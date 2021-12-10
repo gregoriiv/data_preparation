@@ -3,11 +3,19 @@ import time
 import sys
 import ast
 import yaml
+<<<<<<< HEAD
+=======
+from pathlib import Path
+>>>>>>> 7026de2a98e8aaff4b71bf014d55cb951b488f3d
 import numpy as np
 import pandas as pd
 import geopandas as gp
 from pandas.core.accessor import PandasDelegate
+<<<<<<< HEAD
 from collection import gdf_conversion, PyrOSM_Filter
+=======
+from collection import gdf_conversion
+>>>>>>> 7026de2a98e8aaff4b71bf014d55cb951b488f3d
 gp.options.use_pygeos = True
 
 #================================== POIs preparation =============================================#
@@ -40,10 +48,17 @@ def osm_obj2points(df, geom_column = "geom"):
 def file2df(filename):
     name, extens = filename.split(".")
     if extens == "geojson":
+<<<<<<< HEAD
         file = open(os.path.join(sys.path[0], 'data', filename), encoding="utf-8")
         df = gp.read_file(file)
     elif extens == "gpkg":
         file =  os.path.join(sys.path[0], 'data', filename)
+=======
+        file = open(Path.cwd()/'data'/filename, encoding="utf-8")
+        df = gp.read_file(file)
+    elif extens == "gpkg":
+        file =  Path.cwd()/'data'/filename
+>>>>>>> 7026de2a98e8aaff4b71bf014d55cb951b488f3d
         df = gp.read_file(file)
     else:
         print(f"Extension of file {filename} currently doen not support with file2df() function.")
@@ -112,8 +127,13 @@ def pois_preparation(dataframe=None,filename=None, return_type=None,result_name=
 
 
     # This section getting var from conf file (variables container)
+<<<<<<< HEAD
     config = yaml.safe_load(open(os.path.join(sys.path[0] , 'config.yaml'), encoding="utf-8"))
 
+=======
+    with open(Path.cwd()/'config.yaml', encoding="utf-8") as stream:
+        config = yaml.safe_load(stream)
+>>>>>>> 7026de2a98e8aaff4b71bf014d55cb951b488f3d
     var = config['VARIABLES_SET']["pois"]["preparation"]
     # Related to sport facilities
     sport_var_disc = var["sport"]["sport_var_disc"]
@@ -306,7 +326,11 @@ def landuse_preparation(dataframe=None, filename=None, config=None, return_type=
     if dataframe is not None:
         df = dataframe
     elif filename:
+<<<<<<< HEAD
         file = open(os.path.join(sys.path[0], 'data', filename + ".geojson"), encoding="utf-8")
+=======
+        file = open(Path.cwd()/'data'/filename/'.geojson', encoding="utf-8")
+>>>>>>> 7026de2a98e8aaff4b71bf014d55cb951b488f3d
         df = gp.read_file(file)
     else:
         print("Incorrect 'datatype' value!")
@@ -318,8 +342,12 @@ def landuse_preparation(dataframe=None, filename=None, config=None, return_type=
 
     # Preprocessing: removing, renaming and reordering of columns
     df = df.drop(columns={"timestamp", "version", "changeset"})
+<<<<<<< HEAD
     df = df.rename(columns={"geometry": "geom",
                             "id": "osm_id", "osm_type": "origin_geometry"})
+=======
+    df = df.rename(columns={"geometry": "geom", "id": "osm_id", "osm_type": "origin_geometry"})
+>>>>>>> 7026de2a98e8aaff4b71bf014d55cb951b488f3d
     df["landuse_simplified"] = None
     df = df[["landuse_simplified", "landuse", "tourism", "amenity", "leisure", "natural", "name",
              "tags", "osm_id", "origin_geometry", "geom"]]
@@ -327,7 +355,11 @@ def landuse_preparation(dataframe=None, filename=None, config=None, return_type=
     df = df.assign(source = "osm")
 
     # Fill landuse_simplified coulmn with values from the other columns
+<<<<<<< HEAD
     custom_filter = PyrOSM_Filter('landuse').filter
+=======
+    custom_filter = config.pyrosm_filter()[0]
+>>>>>>> 7026de2a98e8aaff4b71bf014d55cb951b488f3d
 
     if custom_filter is None:
         print("landuse_simplified can only be generated if the custom_filter of collection\
@@ -337,11 +369,16 @@ def landuse_preparation(dataframe=None, filename=None, config=None, return_type=
             df["landuse_simplified"] = df["landuse_simplified"].fillna(
                 df[i].loc[df[i].isin(custom_filter[i])])
 
+<<<<<<< HEAD
         # import landuse_simplified dict from pyrosm_collector.py
         with open(os.path.join(sys.path[0], 'config.yaml'), encoding="utf-8") as m:
             config = yaml.safe_load(m)
         var = config['VARIABLES_SET']
         landuse_simplified_dict = var['landuse']['preparation']['landuse_simplified']
+=======
+        # import landuse_simplified dict from config
+        landuse_simplified_dict = config.preparation["landuse_simplified"]
+>>>>>>> 7026de2a98e8aaff4b71bf014d55cb951b488f3d
 
         # Rename landuse_simplified by grouping
         # e.g. ["basin","reservoir","salt_pond","waters"] -> "water"
@@ -373,3 +410,65 @@ def landuse_preparation(dataframe=None, filename=None, config=None, return_type=
         result_name = filename + "prepared"
 
     return gdf_conversion(df, result_name, return_type)
+<<<<<<< HEAD
+=======
+
+    #================================ Buildings preparation ======================================#
+
+def buildings_preparation(dataframe=None, filename=None, config=None ,return_type=None, result_name="buildings_preparation_result"):
+    """introduces the landuse_simplified column and classifies it according to the config input"""
+    # (2 Options) landuse preparation from geojson imported from OSM (if you already have it)
+    if dataframe is not None:
+        df = dataframe
+    elif filename:
+        file = open(Path.cwd()/'data'/filename/'.geojson', encoding="utf-8")
+        df = gp.read_file(file)
+    else:
+        print("Incorrect 'datatype' value!")
+        sys.exit()
+
+    # Timer start
+    print("Preparation started...")
+    start_time = time.time()
+    # Preprocessing: removing, renaming, reordering and data type adjustments of columns
+    df = df.drop(columns={"timestamp", "version", "changeset"})
+    df = df.rename(columns={"geometry": "geom", "id": "osm_id", "osm_type": "origin_geometry",\
+                            "addr:street": "street", "addr:housenumber": "housenumber",\
+                            "building:levels": "building_levels", "roof:levels": "roof_levels"})
+    df["residential_status"] = None
+    df["area"]               = None
+    df = df[["osm_id", "building", "amenity", "leisure", "residential_status", "street", "housenumber",
+             "area", "building_levels", "roof_levels", "origin_geometry","geom"]]
+    df["building_levels"] = pd.to_numeric(df["building_levels"], downcast="float")
+    df["roof_levels"] = pd.to_numeric(df["roof_levels"], downcast="float")
+    df = df.assign(source = "osm")
+
+    # classifying residential_status in 'with_residents', 'potential_residents', 'no_residents'
+    df.loc[((df.building.str.contains("yes")) & (df.amenity.isnull()) & (df.amenity.isnull())), "residential_status"] = "potential_residents"
+    df.loc[df.building.isin(config.variable_container["building_types_residential"]), "residential_status"] = "with_residents"
+    df.residential_status.fillna("no_residents", inplace=True)
+
+    # remove lines from dataset
+    df = df[df.origin_geometry != 'line']
+    df = df.reset_index(drop=True)
+
+    # Convert DataFrame back to GeoDataFrame (important for saving geojson)
+    df = gp.GeoDataFrame(df, geometry="geom")
+    df = df.reset_index(drop=True)
+
+    # calculating the areas of the building outlines in m^2
+
+    df = df.to_crs({'init': 'epsg:3857'})
+    df['area'] = df['geom'].area.round(2)
+    df = df[df.area != 0]
+    df = df.to_crs({'init': 'epsg:4326'})
+
+    # Timer finish
+    print(f"Preparation took {time.time() - start_time} seconds ---")
+
+
+    if filename and not result_name:
+        result_name = filename + "prepared"
+
+    return gdf_conversion(df, result_name, return_type)
+>>>>>>> 7026de2a98e8aaff4b71bf014d55cb951b488f3d
