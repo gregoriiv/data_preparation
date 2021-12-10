@@ -174,7 +174,18 @@ VARIABLES_SET :
     collection:
       osm_tags: 
         building: [True]
+      additional_columns : ["amenity", "leisure", "addr:street", "addr:housenumber", "building:levels", "roof:levels"]
+      points: False
+      polygons: True
+      lines: True
+    preparation:
+    fusion:
 
+  # config to collect points from OSM
+  buildings :
+    collection:
+      osm_tags: 
+        building: [True]
       additional_columns : ["amenity", "leisure", "addr:street", "addr:housenumber", "building:levels", "roof:levels"]
       points: False
       polygons: True
