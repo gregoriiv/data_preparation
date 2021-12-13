@@ -79,22 +79,28 @@ VARIABLES_SET :
     preparation:
       bank: 
         sparkasse       : ["kreissparkasse", "sparkasse", "stadtsparkasse"]
-        raiffeisenbank  : ["raiffeisenbank", "vr bank", "vr-bank", "volksbank", "volks", "Münchner"]
+        raiffeisenbank  : ["raiffeisenbank", "vr bank", "vr-bank", "volksbank", "volks", "münchner"]
         hypovereinsbank : ["hypo vereinsbank", "hypovereinsbank"]
+        commerzbank : ["commerzbank"]
 
       chemist: 
-        dm        : ["dm"]
-        rossmann" : ["rossmann"]
+        dm       : ["dm"]
+        rossmann : ["rossmann"]
+        müller   : ["müller", "mueller"] 
   
       nursery : ["krippe", "kinderkrippe", "kita"]
 
       fast_food: 
         mcdonalds : ["mcdonald"]
+      
+      organic :
+        denn's Biomarkt : ["denn's", "denns", "denn"]
+        alnatura : ["alnatura"]
   
       health_food: 
-        vitalia"   : ["vitalia"]
+        vitalia   : ["vitalia"]
         reformhaus : ["reformhaus"]
-    
+
       hypermarket: 
         hit       : ["hit"]
         real      : ["real"]
@@ -104,7 +110,9 @@ VARIABLES_SET :
   
       supermarket: 
         rewe  : ["rewe", "rewe city"]
-        edeka : ["e center", "edeka"]
+        edeka : ["e center", "edeka", "e-", "e express", "e xpress", "e aktiv", "e kauf", "nah und gut", "nah & gut", "cap markt",
+                 "cap-markt", "diska", "beckesepp", "elli", "frischemarkt ", "frischmarkt ", "inkoop", "kiezmarkt", "marktkauf", "simmel",
+                 "scheck-in"] # a lot of questions z.B."NP"
     
       discount_gym: 
         fitx           : ["fitx"]
@@ -121,8 +129,8 @@ VARIABLES_SET :
         penny : ["penny"]
     
       no_end_consumer_store: 
-        metro"     : ["metro"]
-        hamberger" : ["hamberger"]
+        metro     : ["metro"]
+        hamberger : ["hamberger"]
     
       community_sport_centre: ["bezirkssportanlage"]
 
@@ -132,25 +140,141 @@ VARIABLES_SET :
         sport_var_disc   : ["table_tennis"]
         leisure_var_add  : ["sports_hall", "fitness_center", "sport_center", "track", "pitch"]
         leisure_var_disc : ["fitness_station"]
+      
+      schools:
+        grundschule: ['Grund- und Teilhauptschule','Grund- und Hauptschule','Grund- und Mittelschule']
+        hauptschule_mittelschule : ['Grund- und Teilhauptschule','Grund- und Hauptschule','Hauptschule','Mittelschule','Grund- und Mittelschule']
+        exclude: ['privat','priv.','montessori','waldorf']
 
     fusion:
       table_base  : "pois_bayern"
-      rs_set      : ["097610000", "095640000", "096630000"]
+      rs_set      : ["091620000000","095640000000","097610000000","093620000000","091610000000","096630000000","095630000000","095620000000","094610000000",
+                     "094620000000","092610000000","096610000000","097630000000","091630000000","096620000000","092620000000","091780124124","092630000000",
+                     "091740115115","094640000000","097620000000","097640000000","093630000000","093610000000","095610000000","094630000000","095650000000",
+                     "091790123123","091790121121","094740126126","091840149149","091790142142","095740138138","091860143143","095730134134","095760143143",
+                     "091840148148","091880139139","091750132132","095720132132","091740126126","091840136136","091790145145","091840123123","091880120120",
+                     "091780145145"]
       fusion_data :
         source:
           geonode:
-            doctors_bavaria: 
-              amenity_replace : "doctors"
-              amenity_brand_replace : 
+            doctors_bavaria:
+              fusion_type : "replace" 
+              amenity : "doctors"
+              amenity_set : False
+              amenity_brand : 
               columns2rename : {"category": "amenity", "extras": "tags", "spider": "source"}
               columns2drop : ["id", "ref", "layer", "path"]
+              column_set_value : 
+              columns2fuse : 
           geojson:
             dm:
-              amenity_replace : 
-              amenity_brand_replace : ("chemist","dm")
-              columns2rename : {"@spider": "brand"}
+              fusion_type : "fuse"
+              amenity :
+              amenity_set : False
+              amenity_brand : ("chemist","dm")
+              columns2rename : 
               columns2drop : ["ref","id"]
-              columns2default : {"name" : "dm-drogerie markt"}
+              column_set_value : {"brand" : "dm-drogerie markt", "source" : "dm_de"} # for all values
+              columns2fuse : ["osm_id", "opening_hours", "phone", "addr:street", "housenumber" ,"addr:city", "addr:postcode", "addr:country", "brand"]
+            mueller:
+              fusion_type : "fuse"
+              amenity :
+              amenity_set : False 
+              amenity_brand : ("chemist","Müller")
+              columns2rename : 
+              columns2drop : ["ref","id", "@spider"]
+              column_set_value : {"brand" : "Müller", "source": "mueller_de"} # for all values in osm related to brand
+              columns2fuse : ["osm_id", "opening_hours", "addr:street", "housenumber", "addr:city", "addr:postcode", "addr:country", "name", "brand"]
+            apotheken_de:
+              fusion_type : "replace"
+              amenity : "pharmacy"
+              amenity_set : True
+              amenity_brand : 
+              columns2rename : {"@spider" : "source"}
+              columns2drop : ["ref","id", "fax"]
+              column_set_value : 
+              columns2fuse :
+            denns_de:
+              fusion_type : "fuse"
+              amenity : "organic"
+              amenity_set : False
+              amenity_brand : 
+              columns2rename : {"@spider" : "source"}
+              columns2drop : ["ref","id"]
+              column_set_value : {"operator": "denn's biomarkt"} # for all values in osm related to brand
+              columns2fuse : ["osm_id", "opening_hours", "addr:street", "housenumber", "addr:city", "addr:postcode", "addr:country", "phone","operator"] # no name column for denn's data   
+            alnatura_de:
+              fusion_type : "fuse"
+              amenity : 
+              amenity_set : False
+              amenity_brand : ("organic","Alnatura")
+              columns2rename : {"@spider" : "source"}
+              columns2drop : ["ref","id"]
+              column_set_value : {"brand": "Alnatura"} # for all values in osm related to brand
+              columns2fuse : ["osm_id", "opening_hours", "addr:street", "housenumber", "addr:city", "addr:postcode", "addr:country", "name", "phone", "brand"]
+            commerzbank_de:
+              fusion_type : "fuse"
+              amenity : 
+              amenity_set : False
+              amenity_brand : ("bank","Commerzbank") # issues with brand - operator
+              columns2rename : {"@spider" : "source"}
+              columns2drop : ["ref","id", "fax", "email","barriere_type", "cash_register", "vault", "cashback", "cashgroup"]
+              column_set_value : {"brand": "Commerzbank"} # for all values in osm related to brand
+              columns2fuse : ["osm_id", "opening_hours", "addr:street", "housenumber", "addr:city", "addr:postcode", "addr:country", "name", "phone", "brand"]
+            kaufland:
+              fusion_type : "fuse"
+              amenity : 
+              amenity_set : False
+              amenity_brand : ("hypermarket","Kaufland")
+              columns2rename : {"@spider" : "source"}
+              columns2drop : ["ref","id","brand:wikidata"]
+              column_set_value : {"brand": "Kaufland"} # for all values in osm related to brand
+              columns2fuse : ["osm_id", "opening_hours", "addr:street", "housenumber", "addr:city", "addr:postcode", "addr:country", "name", "phone", "website", "brand"]
+            lidl:
+              fusion_type : "fuse"
+              amenity : 
+              amenity_set : False
+              amenity_brand : ("discount_supermarket","Lidl")
+              columns2rename : {"@spider" : "source"}
+              columns2drop : ["ref","id", "brand:wikidata"]
+              column_set_value : {"brand": "Lidl"} # for all values in osm related to brand
+              columns2fuse : ["osm_id", "opening_hours", "addr:street", "housenumber", "addr:city", "addr:postcode", "addr:country", "name", "brand"]
+            norma_de:
+              fusion_type : "fuse"
+              amenity : 
+              amenity_set : False
+              amenity_brand : ("discount_supermarket","Norma")
+              columns2rename : {"@spider" : "source"}
+              columns2drop : ["ref","id"]
+              column_set_value : {"brand": "Norma"} # for all values in osm related to brand
+              columns2fuse : ["osm_id", "opening_hours", "addr:street", "housenumber", "addr:city", "addr:postcode", "addr:country", "brand"]
+            penny:
+              fusion_type : "fuse"
+              amenity : 
+              amenity_set : False
+              amenity_brand : ("discount_supermarket","Penny")
+              columns2rename : {"@spider" : "source"}
+              columns2drop : ["ref","id", "brand:wikidata"]
+              column_set_value : {"brand": "Penny"} # for all values in osm related to brand
+              columns2fuse : ["addr:street", "addr:city", "addr:postcode", "addr:country", "name", "brand"]
+            deutschepost_filiale:
+              fusion_type : "replace"
+              amenity : "post_office"
+              amenity_set : True
+              amenity_brand :
+              columns2rename : {"@spider" : "source"}
+              columns2drop : ["ref","id", "addr:district", "locationType"]
+              column_set_value : # for all values in osm related to brand
+              columns2fuse : ["addr:street", "housenumber", "addr:city", "addr:postcode", "addr:country", "opening_hours"]
+            deutschepost_paketshop:
+              fusion_type : "replace"
+              amenity : "post_paketshop"
+              amenity_set : True
+              amenity_brand :
+              columns2rename : {"@spider" : "source"}
+              columns2drop : ["ref","id", "addr:district", "locationType"]
+              column_set_value : # for all values in osm related to brand
+              columns2fuse : ["addr:street", "housenumber", "addr:city", "addr:postcode", "addr:country", "opening_hours"]
 
   
   # Following config set treat the bug issue
