@@ -16,8 +16,7 @@ from osm_dict import OSM_tags
 
 class Config:
     def __init__(self,name):
-        config = yaml.safe_load(open(os.path.join(sys.path[0], 'config.yaml'),\
-                 encoding="utf-8"))
+        with open(os.path.join(sys.path[0], 'config.yaml'), encoding="utf-8") as m:config = yaml.safe_load(m) 
         var = config['VARIABLES_SET']
         self.name = name
         self.pbf_data = var['region_pbf']
@@ -51,14 +50,21 @@ class Config:
 
     def fusion_key_set(self, typ):
         fus = self.fusion
-        key_set = fus["fusion_data"]['source'][typ].keys()
+        try:
+            key_set = fus["fusion_data"]['source'][typ].keys()
+        except:
+            key_set = []
         return key_set
 
     def fusion_set(self,typ,key):
         fus = self.fusion["fusion_data"]["source"][typ][key]
-        fus_set = fus["amenity_replace"],fus["amenity_brand_replace"],fus["columns2rename"],\
-                  fus["columns2drop"]
+        fus_set = fus["amenity"],fus["amenity_set"],fus["amenity_brand"],fus["columns2rename"],fus["columns2drop"],fus["column_set_value"], fus["columns2fuse"]
         return fus_set
+    
+    def fusion_type(self, typ, key):
+        fus = self.fusion["fusion_data"]["source"][typ][key]
+        fus_type = fus["fusion_type"]
+        return fus_type
 
 def classify_osm_tags(name):
     """helper function to help assign osm tags to their corresponding feature"""
@@ -97,14 +103,14 @@ def gdf_conversion(gdf, name=None, return_type=None):
     if return_type == "GeoJSON":
         print(f"Writing down the geojson file {name + '.geojson'} ...")
         start_time = time.time()
-        gdf.to_file(os.path.join(sys.path[0],"data", name + ".geojson"), driver=return_type)
+        gdf.to_file(os.path.join(sys.path[0],"data", "output", name + ".geojson"), driver=return_type)
         print(f"Writing file {time.time() - start_time} seconds ---")
         print(f"GeoJSON {name + '.geojson'} was written.")
         return gdf, name
     elif return_type == "GPKG":
         print(f"Writing down the geojson file {name + '.gpkg'} ...")
         start_time = time.time()
-        gdf.to_file(os.path.join(sys.path[0],"data", name + ".gpkg"), driver=return_type)
+        gdf.to_file(os.path.join(sys.path[0],"data", "output", name + ".gpkg"), driver=return_type)
         print(f"Writing file {time.time() - start_time} seconds ---")
         print(f"GeoPackage {name + '.gpkg'} was written.")
         return gdf, name
