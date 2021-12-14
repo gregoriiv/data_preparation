@@ -6,7 +6,8 @@ import numpy as np
 from scipy.spatial.distance import cdist
 from scipy.spatial import cKDTree
 from shapely import geometry
-from collection import gdf_conversion
+from collection import gdf_conversion, Config
+from preparation import file2df
 from db.db import Database
 from db.config import DATABASE
 
@@ -20,7 +21,7 @@ def geonode_connection():
 # df - dataframe, name - table name to store, if_exists="replace" to overwrite datatable
 def df2geonode(df,name,if_exists='replace'):
     db = Database()
-    con = db.connect_engine()
+    con = db.connect_sqlalchemy()
     df.to_postgis(con=con, name=name, if_exists=if_exists)
 
 # Returns geonode table as a dataframe 
@@ -107,6 +108,7 @@ def find_nearest(gdA, gdB, max_dist):
     gdf_not_fus = gdf_not_fus.to_crs(4326)
     gdf_fus = gdf_fus.drop(columns={"dist"})
     gdf_not_fus = gdf_not_fus.drop(columns={"dist"})
+    gdf_not_fus["osm_id"] = None
 
     return gdf_fus, gdf_not_fus
 
@@ -153,21 +155,23 @@ def replace_data_area(df_base2area, df_area, df_input, amenity_replace=None, ame
     # Set tags and geom from osm data to input
 
     # Deaggregate street and number
-    if 'housenumber' not in df_input2area.columns:
-        for i in df_input2area.index:
-            df_row = df_input2area.iloc[i]
-            address = addr_deaggregate(df_row["addr:street"])
-            df_input2area.at[i,"addr:street"] = address[0]
-            df_input2area.at[i,"housenumber"] = address[1]
+    if "addr:street" in df_input2area.columns.tolist():
+        if 'housenumber' not in df_input2area.columns.tolist():
+            for i in df_input2area.index:
+                df_row = df_input2area.iloc[i]
+                address = addr_deaggregate(df_row["addr:street"])
+                df_input2area.at[i,"addr:street"] = address[0]
+                df_input2area.at[i,"housenumber"] = address[1]
+    
+    if column_set_value:
+        for col in column_set_value.keys():
+            df_input2area[col] = column_set_value[col]
 
 
     # Concatination of dataframes
     df_result = pd.concat([df_base2area,df_input2area],sort=False).reset_index(drop=True)
     df_result = df_result.replace({np.nan: None})
 
-    if column_set_value:
-        for col in column_set_value.keys():
-            df_result[col] = column_set_value[col]
 
     # Writedown result of fusion
     return gdf_conversion(df_result, return_name, return_type=return_type)
@@ -193,19 +197,17 @@ def fuse_data_area(df_base2area, df_area, df_input, amenity_fuse=None, amenity_s
     else:
         print("Amenity (and brand) were not specified.. ")
 
-
-    if 'housenumber' not in df_input2area.columns:
-        for i in df_input2area.index:
-            df_row = df_input2area.iloc[i]
-            address = addr_deaggregate(df_row["addr:street"])
-            df_input2area.at[i,"addr:street"] = address[0]
-            df_input2area.at[i,"housenumber"] = address[1]
+    if "addr:street" in df_input2area.columns.tolist():
+        if 'housenumber' not in df_input2area.columns.tolist():
+            for i in df_input2area.index:
+                df_row = df_input2area.iloc[i]
+                address = addr_deaggregate(df_row["addr:street"])
+                df_input2area.at[i,"addr:street"] = address[0]
+                df_input2area.at[i,"housenumber"] = address[1]
 
     if column_set_value:
         for col in column_set_value.keys():
             df_input2area[col] = column_set_value[col]
-
-    
 
     # Create temp sorted base dataframe 
     df_base_temp = df_base_amenity[["geometry", "osm_id"]]      
@@ -238,10 +240,43 @@ def fuse_data_area(df_base2area, df_area, df_input, amenity_fuse=None, amenity_s
     df_result = (df_fus.set_index('osm_id').combine_first(df_base_amenity.set_index('osm_id')))
     df_result = df_result.reset_index()
     df_result = gpd.GeoDataFrame(df_result, geometry="geometry")
-    df_not_fus["osm_id"] = None 
     df_result = pd.concat([df_result,df_not_fus],sort=False)
     df_result = df_result.replace({np.nan: None})
     df_result = pd.concat([df_result,df_base2area_rest],sort=False)
     df_result.crs = "epsg:4326"
 
     return gdf_conversion(df_result, return_name, return_type=return_type)
+
+def fusion_set(config, filename=None, return_type=None):
+    con = geonode_connection()
+
+    table_base = config.fusion["table_base"]
+    rs_set = config.fusion["rs_set"]
+    typen = ["geonode","geojson"]
+
+    df_base = geonode_table2df(con, table_base, geometry_column="geometry")
+    df_area = area_n_buffer2df(con, rs_set, buffer=8300)
+    df_base2area = df2area(df_base, df_area)
+
+    for typ in typen:
+        fusion_key_set = config.fusion_key_set(typ)
+
+        for key in fusion_key_set:
+            print(key)
+            fusion_set = config.fusion_set(typ,key)
+            if typ == 'geojson':
+                filename = key + '.' + typ
+                df_input = file2df(filename)
+            elif typ == 'geonode':
+                df_input = geonode_table2df(con, key)
+            df_input2area = df2area(df_input, df_area)
+            
+            if config.fusion_type(typ, key) == "fuse":
+                df_base2area = fuse_data_area(df_base2area, df_area, df_input, *fusion_set, return_name = None, return_type=None)[0]
+            elif config.fusion_type(typ, key) == "replace":
+                df_base2area = replace_data_area(df_base2area, df_area, df_input, *fusion_set[:-1], return_name = None, return_type=None)[0]
+            else:
+                print("Fusion type for %s was not defined. Fusion was not done." % key)
+                pass
+
+    return gdf_conversion(df_base2area, filename, return_type=return_type)
