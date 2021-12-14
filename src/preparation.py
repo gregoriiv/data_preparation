@@ -8,7 +8,7 @@ import numpy as np
 import pandas as pd
 import geopandas as gp
 from pandas.core.accessor import PandasDelegate
-from collection import gdf_conversion
+from collection import gdf_conversion, osm_collect_filter, bus_stop_conversion, join_osm_pois_n_busstops
 gp.options.use_pygeos = True
 
 #================================== POIs preparation =============================================#
@@ -256,6 +256,12 @@ def pois_preparation(dataframe, config, return_type=None,result_name="pois_prepa
             df.iat[i,i_tags]["shop"] = df_row[i_shop]
             continue
 
+        # Additionaly define operator health_food amenities
+        elif df_row[i_shop] == "health_food" and df_row[i_amenity] == "":
+            operator = poi_return_search_condition(df_row[i_name].lower(), health_food_var)
+            if operator:
+                df.iat[i,i_operator] = operator
+                continue
         # Banks 
         if df_row[i_amenity] == "bank":
             operator = poi_return_search_condition(df_row[i_name].lower(), bank_var)
@@ -331,21 +337,39 @@ def pois_preparation(dataframe, config, return_type=None,result_name="pois_prepa
 
     return gdf_conversion(df,result_name,return_type)
 
-def school_deaggregation(df, config, result_name, return_type):
+# Preparation jedeschule table ->> conversion to fusable format
+def school_categorization(df, config, result_name, return_type):
     var = config.preparation
     var_schools = var["schools"]
-    grundscule = var_schools["grundschule"]
+
+    schule = var_schools["schule"]
+    grundschule = var_schools["grundschule"]
     hauptschule_mittelschule = var_schools["hauptschule_mittelschule"]
     exclude = var_schools["exclude"]
 
+    df['name_1'] = df['name'].str.lower()
+    df['name_1'] = df['name'].replace({np.nan: ""})
+
     for ex in exclude:
-        df = df[~df['name'].str.contains(exclude)]
-    
+        temp_df = df.loc[df['name_1'].str.contains(ex, case=False)]
+        m = ~df.id.isin(temp_df.id)
+        df = df[m]
+    df = df.drop(columns={"name_1"})
+    df = df.reset_index()
 
+    df.loc[df['school_t_1'].isin(schule), 'amenity'] = df['school_t_1'].str.lower()
+    df_base = df[~df['amenity'].isnull()]
 
+    df.loc[df['school_t_1'].isin(grundschule), 'amenity'] = 'grundschule'
+    df_grund = df[df['school_t_1'].isin(grundschule)]
+
+    df.loc[df['school_t_1'].isin(hauptschule_mittelschule), 'amenity'] = 'hauptschule_mittelschule'
+    df_hauptmittel = df[df['school_t_1'].isin(hauptschule_mittelschule)]
+
+    df_result = pd.concat([df_base,df_grund,df_hauptmittel],sort=False)
 
     # Should return 2 dataframes grundschule and mittel_haupt+schule
-    return gdf_conversion(df,result_name,return_type)
+    return gdf_conversion(df_result,result_name,return_type)
 
 
 #================================ Landuse preparation ============================================#
@@ -424,3 +448,21 @@ def landuse_preparation(dataframe=None, filename=None, config=None, return_type=
         result_name = filename + "prepared"
 
     return gdf_conversion(df, result_name, return_type)
+
+
+def pois_preparation_set(config,config_buses,update=False,filename=None,return_type=None):
+    df_res = pd.DataFrame()
+    data_set = config.pbf_data
+
+    for d in data_set:
+        pois_collection = osm_collect_filter(config, d, update=update)
+        pois_bus_collection = join_osm_pois_n_busstops(pois_collection[0],
+                                                    bus_stop_conversion(osm_collect_filter(config_buses,d)[0]),
+                                                    pois_collection[1])
+        temp_df = pois_preparation(dataframe=pois_bus_collection[0], config=config, result_name=pois_bus_collection[1])[0]
+        if data_set.index(d) == 0:
+            df_res = temp_df
+        else:
+            df_res = pd.concat([df_res,temp_df],sort=False).reset_index(drop=True)
+
+    return gdf_conversion(df_res, filename, return_type=return_type)
