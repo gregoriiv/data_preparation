@@ -236,8 +236,8 @@ WITH classification AS
 	SELECT c.gid, classify_building(c.gid, 
 		jsonb_build_array(
 		jsonb_build_object('categorization',c.landuse_residential_status,'landuse_gid', c.landuse_gids, 'table','landuse'),
-		jsonb_build_object('categorization',c.landuse_osm_residential_status,'landuse_osm_gid', c.landuse_osm_gids, 'table','landuse_osm')/*,
-		jsonb_build_object('categorization',c.landuse_additional_residential_status,'landuse_additional_gid', c.landuse_additional_gids, 'table','landuse_additional')*/
+		jsonb_build_object('categorization',c.landuse_osm_residential_status,'landuse_osm_gid', c.landuse_osm_gids, 'table','landuse_osm'),
+		jsonb_build_object('categorization',c.landuse_additional_residential_status,'landuse_additional_gid', c.landuse_additional_gids, 'table','landuse_additional')
 		)
 	) 
 	FROM buildings_classification c

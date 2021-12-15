@@ -180,3 +180,28 @@ data_set = ["Mittelfranken"]
 # df.to_postgis(con=Database().connect_sqlalchemy(), name="landuse_bayern",if_exists='replace')
 
 ##============================================TESTS==============================================##
+
+# config = Config("points")
+
+# points_collection = osm_collect_filter(config,'Mittelfranken', update=True)
+
+from pyrosm import get_data, OSM
+
+fp = get_data("Mittelfranken")
+
+osm = OSM(fp)
+
+test = osm.
+
+# test = osm.get_data_by_custom_criteria(
+#         custom_filter = True,
+#         osm_keys_to_keep=None,
+#         filter_type="keep",
+#         tags_as_columns=None,
+#         keep_nodes=True,
+#         keep_ways=True,
+#         keep_relations=True,
+#         extra_attributes=None
+#     )
+
+test = gdf_conversion(test, "points_osm_mittelfranken", return_type='GPKG')[0]

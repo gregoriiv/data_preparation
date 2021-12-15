@@ -12,13 +12,8 @@ VARIABLES_SET :
         # -> and run: python -c "from collection import classify_osm_tags;classify_osm_tags('landuse')" for e.g. landuse
         # "not a valid osm tag/ missing in our list" with values that where not found will be returned and the collection breaks
         # -> if you need a certain tag add it manually to osm_featutre_tags_dict.py
-<<<<<<< HEAD
-        # PyrOSM recommends to use True instead of the tags list if you want all entries of the specific feature, but their backend dict is incomplete and has 
-        # typos -> not use it -> build own solution add "all"
-=======
         # If you want all entries of a feature use True -> PyrOSM does not apply a filter
         # If you want the data filtered by all tags in our dict -> use "all"
->>>>>>> 7026de2a98e8aaff4b71bf014d55cb951b488f3d
         # a list of the most used tags and their associated feature can be seen in osm_feature_tags_dict.py or https://wiki.openstreetmap.org/wiki/Map_features,
         # https://taginfo.openstreetmap.org/keys/tourism#values  
         # the resulting dataformat e.g. pandas geodataframe will have a column for every feature and one for every entry in additional_columns (should be OSM
@@ -186,17 +181,16 @@ VARIABLES_SET :
     preparation:
     fusion:
 
-  # # config to collect points from OSM
-  # buildings :
-  #   collection:
-  #     osm_tags: 
-  #       building: [True]
-  #     additional_columns : ["amenity", "leisure", "addr:street", "addr:housenumber", "building:levels", "roof:levels"]
-  #     points: False
-  #     polygons: True
-  #     lines: True
-  #   preparation:
-  #   fusion:
+  # config to collect points from OSM
+  points :
+    collection:
+      osm_tags:
+      additional_columns :
+      points: True
+      polygons: True
+      lines: True
+    preparation:
+    fusion:
 
 
 # Variable container to perform the population scripts      
