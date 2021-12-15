@@ -18,6 +18,7 @@ VARIABLES_SET :
         # https://taginfo.openstreetmap.org/keys/tourism#values  
         # the resulting dataformat e.g. pandas geodataframe will have a column for every feature and one for every entry in additional_columns (should be OSM
         # features as well)
+        # if you do not want to add any additional columns, an empty list [] is still needed
 
       osm_tags:
         landuse: ["basin", "reservoir", "salt_pond", "water", "waters", "allotments", "aquaculture", "farmland", "farmyard", "greenhouse_horticulture",  
@@ -338,7 +339,8 @@ VARIABLES_SET :
   points :
     collection:
       osm_tags:
-      additional_columns :
+        'True': [True]
+      additional_columns : []
       points: True
       polygons: True
       lines: True

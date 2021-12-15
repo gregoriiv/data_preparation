@@ -10,8 +10,8 @@ import geopandas as gpd
 from collection import Config, osm_collect_filter, gdf_conversion, bus_stop_conversion, join_osm_pois_n_busstops
 from preparation import file2df, landuse_preparation, pois_preparation, buildings_preparation, school_categorization,pois_preparation_set
 
-#from fusion import geonode_connection, fusion_data_areas_rs_set
-from fusion import replace_data_area, geonode_connection, geonode_table2df, area_n_buffer2df, df2area, df2geonode, fuse_data_area, fusion_set
+# from fusion import geonode_connection, fusion_data_areas_rs_set
+# from fusion import replace_data_area, geonode_connection, geonode_table2df, area_n_buffer2df, df2area, df2geonode, fuse_data_area, fusion_set
 from db.db import Database
 
 # POIS Collection + Preparation
@@ -84,9 +84,9 @@ data_set = ["Mittelfranken"]
 
 ##============================================TESTS==============================================##
 
-# config = Config("points")
+config = Config("points")
 
-# # points_collection = osm_collect_filter(config,'Mittelfranken', update=True)
+points_collection = osm_collect_filter(config,'Mittelfranken', update=True)
 
 # from pyrosm import get_data, OSM
 
