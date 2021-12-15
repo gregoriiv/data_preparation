@@ -251,17 +251,22 @@ def pois_preparation(dataframe, config, return_type=None,result_name="pois_prepa
             else:
                 df.iat[i,i_amenity] = "chemist"
                 continue
+        elif df_row[i_shop] == "health_food" and df_row[i_amenity] == "":
+            operator = poi_return_search_condition(df_row[i_name].lower(), health_food_var)
+            if operator:
+                df.iat[i,i_operator] = operator
+                df.iat[i,i_amenity] = "health_food"
+                continue
+            else:
+                df.iat[i,i_amenity] = "health_food"
+                continue
         elif df_row[i_shop] and df_row[i_shop] != "yes" and df_row[i_amenity] == "":
             df.iat[i,i_amenity] = df.iat[i,i_shop]
             df.iat[i,i_tags]["shop"] = df_row[i_shop]
             continue
 
         # Additionaly define operator health_food amenities
-        elif df_row[i_shop] == "health_food" and df_row[i_amenity] == "":
-            operator = poi_return_search_condition(df_row[i_name].lower(), health_food_var)
-            if operator:
-                df.iat[i,i_operator] = operator
-                continue
+
         # Banks 
         if df_row[i_amenity] == "bank":
             operator = poi_return_search_condition(df_row[i_name].lower(), bank_var)
