@@ -54,14 +54,21 @@ class Config:
 
     def fusion_key_set(self, typ):
         fus = self.fusion
-        key_set = fus["fusion_data"]['source'][typ].keys()
+        try:
+            key_set = fus["fusion_data"]['source'][typ].keys()
+        except:
+            key_set = []
         return key_set
 
     def fusion_set(self,typ,key):
         fus = self.fusion["fusion_data"]["source"][typ][key]
-        fus_set = fus["amenity_replace"],fus["amenity_brand_replace"],fus["columns2rename"],\
-                  fus["columns2drop"]
+        fus_set = fus["amenity"],fus["amenity_set"],fus["amenity_brand"],fus["columns2rename"],fus["columns2drop"],fus["column_set_value"], fus["columns2fuse"]
         return fus_set
+    
+    def fusion_type(self, typ, key):
+        fus = self.fusion["fusion_data"]["source"][typ][key]
+        fus_type = fus["fusion_type"]
+        return fus_type
 
 def classify_osm_tags(name):
     """helper function to help assign osm tags to their corresponding feature"""
