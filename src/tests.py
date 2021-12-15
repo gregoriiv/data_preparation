@@ -19,14 +19,17 @@ from db.db import Database
 config = Config("pois")
 config_buses = Config("bus_stops")
 
-##===================================Collection POIs=============================================##
+##===================================Collection + Preparation POIs=============================================##
+
+#osm_collect_filter(config, pbf_region="Oberbayern", driver="GeoJSON", update=False)
+
 
 # data_name = "pois_bayern"
 
-# df = pois_preparation_set(config,config_buses,data_name,return_type="GeoJSON")[0]
+# df = pois_preparation_set(config,config_buses, update=False,filename=data_name,return_type="GeoJSON")[0]
 
-# Possible to upload to geonode
-# df = file2df("pois_bayern.geojson")
+# # Possible to upload to geonode
+# # df = file2df("pois_bayern.geojson")
 # df2geonode(df,data_name)
 
 #==============================================================Fusion POIs===========================================================================##
@@ -38,6 +41,7 @@ df = fusion_set(config, "pois_fused", return_type="GeoJSON")
 
 # config = Config("landuse")
 # df_res = pd.DataFrame()
+# data_set = config.region_pbf
 
 # for d in data_set:
 #     landuse_collection = osm_collect_filter(config,d, update=True)
