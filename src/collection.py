@@ -16,7 +16,7 @@ from osm_dict import OSM_tags
 
 class Config:
     def __init__(self,name):
-        with open(os.path.join(sys.path[0], 'config.yaml'), encoding="utf-8") as m:config = yaml.safe_load(m) 
+        with open(os.path.join(sys.path[0],'config','config.yaml'), encoding="utf-8") as m:config = yaml.safe_load(m) 
         var = config['VARIABLES_SET']
         self.name = name
         self.pbf_data = var['region_pbf']

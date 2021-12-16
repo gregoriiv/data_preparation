@@ -112,7 +112,7 @@ VARIABLES_SET :
         rewe  : ["rewe", "rewe city"]
         edeka : ["e center", "edeka", "e-", "e express", "e xpress", "e aktiv", "e kauf", "nah und gut", "nah & gut", "cap markt",
                  "cap-markt", "diska", "beckesepp", "elli", "frischemarkt ", "frischmarkt ", "inkoop", "kiezmarkt", "marktkauf", "simmel",
-                 "scheck-in"] # a lot of questions z.B."NP"
+                 "scheck-in"] # a lot of places impossible to define z.B."NP"
         tegut : ["tegut"]
      
       discount_gym: 
