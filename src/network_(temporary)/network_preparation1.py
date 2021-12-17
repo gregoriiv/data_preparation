@@ -2,7 +2,7 @@ from pathlib import Path
 import yaml
 import json
 
-with open(Path.cwd().parent/'config.yaml', encoding="utf-8") as stream:
+with open(Path.cwd().parent/'config/config.yaml', encoding="utf-8") as stream:
     config = yaml.safe_load(stream)
 var = config['Ways']
 

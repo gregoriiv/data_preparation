@@ -209,7 +209,7 @@ class Profiles:
 class PrepareLayers():
     """Data layers such as population as prepared with this class."""
     def __init__(self,Database ,is_temp = True):
-        with open(Path.cwd().parent/'config.yaml', encoding="utf-8") as stream:
+        with open(Path.cwd().parent/'config/config.yaml', encoding="utf-8") as stream:
             config = yaml.safe_load(stream)
         var = config['Population']
         self.variable_container = var['variable_container']
