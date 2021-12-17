@@ -31,8 +31,8 @@ def geonode_table2df(con, table_name, geometry_column='geometry'):
     return df
 
 # Returns study area as df from geonode db (germany_municipalities) according to rs code 
-def study_area2df(con,sdv_rs):
-    query = "SELECT * FROM germany_municipalities WHERE sdv_rs = '%s'" % sdv_rs
+def study_area2df(con,rs):
+    query = "SELECT * FROM germany_municipalities WHERE rs = '%s'" % rs
     df_area = gpd.read_postgis(con=con,sql=query, geom_col='geom')
     df_area = df_area.filter(['geom'], axis=1)
     return df_area
@@ -247,14 +247,14 @@ def fuse_data_area(df_base2area, df_area, df_input, amenity_fuse=None, amenity_s
 
     return gdf_conversion(df_result, return_name, return_type=return_type)
 
-def fusion_set(config, filename=None, return_type=None):
+def fusion_set(config, result_name=None, return_type=None):
     con = geonode_connection()
 
     table_base = config.fusion["table_base"]
     rs_set = config.fusion["rs_set"]
     typen = ["geonode","geojson"]
 
-    df_base = geonode_table2df(con, table_base, geometry_column="geometry")
+    df_base = geonode_table2df(con, table_base, geometry_column="geom")
     df_area = area_n_buffer2df(con, rs_set, buffer=8300)
     df_base2area = df2area(df_base, df_area)
 
@@ -279,4 +279,4 @@ def fusion_set(config, filename=None, return_type=None):
                 print("Fusion type for %s was not defined. Fusion was not done." % key)
                 pass
 
-    return gdf_conversion(df_base2area, filename, return_type=return_type)
+    return gdf_conversion(df_base2area, result_name, return_type=return_type)
