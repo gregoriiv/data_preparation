@@ -43,7 +43,9 @@ dependencies:
   - freexl=1.0.6=ha8e266a_0
   - gdal=3.4.0=py39hd395a97_12
   - geoalchemy2=0.6.3=py_0
+  - geographiclib=1.52=pyhd8ed1ab_0
   - geopandas=0.9.0=pyhd8ed1ab_0
+  - geopy=2.2.0=pyhd8ed1ab_0
   - geos=3.10.1=h39d44d4_1
   - geotiff=1.7.0=hc8731e1_5
   - gettext=0.19.8.1=ha2e2712_1008
@@ -214,3 +216,4 @@ by_hand:
   - geoalchemy2 # geoalchemy2               0.6.3                      py_0    conda-forge
   - pylint # pylint-2.11.1              |     pyhd8ed1ab_0         250 KB  conda-forge
   - scipy #  scipy-1.7.3                |   py39hc0c34ad_0        24.6 MB  conda-forge
+  - geopy #  geopy-2.2.0                |     pyhd8ed1ab_0          67 KB  conda-forge

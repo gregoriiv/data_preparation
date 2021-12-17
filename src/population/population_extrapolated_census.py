@@ -1,4 +1,11 @@
-population_extrapolated_census = '''
+from pathlib import Path
+import yaml
+
+with open(Path.cwd().parent/'config.yaml', encoding="utf-8") as stream:
+    config = yaml.safe_load(stream)
+var = config['Population']
+
+population_extrapolated_census = f'''
 
 /*Split up census tracts that are intersecting several study areas.*/
 DROP TABLE IF EXISTS splitted_census; 
@@ -77,8 +84,8 @@ FROM census_to_update cu
 WHERE c.gid = cu.gid;
 
 UPDATE census_prepared 
-SET new_pop = sum_gross_floor_area_residential/select_from_variable_container_s('average_gross_living_area')::float
-WHERE number_buildings_now > select_from_variable_container_s('census_minimum_number_new_buildings')::integer
+SET new_pop = sum_gross_floor_area_residential/{var['variable_container']['average_gross_living_area']}::float
+WHERE number_buildings_now > {var['variable_container']['census_minimum_number_new_buildings']}::integer
 AND pop < 1; 
 
 DROP TABLE IF EXISTS census_split_new_development;
@@ -86,7 +93,7 @@ CREATE TABLE census_split_new_development as
 SELECT * 
 FROM census_prepared 
 WHERE pop < 1 
-AND number_buildings_now >= select_from_variable_container_s('census_minimum_number_new_buildings')::integer;
+AND number_buildings_now >= {var['variable_container']['census_minimum_number_new_buildings']}::integer;
 
 ALTER TABLE census_split_new_development ADD PRIMARY key(gid);
 CREATE INDEX ON census_split_new_development USING GIST(geom);
@@ -117,7 +124,7 @@ sum_distributed_pop AS (
 	SELECT s.name, sum(c.new_pop) distributed_pop
 	FROM census_prepared c, study_area s
 	WHERE c.pop < 1 
-	AND c.number_buildings_now >= select_from_variable_container_s('census_minimum_number_new_buildings')::integer
+	AND c.number_buildings_now >= {var['variable_container']['census_minimum_number_new_buildings']}::integer
 	AND ST_Intersects(ST_Centroid(c.geom), s.geom)
 	GROUP BY s.name
 ),
@@ -131,7 +138,7 @@ UPDATE census_prepared
 SET new_pop=new_pop-(new_pop::float/cc.distributed_pop::float)::float*cc.difference::float 
 FROM to_reduce_pop cc
 WHERE ST_Intersects(ST_Centroid(census_prepared.geom), cc.geom)
-AND number_buildings_now > select_from_variable_container_s('census_minimum_number_new_buildings')::integer
+AND number_buildings_now > {var['variable_container']['census_minimum_number_new_buildings']}::integer
 AND pop < 1; 
 
 WITH new_comparison_pop AS (

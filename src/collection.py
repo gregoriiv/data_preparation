@@ -20,13 +20,11 @@ class Config:
         with open(Path.cwd()/'config.yaml', encoding="utf-8") as stream:
             config = yaml.safe_load(stream)
         var = config['VARIABLES_SET']
-        var_population = config['Population']
         self.name = name
         self.pbf_data = var['region_pbf']
         self.collection = var[name]['collection']
         self.preparation = var[name]['preparation']
         self.fusion = var[name]['fusion']
-        self.variable_container = var_population["variable_container"]
 
     def pyrosm_filter(self):
         """creates a filter based on user input in the config to filter the OSM import"""
@@ -46,6 +44,7 @@ class Config:
             for value in values:
                 if value == 'all':
                     temp = temp | {key:OSM_tags[key]}
+        
         po_filter = coll["osm_tags"] | temp,None,"keep",list(coll["osm_tags"].keys())+\
                     coll["additional_columns"],coll["points"], coll["lines"],coll["polygons"], None
 

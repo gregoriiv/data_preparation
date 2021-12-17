@@ -6,6 +6,7 @@ import yaml
 import numpy as np
 import pandas as pd
 import geopandas as gpd
+from pathlib import Path
 
 from collection import Config, osm_collect_filter, gdf_conversion, bus_stop_conversion, join_osm_pois_n_busstops
 from preparation import file2df, landuse_preparation, pois_preparation, buildings_preparation, school_categorization,pois_preparation_set
@@ -84,29 +85,27 @@ data_set = ["Mittelfranken"]
 
 ##============================================TESTS==============================================##
 
-config = Config("points")
+# config = Config("points")
 
-points_collection = osm_collect_filter(config,'Mittelfranken', update=True)
+# points_collection = osm_collect_filter(config,'Mittelfranken', update=True)
 
-# from pyrosm import get_data, OSM
 
-# fp = get_data("Mittelfranken")
 
-# osm = OSM(fp)
 
-# test = osm.
 
-# # test = osm.get_data_by_custom_criteria(
-# #         custom_filter = True,
-# #         osm_keys_to_keep=None,
-# #         filter_type="keep",
-# #         tags_as_columns=None,
-# #         keep_nodes=True,
-# #         keep_ways=True,
-# #         keep_relations=True,
-# #         extra_attributes=None
-# #     )
+# test = osm.get_data_by_custom_criteria(
+#         custom_filter = True,
+#         osm_keys_to_keep=None,
+#         filter_type="keep",
+#         tags_as_columns=None,
+#         keep_nodes=True,
+#         keep_ways=True,
+#         keep_relations=True,
+#         extra_attributes=None
+#     )
 
 # test = gdf_conversion(test, "points_osm_mittelfranken", return_type='GPKG')[0]
 
-##==============================================================CHECK===============================================================================##
+#==============================================================CHECK===============================================================================##
+
+# %%
