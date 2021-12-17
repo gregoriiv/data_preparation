@@ -5,6 +5,7 @@ import os
 import sys
 import time
 import yaml
+from pathlib import Path
 
 #from pygeos import GEOSException
 from pyrosm import get_data, OSM
@@ -16,7 +17,8 @@ from osm_dict import OSM_tags
 
 class Config:
     def __init__(self,name):
-        with open(os.path.join(sys.path[0],'config','config.yaml'), encoding="utf-8") as m:config = yaml.safe_load(m) 
+        with open(Path.cwd()/'config.yaml', encoding="utf-8") as stream:
+            config = yaml.safe_load(stream)
         var = config['VARIABLES_SET']
         self.name = name
         self.pbf_data = var['region_pbf']
@@ -33,7 +35,7 @@ class Config:
             if i not in OSM_tags.keys():
                 print(f"{i} is not a valid osm_feature")
         for i in [item for sublist in coll["osm_tags"].values() for item in sublist]:
-            if i not in [item for sublist in OSM_tags.values() for item in sublist] + ['all']:
+            if i not in [item for sublist in OSM_tags.values() for item in sublist] + ['all', True]:
                 print(f"{i} is not a valid osm_feature")
 
         # loop collects all tags of a feature from osm_feature_tags_dict.py if "all" in config file
@@ -42,7 +44,7 @@ class Config:
             for value in values:
                 if value == 'all':
                     temp = temp | {key:OSM_tags[key]}
-
+        
         po_filter = coll["osm_tags"] | temp,None,"keep",list(coll["osm_tags"].keys())+\
                     coll["additional_columns"],coll["points"], coll["lines"],coll["polygons"], None
 
@@ -69,8 +71,8 @@ class Config:
 def classify_osm_tags(name):
     """helper function to help assign osm tags to their corresponding feature"""
     # import dict from conf_yaml
-    config = yaml.safe_load(open(os.path.join(sys.path[0], 'config.yaml'),\
-             encoding="utf-8"))
+    with open(Path.cwd()/'config.yaml', encoding="utf-8") as stream:
+        config = yaml.safe_load(stream)
     var = config['VARIABLES_SET']
     temp = {}
     for key in var[name]['collection']['osm_tags'].keys():
@@ -103,14 +105,14 @@ def gdf_conversion(gdf, name=None, return_type=None):
     if return_type == "GeoJSON":
         print(f"Writing down the geojson file {name + '.geojson'} ...")
         start_time = time.time()
-        gdf.to_file(os.path.join(sys.path[0],"data", "output", name + ".geojson"), driver=return_type)
+        gdf.to_file(Path.cwd()/'data'/(name + '.geojson'), driver=return_type)
         print(f"Writing file {time.time() - start_time} seconds ---")
         print(f"GeoJSON {name + '.geojson'} was written.")
         return gdf, name
     elif return_type == "GPKG":
-        print(f"Writing down the geojson file {name + '.gpkg'} ...")
+        print(f"Writing down the geopackage file {name + '.gpkg'} ...")
         start_time = time.time()
-        gdf.to_file(os.path.join(sys.path[0],"data", "output", name + ".gpkg"), driver=return_type)
+        gdf.to_file(Path.cwd()/'data'/(name + '.gpkg'), driver=return_type)
         print(f"Writing file {time.time() - start_time} seconds ---")
         print(f"GeoPackage {name + '.gpkg'} was written.")
         return gdf, name
@@ -188,9 +190,8 @@ def join_osm_pois_n_busstops(df_pois,  df_stops, df_pois_name=None, return_type=
 
 def osm_collect_buildings(name='buildings', driver=None):
     #import data from pois_coll_conf.yaml
-    with open(os.path.join(sys.path[0] , 'config.yaml'), encoding="utf-8") as m:
-        config = yaml.safe_load(m)
-
+    with open(Path.cwd()/'config.yaml', encoding="utf-8") as stream:
+        config = yaml.safe_load(stream)
     var = config['VARIABLES_SET']
 
     # get region name desired pois types from yaml settings
