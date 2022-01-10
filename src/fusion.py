@@ -138,10 +138,10 @@ def replace_data_area(df_base2area, df_area, df_input, amenity_replace=None, ame
         print("Amenity (and brand) were not specified.. ")
 
     # Prepare input data for concatination
-    if columns2rename:
-        df_input2area = df_input2area.rename(columns=columns2rename)
     if columns2drop:
         df_input2area = df_input2area.drop(columns={*columns2drop})
+    if columns2rename:
+        df_input2area = df_input2area.rename(columns=columns2rename)
 
     if amenity_brand_replace:
         df_input2area['amenity'] = amenity_brand_replace[0]
@@ -213,17 +213,17 @@ def fuse_data_area(df_base2area, df_area, df_input, amenity_fuse=None, amenity_s
     df_base_temp = df_base_amenity[["geometry", "osm_id"]]      
     # find closest points to fuse, default max distance for fusion 150 meters
     # return 2 df - find closests and not
-    df_fus, df_not_fus = find_nearest(df_input2area, df_base_temp, 250)
+    df_fus, df_not_fus = find_nearest(df_input2area, df_base_temp, 500)
 
     fus_col_fus = columns2fuse
     fus_col_fus.append("osm_id")
     df_fus = df_fus[fus_col_fus]
 
     # Prepare input data for concatination
-    if columns2rename:
-        df_not_fus = df_not_fus.rename(columns=columns2rename)
     if columns2drop:
         df_not_fus = df_not_fus.drop(columns={*columns2drop})
+    if columns2rename:
+        df_not_fus = df_not_fus.rename(columns=columns2rename)
 
     if amenity_brand_fuse:
         df_not_fus['amenity'] = amenity_brand_fuse[0]
@@ -254,7 +254,7 @@ def fusion_set(config, result_name=None, return_type=None):
     rs_set = config.fusion["rs_set"]
     typen = ["geonode","geojson"]
 
-    df_base = geonode_table2df(con, table_base, geometry_column="geom")
+    df_base = geonode_table2df(con, table_base, geometry_column="geometry")
     df_area = area_n_buffer2df(con, rs_set, buffer=8300)
     df_base2area = df2area(df_base, df_area)
 

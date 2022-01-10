@@ -76,7 +76,7 @@ class Config:
 def classify_osm_tags(name):
     """helper function to help assign osm tags to their corresponding feature"""
     # import dict from conf_yaml
-    with open(Path(__file__).parent/'config.yaml', encoding="utf-8") as stream:
+    with open(Path(__file__).parent/'config/config.yaml', encoding="utf-8") as stream:
         config = yaml.safe_load(stream)
     var = config['VARIABLES_SET']
     temp = {}
@@ -110,14 +110,14 @@ def gdf_conversion(gdf, name=None, return_type=None):
     if return_type == "GeoJSON":
         print(f"Writing down the geojson file {name + '.geojson'} ...")
         start_time = time.time()
-        gdf.to_file(Path(__file__).parent/'data'/(name + '.geojson'), driver=return_type)
+        gdf.to_file(Path(__file__).parent/'data'/'output'/(name + '.geojson'), driver=return_type)
         print(f"Writing file {time.time() - start_time} seconds ---")
         print(f"GeoJSON {name + '.geojson'} was written.")
         return gdf, name
     elif return_type == "GPKG":
         print(f"Writing down the geopackage file {name + '.gpkg'} ...")
         start_time = time.time()
-        gdf.to_file(Path(__file__).parent/'data'/(name + '.gpkg'), driver=return_type)
+        gdf.to_file(Path(__file__).parent/'data'/'output'/(name + '.gpkg'), driver=return_type)
         print(f"Writing file {time.time() - start_time} seconds ---")
         print(f"GeoPackage {name + '.gpkg'} was written.")
         return gdf, name
@@ -195,7 +195,7 @@ def join_osm_pois_n_busstops(df_pois,  df_stops, df_pois_name=None, return_type=
 
 def osm_collect_buildings(name='buildings', driver=None):
     #import data from pois_coll_conf.yaml
-    with open(Path(__file__).parent/'config.yaml', encoding="utf-8") as stream:
+    with open(Path(__file__).parent/'config/config.yaml', encoding="utf-8") as stream:
         config = yaml.safe_load(stream)
     var = config['VARIABLES_SET']
 

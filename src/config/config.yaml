@@ -205,7 +205,7 @@ VARIABLES_SET :
               columns2rename : {"@spider" : "source"}
               columns2drop : ["ref","id"]
               column_set_value : {"operator": "denn's biomarkt"} # for all values in osm related to brand
-              columns2fuse : ["opening_hours", "addr:street", "housenumber", "addr:city", "addr:postcode", "addr:country", "phone","operator"] # no name column for denn's data   
+              columns2fuse : ["opening_hours", "addr:street", "housenumber", "addr:city", "addr:postcode", "addr:country", "phone","operator", "amenity"] # no name column for denn's data   
             alnatura_de:
               fusion_type : "fuse"
               amenity : 
@@ -305,7 +305,15 @@ VARIABLES_SET :
               columns2drop : ["ref", "id", "url"]
               column_set_value : {"brand": "Tegut"} # for all values in osm related to brand
               columns2fuse : ["phone", "addr:street", "housenumber" ,"addr:city", "addr:postcode", "addr:country", "brand"]
-
+            childcare_bayern_de:
+              fusion_type : "replace"
+              amenity : "kindergarten"
+              amenity_set : False
+              amenity_brand :
+              columns2rename : {"amenity_t" : "amenity"}
+              columns2drop : ["amenity", "age_group", "operator", "capacity", "year", "comment","addr:state"]
+              column_set_value : # for all values in osm related to brand
+              columns2fuse : 
 
   # Following config set treat the bug issue
   # Bug behavior "highway" -> "bus_stop"!!!!!!!!!!!!!!!!!!!!!!!!!! 

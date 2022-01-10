@@ -1,4 +1,5 @@
 #%%
+#%%
 import os
 import sys
 import yaml
@@ -7,11 +8,12 @@ import numpy as np
 import pandas as pd
 import geopandas as gpd
 from pathlib import Path
+
 from collection import Config, osm_collect_filter, gdf_conversion, bus_stop_conversion, join_osm_pois_n_busstops
-from preparation import file2df, landuse_preparation, pois_preparation, buildings_preparation, school_categorization,pois_preparation_set
+from preparation import file2df, landuse_preparation, pois_preparation, buildings_preparation, school_categorization,pois_preparation_set,kindergarten_deaggrgation
 
 # from fusion import geonode_connection, fusion_data_areas_rs_set
-# from fusion import replace_data_area, geonode_connection, geonode_table2df, area_n_buffer2df, df2area, df2geonode, fuse_data_area, fusion_set
+from fusion import replace_data_area, geonode_connection, geonode_table2df, area_n_buffer2df, df2area, df2geonode, fuse_data_area, fusion_set
 from db.db import Database
 
 # POIS Collection + Preparation
@@ -20,32 +22,38 @@ from db.db import Database
 #             "Unterfranken"]
 data_set = ["Mittelfranken"]
 
-# config = Config("pois")
-# config_buses = Config("bus_stops")
+config = Config("pois")
+config_buses = Config("bus_stops")
 
-##===================================Collection + Preparation POIs=============================================##
+##============================================================Collection + Preparation POIs==========================================================##
 
 #osm_collect_filter(config, pbf_region="Oberbayern", driver="GeoJSON", update=False)
 
 
-# data_name = "pois_bayern"
+data_name = "pois_bayern"
 
-# df = pois_preparation_set(config,config_buses, update=False,filename=data_name,return_type="GeoJSON")[0]
+# df = pois_preparation_set(config, config_buses, update=False, filename=data_name, return_type="GeoJSON")[0]
 
-# # Possible to upload to geonode
-# # df = file2df("pois_bayern.geojson")
+# # Convert pois_bayern file to DB Geonode (necessary to update layer manually then)
+# df = file2df("pois_bayern.geojson")
 # df2geonode(df,data_name)
 
 #==============================================================Fusion POIs===========================================================================##
 # ======  Fusion with config settings ====== #
 
-#df = fusion_set(config, "pois_fused", return_type="GeoJSON")
+# df = fusion_set(config, "pois_prepared_goat", return_type="GeoJSON")
 
-##==============================================================School preparation==================================================================##
+# df = file2df("pois_prepared_goat.geojson")
+# df2geonode(df,"pois_prepared_goat")
+
+##==============================================================School preparation===================================================================##
 
 # table_school = "jedeschule_geocode"
 # sc_df = geonode_table2df(con, table_school, geometry_column="geom")
 # school_categorization(sc_df, config, table_school, "GeoJSON")
+
+# df = file2df("childcare_bayern.geojson")
+# kindergarten_deaggrgation(df, "childcare_bayern_de", "GeoJSON")
 
 ##======================= Landuse Collection + Preparation + Export to GeoNode ==================##
 
