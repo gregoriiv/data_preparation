@@ -45,10 +45,10 @@ def osm_obj2points(df, geom_column = "geom"):
 def file2df(filename):
     name, extens = filename.split(".")
     if extens == "geojson":
-        file = open(Path(__file__).parent/'data'/filename, encoding="utf-8")
+        file = open(Path(__file__).parent/'data'/'input'/filename, encoding="utf-8")
         df = gp.read_file(file)
     elif extens == "gpkg":
-        file =  Path(__file__).parent/'data'/filename
+        file =  Path(__file__).parent/'data'/'input'/filename
         df = gp.read_file(file)
     else:
         print("Extension of file %s currently doen not support with file2df() function." % filename)
@@ -343,6 +343,23 @@ def pois_preparation(dataframe, config, return_type=None,result_name="pois_prepa
 
     return gdf_conversion(df,result_name,return_type)
 
+def pois_preparation_set(config,config_buses,update=False,filename=None,return_type=None):
+    df_res = pd.DataFrame()
+    data_set = config.pbf_data
+
+    for d in data_set:
+        pois_collection = osm_collect_filter(config, d, update=update)
+        pois_bus_collection = join_osm_pois_n_busstops(pois_collection[0],
+                                                    bus_stop_conversion(osm_collect_filter(config_buses,d)[0]),
+                                                    pois_collection[1])
+        temp_df = pois_preparation(dataframe=pois_bus_collection[0], config=config, result_name=pois_bus_collection[1])[0]
+        if data_set.index(d) == 0:
+            df_res = temp_df
+        else:
+            df_res = pd.concat([df_res,temp_df],sort=False).reset_index(drop=True)
+
+    return gdf_conversion(df_res, filename, return_type=return_type)
+
 # Preparation jedeschule table ->> conversion to fusable format
 def school_categorization(df, config, result_name, return_type):
     var = config.preparation
@@ -374,26 +391,23 @@ def school_categorization(df, config, result_name, return_type):
 
     df_result = pd.concat([df_base,df_grund,df_hauptmittel],sort=False)
 
-    # Should return 2 dataframes grundschule and mittel_haupt+schule
+    # Should return 2 dataframes grundschule and mittel_hauptschule
     return gdf_conversion(df_result,result_name,return_type)
 
-def pois_preparation_set(config,config_buses,update=False,filename=None,return_type=None):
-    df_res = pd.DataFrame()
-    data_set = config.pbf_data
+# function deaggregates childacare amenities to four groups according to value in "age_group" column
+def kindergarten_deaggrgation(df, result_name, return_type):
+    df.loc[df['age_group'] == '0-3', 'amenity_t'] = 'krippe'
+    df.loc[(df['age_group'] == '3-6') | (df['age_group'] == '2-6'), 'amenity_t'] = 'kindergarten'
+    df.loc[df['age_group'] == '6+', 'amenity_t'] = 'kinderhort'
 
-    for d in data_set:
-        pois_collection = osm_collect_filter(config, d, update=update)
-        pois_bus_collection = join_osm_pois_n_busstops(pois_collection[0],
-                                                    bus_stop_conversion(osm_collect_filter(config_buses,d)[0]),
-                                                    pois_collection[1])
-        temp_df = pois_preparation(dataframe=pois_bus_collection[0], config=config, result_name=pois_bus_collection[1])[0]
-        if data_set.index(d) == 0:
-            df_res = temp_df
-        else:
-            df_res = pd.concat([df_res,temp_df],sort=False).reset_index(drop=True)
+    df_temp = df[(df['age_group'] == '0-6') | (df['age_group'] == '1-6')]
+    df_temp['amenity_t'] = 'krippe'
 
-    return gdf_conversion(df_res, filename, return_type=return_type)
+    df.loc[(df['age_group'] == '0-6') | (df['age_group'] == '1-6'), 'amenity_t'] = 'kindergarten'
 
+    df_result = pd.concat([df,df_temp],sort=False).reset_index(drop=True)
+
+    return gdf_conversion(df_result, result_name,return_type)
 
 #================================ Landuse preparation ============================================#
 

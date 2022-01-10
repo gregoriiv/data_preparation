@@ -25,6 +25,8 @@ def getValue(d, attr):
     else:
         return ""
 
+# json should be FeatureCollection structured
+# if geometry exists it willbe replaced
 def addLocationOfAdressToJson(input_fpath,output_fpath,g_api_key,addr_class):
     g = geocoders.GoogleV3(api_key=g_api_key)
     osm = Nominatim(user_agent = "goat_community")
@@ -37,11 +39,15 @@ def addLocationOfAdressToJson(input_fpath,output_fpath,g_api_key,addr_class):
         try:
             location = g.geocode(address)
             g_point = Point((location.longitude, location.latitude))
-            i.pop('geometry')
+            try:
+                i.pop('geometry')
+            except:
+                pass
             i['geometry'] = g_point
         except:
             try:
                 location = osm.geocode(address)
+                print("osm")
                 osm_point = Point((location.longitude, location.latitude))
                 i['geometry'] = osm_point
             except:
