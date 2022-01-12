@@ -1,7 +1,5 @@
-# This function is used if the intersection with a landuse table results in one building intersecting both residential and not-residential 
-# category. 
-
-derive_dominant_class = '''
+--This function is used if the intersection with a landuse table results in one building intersecting both residential and not-residential 
+--category. 
 
 DROP FUNCTION IF EXISTS derive_dominant_class;
 CREATE OR REPLACE FUNCTION derive_dominant_class(bgid integer, categorization integer[], landuse_gids integer[], landuse_table TEXT)
@@ -45,5 +43,3 @@ BEGIN
 	RETURN dominant_class;
 END
 $$ LANGUAGE plpgsql;
-
-'''
