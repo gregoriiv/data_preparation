@@ -3,7 +3,7 @@ import os, glob
 import subprocess
 from db.config import DATABASE
 
-from common_import_functions import BulkImport
+from src.import.common_import_functions import BulkImport
 
 
 # Creating a .pgpass for autu-authentication

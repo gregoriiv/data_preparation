@@ -1,6 +1,6 @@
 import argparse
 
-from common_import_functions import initialize_import
+from src.import.common_import_functions import initialize_import
 from bulk_import_geotiff import bulk_import_geotiff
 
 ap = argparse.ArgumentParser()
