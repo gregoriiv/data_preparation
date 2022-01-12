@@ -1,6 +1,7 @@
 .env
 env
 venv
-data
+data/input
+data/output
 __pycache__
 db.yaml
