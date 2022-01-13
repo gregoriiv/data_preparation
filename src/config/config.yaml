@@ -88,8 +88,6 @@ VARIABLES_SET :
         dm       : ["dm"]
         rossmann : ["rossmann"]
         müller   : ["müller", "mueller"] 
-  
-      nursery : ["krippe", "kinderkrippe", "kita"]
 
       fast_food: 
         mcdonalds : ["mcdonald"]
@@ -136,6 +134,7 @@ VARIABLES_SET :
     
       community_sport_centre: ["bezirkssportanlage"]
 
+      # Not used (operators for various cities in Germany are too different)
       operators_bicycle_rental: ["münchner verkehrs gesellschaft", "münchner verkehrsgesellschaft", "mvg"]
     
       sport:
@@ -143,6 +142,7 @@ VARIABLES_SET :
         leisure_var_add  : ["sports_hall", "fitness_center", "sport_center", "track", "pitch"]
         leisure_var_disc : ["fitness_station"]
       
+      # Schools config relevant for preparation separate file and subsequent fusion of file
       schools:
         schule: ['Grundschule','Gymnasium','Realschule','Werkrealschule']
         grundschule: ['Grund- und Teilhauptschule','Grund- und Hauptschule','Grund- und Mittelschule']
@@ -164,7 +164,7 @@ VARIABLES_SET :
               fusion_type : "replace" 
               amenity : "doctors"
               amenity_set : False
-              amenity_brand : 
+              amenity_operator : 
               columns2rename : {"category": "amenity", "extras": "tags", "spider": "source"}
               columns2drop : ["id", "ref", "layer", "path"]
               column_set_value : 
@@ -174,7 +174,7 @@ VARIABLES_SET :
               fusion_type : "fuse"
               amenity :
               amenity_set : False
-              amenity_brand : ("chemist","dm")
+              amenity_operator : ("chemist","dm")
               columns2rename : 
               columns2drop : ["ref","id"]
               column_set_value : {"brand" : "dm-drogerie markt", "source" : "dm_de"} # for all values
@@ -183,7 +183,7 @@ VARIABLES_SET :
               fusion_type : "fuse"
               amenity :
               amenity_set : False 
-              amenity_brand : ("chemist","Müller")
+              amenity_operator : ("chemist","Müller")
               columns2rename : 
               columns2drop : ["ref","id", "@spider"]
               column_set_value : {"brand" : "Müller", "source": "mueller_de"} # for all values in osm related to brand
@@ -192,7 +192,7 @@ VARIABLES_SET :
               fusion_type : "replace"
               amenity : "pharmacy"
               amenity_set : True
-              amenity_brand : 
+              amenity_operator : 
               columns2rename : {"@spider" : "source"}
               columns2drop : ["ref","id", "fax"]
               column_set_value : 
@@ -201,7 +201,7 @@ VARIABLES_SET :
               fusion_type : "fuse"
               amenity : "organic"
               amenity_set : False
-              amenity_brand : 
+              amenity_operator : 
               columns2rename : {"@spider" : "source"}
               columns2drop : ["ref","id"]
               column_set_value : {"operator": "denn's biomarkt"} # for all values in osm related to brand
@@ -210,7 +210,7 @@ VARIABLES_SET :
               fusion_type : "fuse"
               amenity : 
               amenity_set : False
-              amenity_brand : ("organic","Alnatura")
+              amenity_operator : ("organic","Alnatura")
               columns2rename : {"@spider" : "source"}
               columns2drop : ["ref","id"]
               column_set_value : {"brand": "Alnatura"} # for all values in osm related to brand
@@ -219,7 +219,7 @@ VARIABLES_SET :
               fusion_type : "fuse"
               amenity : 
               amenity_set : False
-              amenity_brand : ("bank","Commerzbank") # issues with brand - operator
+              amenity_operator : ("bank","Commerzbank") # issues with brand - operator
               columns2rename : {"@spider" : "source"}
               columns2drop : ["ref","id", "fax", "email","barriere_type", "cash_register", "vault", "cashback", "cashgroup"]
               column_set_value : {"brand": "Commerzbank"} # for all values in osm related to brand
@@ -228,7 +228,7 @@ VARIABLES_SET :
               fusion_type : "fuse"
               amenity : 
               amenity_set : False
-              amenity_brand : ("hypermarket","Kaufland")
+              amenity_operator : ("hypermarket","Kaufland")
               columns2rename : {"@spider" : "source"}
               columns2drop : ["ref","id","brand:wikidata"]
               column_set_value : {"brand": "Kaufland"} # for all values in osm related to brand
@@ -237,7 +237,7 @@ VARIABLES_SET :
               fusion_type : "fuse"
               amenity : 
               amenity_set : False
-              amenity_brand : ("discount_supermarket","Lidl")
+              amenity_operator : ("discount_supermarket","Lidl")
               columns2rename : {"@spider" : "source"}
               columns2drop : ["ref","id", "brand:wikidata"]
               column_set_value : {"brand": "Lidl"} # for all values in osm related to brand
@@ -246,7 +246,7 @@ VARIABLES_SET :
               fusion_type : "fuse"
               amenity : 
               amenity_set : False
-              amenity_brand : ("discount_supermarket","Norma")
+              amenity_operator : ("discount_supermarket","Norma")
               columns2rename : {"@spider" : "source"}
               columns2drop : ["ref","id"]
               column_set_value : {"brand": "Norma"} # for all values in osm related to brand
@@ -255,7 +255,7 @@ VARIABLES_SET :
               fusion_type : "fuse"
               amenity : 
               amenity_set : False
-              amenity_brand : ("discount_supermarket","Penny")
+              amenity_operator : ("discount_supermarket","Penny")
               columns2rename : {"@spider" : "source"}
               columns2drop : ["ref","id", "brand:wikidata"]
               column_set_value : {"brand": "Penny"} # for all values in osm related to brand
@@ -264,7 +264,7 @@ VARIABLES_SET :
               fusion_type : "replace"
               amenity : "post_office"
               amenity_set : True
-              amenity_brand :
+              amenity_operator :
               columns2rename : {"@spider" : "source"}
               columns2drop : ["ref", "id", "addr:district", "locationType"]
               column_set_value : {"brand": "Deutschepost"} # for all values in osm related to brand
@@ -273,7 +273,7 @@ VARIABLES_SET :
               fusion_type : "replace"
               amenity : "post_paketshop"
               amenity_set : True
-              amenity_brand :
+              amenity_operator :
               columns2rename : {"@spider" : "source"}
               columns2drop : ["ref","id", "addr:district", "locationType"]
               column_set_value : # for all values in osm related to brand
@@ -282,7 +282,7 @@ VARIABLES_SET :
               fusion_type : "replace"
               amenity : "school"
               amenity_set : False
-              amenity_brand :
+              amenity_operator :
               columns2rename : 
               columns2drop : ["index", "id_2", "id_1", "id_0", "fid", "address", "fax", "full_time_", "id", "lat", "lon", "official_i", "school_typ", "school_t_1", "state"]
               column_set_value : {"source": "jedeschule"} # for all values in osm related to brand
@@ -291,7 +291,7 @@ VARIABLES_SET :
               fusion_type : "fuse"
               amenity : 
               amenity_set : False
-              amenity_brand : ("health_food", "Vitalia")
+              amenity_operator : ("health_food", "Vitalia")
               columns2rename : {"@spider" : "source"}
               columns2drop : ["ref", "id", "email", "website", "category"]
               column_set_value : {"brand": "Vitalia"} # for all values in osm related to brand
@@ -300,7 +300,7 @@ VARIABLES_SET :
               fusion_type : "fuse"
               amenity : 
               amenity_set : False
-              amenity_brand : ("supermarket", "tegut")
+              amenity_operator : ("supermarket", "tegut")
               columns2rename : {"@spider" : "source"}
               columns2drop : ["ref", "id", "url"]
               column_set_value : {"brand": "Tegut"} # for all values in osm related to brand
@@ -309,7 +309,7 @@ VARIABLES_SET :
               fusion_type : "replace"
               amenity : "kindergarten"
               amenity_set : False
-              amenity_brand :
+              amenity_operator :
               columns2rename : {"amenity_t" : "amenity"}
               columns2drop : ["amenity", "age_group", "operator", "capacity", "year", "comment","addr:state"]
               column_set_value : # for all values in osm related to brand

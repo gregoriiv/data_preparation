@@ -9,7 +9,7 @@ import numpy as np
 import pandas as pd
 import geopandas as gp
 from pandas.core.accessor import PandasDelegate
-from collection import gdf_conversion, osm_collect_filter, bus_stop_conversion, join_osm_pois_n_busstops
+from collection import Config, gdf_conversion, osm_collect_filter, bus_stop_conversion, join_osm_pois_n_busstops
 gp.options.use_pygeos = True
 
 #================================== POIs preparation =============================================#
@@ -343,8 +343,13 @@ def pois_preparation(dataframe, config, return_type=None,result_name="pois_prepa
 
     return gdf_conversion(df,result_name,return_type)
 
-def pois_preparation_set(config,config_buses,update=False,filename=None,return_type=None):
+def pois_preparation_set(config=None,config_buses=None,update=False,filename=None,return_type=None):
     df_res = pd.DataFrame()
+    if not config:
+        config = Config("pois")
+    if not config_buses:
+        config_buses = Config("bus_stops")
+        
     data_set = config.pbf_data
 
     for d in data_set:
@@ -396,12 +401,12 @@ def school_categorization(df, config, result_name, return_type):
 
 # function deaggregates childacare amenities to four groups according to value in "age_group" column
 def kindergarten_deaggrgation(df, result_name, return_type):
-    df.loc[df['age_group'] == '0-3', 'amenity_t'] = 'krippe'
+    df.loc[df['age_group'] == '0-3', 'amenity_t'] = 'nursery'
     df.loc[(df['age_group'] == '3-6') | (df['age_group'] == '2-6'), 'amenity_t'] = 'kindergarten'
     df.loc[df['age_group'] == '6+', 'amenity_t'] = 'kinderhort'
 
     df_temp = df[(df['age_group'] == '0-6') | (df['age_group'] == '1-6')]
-    df_temp['amenity_t'] = 'krippe'
+    df_temp['amenity_t'] = 'nursery'
 
     df.loc[(df['age_group'] == '0-6') | (df['age_group'] == '1-6'), 'amenity_t'] = 'kindergarten'
 
