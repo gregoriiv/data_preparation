@@ -72,8 +72,7 @@ VARIABLES_SET :
         sport   : ["yoga", "fitness"]
 
       additional_columns: ["name", "brand", "addr:street","addr:housenumber", "addr:postcode", "addr:city", "addr:country", "phone", "website", 
-                           "open
-      table_base  : "ping_hours", "operator", "origin", "organic", "public_transport", "subway"]
+                           "opening_hours", "operator", "origin", "organic", "public_transport", "subway"]
       points    : True
       polygons  : True
       lines     : True
@@ -140,8 +139,7 @@ VARIABLES_SET :
     
       sport:
         sport_var_disc   : ["table_tennis"]
-        leisure_var_add  : ["sports_hall", "fitness
-      table_base  : "p_center", "sport_center", "track", "pitch"]
+        leisure_var_add  : ["sports_hall", "fitness_center", "sport_center", "track", "pitch"]
         leisure_var_disc : ["fitness_station"]
       
       # Schools config relevant for preparation separate file and subsequent fusion of file
@@ -265,15 +263,15 @@ VARIABLES_SET :
               amenity_set : True
               amenity_operator :
               columns2rename : {"@spider" : "source"}
-              column_set_value : # for all values in osm related to brand
+              column_set_value : {"brand": "Deutschepost"} # for all values in osm related to brand
               columns2fuse : ["name", "source", "brand", "addr:street", "housenumber", "addr:city", "addr:postcode", "addr:country", "opening_hours"]
             jedeschule_geocode:
               fusion_type : "replace"
               amenity : "school"
               amenity_set : False
               amenity_operator :
-              columns2rename : 
-              column_set_value : {"source": "jedeschule", "official_i": "osm_id"} # for all values in osm related to brand
+              columns2rename : {"official_i": "osm_id"}
+              column_set_value : {"source": "jedeschule"} # for all values in osm related to brand
               columns2fuse : ["name", "source", "osm_id", "amenity"] # , "addr:street", "housenumber", "addr:city", "addr:postcode", "addr:country", "opening_hours"
             vitalia:
               fusion_type : "fuse"
