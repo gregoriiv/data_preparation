@@ -56,7 +56,7 @@ The last subcategory **"schools"** specifies the configuration for preparing a f
         exclude: [...]
 ...
 ```
-Collection and preparation of data are possible in one step with the function **_pois_preparation_set()_**, where by default a dataframe is returned, which can subsequently be exported to the GOAT database. The function is able to accept the following variables (_config_, _config_buses_, _update_, _filename_, _return_type_). The variables **_config_**, **_config_buses_** can be user-defined, but are defined inside the function by default. The update(True or False) variable determines whether data will be downloaded from the OSM for processing or whether local data previously downloaded will be used. The default is **False**. Also the result of the operation can be saved as a file. For this purpose, you can use variables **filename** and **return_type**, in which you can specify file name and extension respectively. At the moment, the extensions **"GeoJSON"** and **"GPKG"** are supported, which can be defined in **return_type**.
+Collection and preparation of data are possible in one step with the function **_pois_preparation_set()_**, where by default a dataframe is returned, which can subsequently be exported to the GOAT database. The function is able to accept the following variables (_config_, _config_buses_, _update_, _filename_, _return_type_). The variables **_config_**, **_config_buses_** can be user-defined, but are defined inside the function by default. The update(True or False) variable determines whether data will be downloaded from the OSM for processing or whether local data previously downloaded will be used. The default is **False**. Also the result of the operation can be saved as a file in _crs/data/output_. For this purpose, you can use variables **filename** and **return_type**, in which you can specify file name and extension respectively. At the moment, the extensions **"GeoJSON"** and **"GPKG"** are supported, which can be defined in **return_type**. 
 ## Fusion
 The fusion settings are in the corresponding subcategory. The fusion process uses data from GeoNode tables. The **_table_base_** specifies the name of the table with the POIs data prepared in the Collection/Prepare step.  
 The table below shows the data format of the POIs table used in the GOAT. **!!! Fusion and replacement can only be done by the column names specified in the table.**
@@ -121,7 +121,7 @@ Next comes a subcategory containing settings for data that will be integrated in
               ...
 ...              
 ```
-Fusion is done with a single function **fusion_set()**, which by default returns the dataframe. It is possible to save the result of fusion as a file if the _result_filename_ and _return_type_ variables are defined. For example, **fusion_set(result_name="pois_result", return_type="GeoJSON")**. At the moment, the extensions **"GeoJSON"** and **"GPKG"** are supported.
+Fusion is done with a single function **fusion_set()**, which by default returns the dataframe. It is possible to save the result of fusion as a file if the _result_filename_ and _return_type_ variables are defined. For example, **fusion_set(result_name="pois_result", return_type="GeoJSON")**. At the moment, the extensions **"GeoJSON"** and **"GPKG"** are supported. Result file will be saved in _crs/data/output_
 
 ## 
 ### Temporary Bug Fix
