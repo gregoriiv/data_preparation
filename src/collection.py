@@ -65,7 +65,7 @@ class Config:
 
     def fusion_set(self,typ,key):
         fus = self.fusion["fusion_data"]["source"][typ][key]
-        fus_set = fus["amenity"],fus["amenity_set"],fus["amenity_brand"],fus["columns2rename"],fus["columns2drop"],fus["column_set_value"], fus["columns2fuse"]
+        fus_set = fus["amenity"],fus["amenity_set"],fus["amenity_operator"],fus["columns2rename"], fus["column_set_value"], fus["columns2fuse"]
         return fus_set
     
     def fusion_type(self, typ, key):

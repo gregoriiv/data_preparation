@@ -159,16 +159,15 @@ VARIABLES_SET :
                      "091780145"]
       fusion_data :
         source:
-          geonode:
+          database:
             doctors_bavaria:
               fusion_type : "replace" 
               amenity : "doctors"
               amenity_set : False
               amenity_operator : 
               columns2rename : {"category": "amenity", "extras": "tags", "spider": "source"}
-              columns2drop : ["id", "ref", "layer", "path"]
               column_set_value : 
-              columns2fuse : 
+              columns2fuse : ["amenity", "tags", "source", "name", "opening_hours", "phone", "addr:street", "housenumber" ,"addr:city", "addr:postcode", "addr:country", "website"]
           geojson:
             dm:
               fusion_type : "fuse"
@@ -176,144 +175,128 @@ VARIABLES_SET :
               amenity_set : False
               amenity_operator : ("chemist","dm")
               columns2rename : 
-              columns2drop : ["ref","id"]
               column_set_value : {"brand" : "dm-drogerie markt", "source" : "dm_de"} # for all values
-              columns2fuse : ["opening_hours", "phone", "addr:street", "housenumber" ,"addr:city", "addr:postcode", "addr:country", "brand"]
+              columns2fuse : ["name", "source", "opening_hours", "phone", "addr:street", "housenumber" ,"addr:city", "addr:postcode", "addr:country", "brand"]
             mueller:
               fusion_type : "fuse"
               amenity :
               amenity_set : False 
               amenity_operator : ("chemist","Müller")
               columns2rename : 
-              columns2drop : ["ref","id", "@spider"]
               column_set_value : {"brand" : "Müller", "source": "mueller_de"} # for all values in osm related to brand
-              columns2fuse : ["opening_hours", "addr:street", "housenumber", "addr:city", "addr:postcode", "addr:country", "name", "brand"]
+              columns2fuse : ["source", "opening_hours", "addr:street", "housenumber", "addr:city", "addr:postcode", "addr:country", "name", "brand"]
             apotheken_de:
               fusion_type : "replace"
               amenity : "pharmacy"
               amenity_set : True
               amenity_operator : 
               columns2rename : {"@spider" : "source"}
-              columns2drop : ["ref","id", "fax"]
               column_set_value : 
-              columns2fuse :
+              columns2fuse : ["amenity", "source", "name", "phone", "addr:street", "housenumber" ,"addr:city", "addr:postcode", "addr:country"]
             denns_de:
               fusion_type : "fuse"
               amenity : "organic"
               amenity_set : False
               amenity_operator : 
               columns2rename : {"@spider" : "source"}
-              columns2drop : ["ref","id"]
-              column_set_value : {"operator": "denn's biomarkt"} # for all values in osm related to brand
-              columns2fuse : ["opening_hours", "addr:street", "housenumber", "addr:city", "addr:postcode", "addr:country", "phone","operator", "amenity"] # no name column for denn's data   
+              column_set_value : {"operator": "denn's biomarkt", "name" : "denn's Biomarkt"} # for all values in osm related to brand
+              columns2fuse : ["name", "source", "opening_hours", "addr:street", "housenumber", "addr:city", "addr:postcode", "addr:country", "phone","operator"] # no name column for denn's data   
             alnatura_de:
               fusion_type : "fuse"
               amenity : 
               amenity_set : False
               amenity_operator : ("organic","Alnatura")
               columns2rename : {"@spider" : "source"}
-              columns2drop : ["ref","id"]
               column_set_value : {"brand": "Alnatura"} # for all values in osm related to brand
-              columns2fuse : ["opening_hours", "addr:street", "housenumber", "addr:city", "addr:postcode", "addr:country", "name", "phone", "brand"]
+              columns2fuse : ["opening_hours", "source", "addr:street", "housenumber", "addr:city", "addr:postcode", "addr:country", "name", "phone", "brand"]
             commerzbank_de:
               fusion_type : "fuse"
               amenity : 
               amenity_set : False
               amenity_operator : ("bank","Commerzbank") # issues with brand - operator
               columns2rename : {"@spider" : "source"}
-              columns2drop : ["ref","id", "fax", "email","barriere_type", "cash_register", "vault", "cashback", "cashgroup"]
               column_set_value : {"brand": "Commerzbank"} # for all values in osm related to brand
-              columns2fuse : ["opening_hours", "addr:street", "housenumber", "addr:city", "addr:postcode", "addr:country", "name", "phone", "brand"]
+              columns2fuse : ["opening_hours", "source", "addr:street", "housenumber", "addr:city", "addr:postcode", "addr:country", "name", "phone", "brand"]
             kaufland:
               fusion_type : "fuse"
               amenity : 
               amenity_set : False
               amenity_operator : ("hypermarket","Kaufland")
               columns2rename : {"@spider" : "source"}
-              columns2drop : ["ref","id","brand:wikidata"]
               column_set_value : {"brand": "Kaufland"} # for all values in osm related to brand
-              columns2fuse : ["opening_hours", "addr:street", "housenumber", "addr:city", "addr:postcode", "addr:country", "name", "phone", "website", "brand"]
+              columns2fuse : ["source", "opening_hours", "addr:street", "housenumber", "addr:city", "addr:postcode", "addr:country", "name", "phone", "website", "brand"]
             lidl:
               fusion_type : "fuse"
               amenity : 
               amenity_set : False
               amenity_operator : ("discount_supermarket","Lidl")
               columns2rename : {"@spider" : "source"}
-              columns2drop : ["ref","id", "brand:wikidata"]
               column_set_value : {"brand": "Lidl"} # for all values in osm related to brand
-              columns2fuse : ["opening_hours", "addr:street", "housenumber", "addr:city", "addr:postcode", "addr:country", "name", "brand"]
+              columns2fuse : ["source", "opening_hours", "addr:street", "housenumber", "addr:city", "addr:postcode", "addr:country", "name", "brand"]
             norma_de:
               fusion_type : "fuse"
               amenity : 
               amenity_set : False
               amenity_operator : ("discount_supermarket","Norma")
               columns2rename : {"@spider" : "source"}
-              columns2drop : ["ref","id"]
-              column_set_value : {"brand": "Norma"} # for all values in osm related to brand
-              columns2fuse : ["opening_hours", "addr:street", "housenumber", "addr:city", "addr:postcode", "addr:country", "brand"]
+              column_set_value : {"brand": "Norma", "name" : "Norma"} # for all values in osm related to brand
+              columns2fuse : ["name", "source", "opening_hours", "addr:street", "housenumber", "addr:city", "addr:postcode", "addr:country", "brand"]
             penny:
               fusion_type : "fuse"
               amenity : 
               amenity_set : False
               amenity_operator : ("discount_supermarket","Penny")
               columns2rename : {"@spider" : "source"}
-              columns2drop : ["ref","id", "brand:wikidata"]
               column_set_value : {"brand": "Penny"} # for all values in osm related to brand
-              columns2fuse : ["addr:street", "addr:city", "addr:postcode", "addr:country", "name", "brand"]
+              columns2fuse : ["source", "addr:street", "addr:city", "addr:postcode", "addr:country", "name", "brand"]
             deutschepost_filiale:
               fusion_type : "replace"
               amenity : "post_office"
               amenity_set : True
               amenity_operator :
               columns2rename : {"@spider" : "source"}
-              columns2drop : ["ref", "id", "addr:district", "locationType"]
               column_set_value : {"brand": "Deutschepost"} # for all values in osm related to brand
-              columns2fuse : ["addr:street", "housenumber", "addr:city", "addr:postcode", "addr:country", "opening_hours"]
+              columns2fuse : ["name", "source", "brand", "addr:street", "housenumber", "addr:city", "addr:postcode", "addr:country", "opening_hours"]
             deutschepost_paketshop:
               fusion_type : "replace"
               amenity : "post_paketshop"
               amenity_set : True
               amenity_operator :
               columns2rename : {"@spider" : "source"}
-              columns2drop : ["ref","id", "addr:district", "locationType"]
-              column_set_value : # for all values in osm related to brand
-              columns2fuse : ["addr:street", "housenumber", "addr:city", "addr:postcode", "addr:country", "opening_hours"]
+              column_set_value : {"brand": "Deutschepost"} # for all values in osm related to brand
+              columns2fuse : ["name", "source", "brand", "addr:street", "housenumber", "addr:city", "addr:postcode", "addr:country", "opening_hours"]
             jedeschule_geocode:
               fusion_type : "replace"
               amenity : "school"
               amenity_set : False
               amenity_operator :
-              columns2rename : 
-              columns2drop : ["index", "id_2", "id_1", "id_0", "fid", "address", "fax", "full_time_", "id", "lat", "lon", "official_i", "school_typ", "school_t_1", "state"]
+              columns2rename : {"official_i": "osm_id"}
               column_set_value : {"source": "jedeschule"} # for all values in osm related to brand
-              columns2fuse : 
+              columns2fuse : ["name", "source", "osm_id", "amenity"] # , "addr:street", "housenumber", "addr:city", "addr:postcode", "addr:country", "opening_hours"
             vitalia:
               fusion_type : "fuse"
               amenity : 
               amenity_set : False
               amenity_operator : ("health_food", "Vitalia")
               columns2rename : {"@spider" : "source"}
-              columns2drop : ["ref", "id", "email", "website", "category"]
               column_set_value : {"brand": "Vitalia"} # for all values in osm related to brand
-              columns2fuse : ["opening_hours", "phone", "addr:street", "housenumber" ,"addr:city", "addr:postcode", "addr:country", "brand"]
+              columns2fuse : ["name", "source", "opening_hours", "phone", "addr:street", "housenumber" ,"addr:city", "addr:postcode", "addr:country", "brand"]
             tegut:
               fusion_type : "fuse"
               amenity : 
               amenity_set : False
               amenity_operator : ("supermarket", "tegut")
               columns2rename : {"@spider" : "source"}
-              columns2drop : ["ref", "id", "url"]
-              column_set_value : {"brand": "Tegut"} # for all values in osm related to brand
-              columns2fuse : ["phone", "addr:street", "housenumber" ,"addr:city", "addr:postcode", "addr:country", "brand"]
+              column_set_value : {"brand": "Tegut"} 
+              columns2fuse : ["name", "source", "phone", "addr:street", "housenumber" ,"addr:city", "addr:postcode", "addr:country", "brand"]
             childcare_bayern_de:
               fusion_type : "replace"
               amenity : "kindergarten"
               amenity_set : False
               amenity_operator :
-              columns2rename : {"amenity_t" : "amenity"}
-              columns2drop : ["amenity", "age_group", "operator", "capacity", "year", "comment","addr:state"]
-              column_set_value : # for all values in osm related to brand
-              columns2fuse : 
+              columns2rename : {"street" : "addr:street", "zipcode" : "addr:postcode", "municipality" : "addr:city"}
+              column_set_value : 
+              columns2fuse : ["amenity", "source", "name", "addr:street" , "housenumber" ,"addr:city", "addr:postcode"]
 
   # Following config set treat the bug issue
   # Bug behavior "highway" -> "bus_stop"!!!!!!!!!!!!!!!!!!!!!!!!!! 

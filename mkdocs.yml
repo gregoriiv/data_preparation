@@ -1,3 +1,4 @@
 site_name: GOAT Documentation
 theme:
   name: material
+  markdown_extensions: tables

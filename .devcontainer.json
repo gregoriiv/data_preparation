@@ -5,7 +5,7 @@
     "dockerComposeFile": [
         "docker-compose.yml"
     ],
-    "service": "db",
+    "service": "app",
     "workspaceFolder": "/app",
     "shutdownAction": "none",
     // Add the IDs of extensions you want installed when the container is created.
@@ -15,9 +15,8 @@
 		"ms-toolsai.jupyter-keymap"
 	],
     "settings": {
-        "python.defaultInterpreterPath": "/opt/venv/bin/python",
-        "python.formatting.provider":"black",
-        "python.formatting.blackPath":"/opt/venv/bin/black",
+        "python.defaultInterpreterPath": "/usr/local/bin/python",
+        "python.formatting.provider": "black",
         "python.linting.enabled": true,
         "python.linting.pylintEnabled": true
     }

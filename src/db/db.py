@@ -6,9 +6,10 @@
 import logging as LOGGER
 import psycopg2
 from sqlalchemy import create_engine
-from db.config import DATABASE
+from db.config import DATABASE, DATABASE_RD
 
 user,password,host,port,dbname = DATABASE.values()
+user_rd,password_rd,host_rd,port_rd,dbname_rd = DATABASE_RD.values()
 
 class Database:
     """PostgreSQL Database class."""
@@ -28,11 +29,34 @@ class Database:
             finally:
                 LOGGER.info('Connection opened successfully.')
         return self.conn
+    def connect_rd(self):
+        """Connect to a Postgres database."""
+        if self.conn is None:
+            try:
+                connection_string = " ".join(("{}={}".format(*i) for i in DATABASE_RD.items()))
+                self.conn = psycopg2.connect(connection_string)
+            except psycopg2.DatabaseError as e:
+                LOGGER.error(e)
+                raise e
+            finally:
+                LOGGER.info('Connection opened successfully.')
+        return self.conn
     def connect_sqlalchemy(self):
         """Connect to a Postgres database with engine"""
         if self.conn is None:
             try:
                 self.conn = create_engine(f"postgresql://{user}:{password}@{host}:{port}/{dbname}")
+            except Exception as e:
+                LOGGER.error(e)
+                raise e
+            finally:
+                LOGGER.info('Connection opened successfully.')
+        return self.conn
+    def connect_rd_sqlalchemy(self):
+        """Connect to a Postgres database with engine"""
+        if self.conn is None:
+            try:
+                self.conn = create_engine(f"postgresql://{user_rd}:{password_rd}@{host_rd}:{port_rd}/{dbname_rd}")
             except Exception as e:
                 LOGGER.error(e)
                 raise e
