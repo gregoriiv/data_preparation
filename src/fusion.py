@@ -14,7 +14,7 @@ from db.config import DATABASE
 # Create connection to database db
 def database_connection():
     db = Database()
-    con = db.connect()
+    con = db.connect_rd()
     return con
 
 # Publish dataframe in remote database  
