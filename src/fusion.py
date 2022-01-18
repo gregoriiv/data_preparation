@@ -213,8 +213,9 @@ def fuse_data_area(df_base2area, df_area, df_input, amenity_fuse=None, amenity_s
     # return 2 df - find closests and not
     df_fus, df_not_fus = find_nearest(df_input2area, df_base_temp, 500)
 
-    fus_col_fus = columns2fuse
+    fus_col_fus = columns2fuse.copy()
     fus_col_fus.append("osm_id")
+    fus_col_fus.remove("source")
     df_fus = df_fus[fus_col_fus]
 
     # Prepare input data for concatination
@@ -226,11 +227,11 @@ def fuse_data_area(df_base2area, df_area, df_input, amenity_fuse=None, amenity_s
     if amenity_brand_fuse:
         df_not_fus['amenity'] = amenity_brand_fuse[0]
         df_not_fus['operator'] = amenity_brand_fuse[1].lower()
-        columns2fuse.extend(('amenity', 'operator', 'source', 'geometry'))
+        columns2fuse.extend(('amenity', 'operator', 'geometry'))
         df_not_fus = df_not_fus[columns2fuse]
     elif amenity_set:
         df_not_fus['amenity'] = amenity_fuse.lower()
-        columns2fuse.extend(('amenity', 'source', 'geometry'))
+        columns2fuse.extend(('amenity', 'geometry'))
         df_not_fus = df_not_fus[columns2fuse]
     # df_not_fus['amenity'] = df_not_fus['amenity'].str.lower()
 

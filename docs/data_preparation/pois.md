@@ -1,15 +1,15 @@
 # Prepare POIs
 HowTo for preparation of Points of Interest to GOAT database format.  
   
-All settings for the subsequent preprocessing of the data are used by the file config.yaml. The **"pois"** section provides settings for "collection", "preparation" and "fusion" in the corresponding categories. 
-In the header of the configuration file there is an attribute "region_pbf" in which as a list the regions for which the data collection and preparation will be performed. 
+All settings for the subsequent preprocessing of the data are used by the file **_config.yaml_**. The **"pois"** section provides settings for **_"collection"_, _"preparation"_** and **_"fusion"_** in the corresponding categories. 
+In the header of the configuration file there is an attribute _**"region_pbf"**_ in which as a list the regions for which the data collection and preparation will be performed. 
 !!! WARNING Be careful with the choice of region! Too large size and as a consequence, a large amount of data in the OSM for the region may significantly load the operating memory of the computer used and end in failure of the operation.!!!  
 ## Collection/Preparation
 ### Collection
-In the "collection" subsection, "osm_tags" is specified first. It specifies all kinds of points of interest to be collected from the OSM database. All tags should be correctly categorized by "amenity", "shop", etc. according to the OSM documentation. When placing tags in the wrong category, selected points of interest will not be collected.  
-There is an auxiliary function that allows you to automatically assign the desired tags to existing categories. ***  
+In the "collection" subsection, "osm_tags" is specified first. It specifies all kinds of points of interest to be collected from the OSM database. All tags should be correctly categorized by _"amenity", "shop",_ etc. according to the OSM documentation. When placing tags in the wrong category, selected points of interest will not be collected.  
+There is an auxiliary function that allows you to automatically assign the desired tags to existing categories.   
 The next sub-section contains the names of all attributes of the collected objects which will be converted into columns to be placed in the GOAT database. All attributes not specified here will be collected in the "tags" column in json format.  
-The subsequent "points", "polygons" and "lines" subsections can be defined as True or False, determining which types of geometries will be collected from the OSM database. !!! WARNING. Due to the existing bug in the "pyrosm" library it is NOT RECOMMENDED to change these settings!!! 
+The subsequent _"points", "polygons"_ and _"lines"_ subsections can be defined as True or False, determining which types of geometries will be collected from the OSM database. !!! WARNING. Due to the existing bug in the **"pyrosm"** library it is NOT RECOMMENDED to change these settings!!! 
 ```yaml
 VARIABLES_SET:
 region_pbf : ["Mittelfranken", ...]
@@ -97,7 +97,7 @@ Next comes a subcategory containing settings for data that will be integrated in
   
 **column_set_value** - allows to create a column and assign a pre-fusion value to it. For example, create a source column and specify the value.
   
-**columns2fuse** - here should be specified the names of those columns in the input data whose contents will be integrated into the final table.
+**columns2fuse** - here should be specified the names of those columns in the input data whose contents will be integrated into the final table. **Important! "amenity", "operator" and "geometry" should not be defined in list, it will be attached automatically.**
 
 ```yaml
 ...
