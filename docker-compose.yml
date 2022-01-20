@@ -8,7 +8,7 @@ volumes:
 
 services:
   app:
-    image: ${DOCKER_ID}/${COMPOSE_PROJECT_NAME}:data_preparation-${PROJECT_VERSION}
+    image: ${DOCKER_ID}/${COMPOSE_PROJECT_NAME}:app-${PROJECT_VERSION}
     build:
       context: .
       args:
@@ -29,4 +29,20 @@ services:
     networks:
       data_preparation_proxy:
 
-
+  db:
+    image: ${DOCKER_ID}/${COMPOSE_PROJECT_NAME}:db-${PROJECT_VERSION}
+    build: .
+    container_name: ${COMPOSE_PROJECT_NAME}_db
+    environment:
+      - POSTGRES_PASS=${POSTGRES_PASSWORD}
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_DBNAME=goat
+      - DATABASE_URL=postgis://${POSTGRES_USER}:${POSTGRES_PASSWORD}@goat_db:5432/goat
+    volumes:
+      - db_data_preparation:/var/lib/postgresql
+      - .:/app
+    ports:
+      - "${POSTGRES_OUTER_PORT}:5432"
+    restart: on-failure
+    networks:
+      data_preparation_proxy:
