@@ -24,18 +24,25 @@ class H3Grid:
         hex_polygons = lambda hex_id: Polygon(
                                 h3.h3_to_geo_boundary(
                                     hex_id, geo_json=True)
-                                )           
+                                )
 
         hex_polygons = gpd.GeoSeries(list(map(hex_polygons, hex_ids)), 
                                       crs="EPSG:4326" \
                                      )
+
+        # Get parent ids of one level from hexagons           
+        hex_parents = lambda hex_id: h3.h3_to_parent(hex_id, resolution - 1)
+        hex_parents = pd.Series(list(map(hex_parents, hex_ids)))
+
+        # Create series from hex_ids array
         hex_ids = pd.Series(hex_ids)
-        gdf = gpd.GeoDataFrame(pd.concat([hex_ids,hex_polygons], keys=['id','geometry'], axis=1))
+        gdf = gpd.GeoDataFrame(pd.concat([hex_ids,hex_parents,hex_polygons], keys=['id','parent_id','geometry'], axis=1))
         
         # Save as Geopackage
         gdf.to_file('%s/%s.gpkg' % (self.data_dir,layer_name), driver='GPKG')
 
 # Create grid from bouding box example
 #bbox = H3Grid().create_geojson_from_bbox(top=48.352598707539315, left=11.255493164062498, bottom=47.92738566360356, right=11.8927001953125)
-#H3Grid().create_grid(polygon=bbox, resolution=9, layer_name='grid_caclulation')
-#H3Grid().create_grid(polygon=bbox, resolution=10, layer_name='grid_visualization')
+#bbox = H3Grid().create_geojson_from_bbox(top=48.05924, left=7.68083, bottom=47.92881, right=7.96208)
+#H3Grid().create_grid(polygon=bbox, resolution=9, layer_name='grid_visualization')
+#H3Grid().create_grid(polygon=bbox, resolution=10, layer_name='grid_calculation')
