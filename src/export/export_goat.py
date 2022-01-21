@@ -4,7 +4,7 @@ from db.config import DATABASE
 import os
 import subprocess
 import datetime
-from export_sql_queries import *
+from src.export.export_sql_queries import *
 
 cwd = os.getcwd()
 user,password,host,port,dbname = DATABASE.values()

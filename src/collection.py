@@ -1,7 +1,5 @@
 """This module contains all classes and functions for the OSM data collection
 with the Pyrosm package."""
-#%%
-#%%
 import os
 import sys
 import time
@@ -13,7 +11,7 @@ from pyrosm import get_data, OSM
 import geopandas as gpd
 import pandas as pd
 import numpy as np
-from osm_dict import OSM_tags
+from src.config.osm_dict import OSM_tags
 class Config:
     def __init__(self,name):
         with open(Path(__file__).parent/'config/config.yaml', encoding="utf-8") as stream:

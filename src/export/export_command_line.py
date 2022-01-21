@@ -1,5 +1,5 @@
 import argparse
-from export_goat import getDataFromSql
+from src.export.export_goat import getDataFromSql
 
 
 
