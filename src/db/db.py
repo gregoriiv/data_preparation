@@ -1,5 +1,3 @@
-#%%
-
 """This module contains all classes and functions for database interactions."""
 # Code based on
 # https://github.com/hackersandslackers/psycopg2-tutorial/blob/master/psycopg2_tutorial/db.py
@@ -113,5 +111,3 @@ class Database:
         self.connect()
         self.conn.cursor()
         return self.conn.cursor()
-
-#%%

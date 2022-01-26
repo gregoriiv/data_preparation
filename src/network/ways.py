@@ -7,7 +7,7 @@ import yaml
 from pathlib import Path
 from db.db import Database
 db = Database()
-from collection import Config
+from config.config import Config
 
 class Profiles:
     def __init__(self, db_suffix, ways_table, filter_ways):

@@ -30,8 +30,7 @@ services:
       data_preparation_proxy:
 
   db:
-    image: ${DOCKER_ID}/${COMPOSE_PROJECT_NAME}:db-${PROJECT_VERSION}
-    build: .
+    image: goatcommunity/database:test-release
     container_name: ${COMPOSE_PROJECT_NAME}_db
     environment:
       - POSTGRES_PASS=${POSTGRES_PASSWORD}
