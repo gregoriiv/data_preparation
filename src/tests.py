@@ -1,5 +1,3 @@
-#%%
-#%%
 import os
 import sys
 import yaml
@@ -12,8 +10,8 @@ from pathlib import Path
 from collection import Config, osm_collect_filter, gdf_conversion, bus_stop_conversion, join_osm_pois_n_busstops
 from preparation import file2df, landuse_preparation, pois_preparation, buildings_preparation, school_categorization,pois_preparation_set,kindergarten_deaggrgation
 
-# from fusion import geonode_connection, fusion_data_areas_rs_set
-from fusion import replace_data_area, geonode_connection, geonode_table2df, area_n_buffer2df, df2area, df2geonode, fuse_data_area, fusion_set
+# from fusion import database_connection, fusion_data_areas_rs_set
+from fusion import replace_data_area, database_connection, database_table2df, area_n_buffer2df, df2area, df2database, fuse_data_area, fusion_set
 from db.db import Database
 
 # POIS Collection + Preparation
@@ -34,9 +32,9 @@ data_name = "pois_bayern"
 
 # df = pois_preparation_set(config, config_buses, update=False, filename=data_name, return_type="GeoJSON")[0]
 
-# # Convert pois_bayern file to DB Geonode (necessary to update layer manually then)
+# # Convert pois_bayern file to remote DB (necessary to update layer manually then)
 # df = file2df("pois_bayern.geojson")
-# df2geonode(df,data_name)
+# df2database(df,data_name)
 
 #==============================================================Fusion POIs===========================================================================##
 # ======  Fusion with config settings ====== #
@@ -44,18 +42,18 @@ data_name = "pois_bayern"
 # df = fusion_set(config, "pois_prepared_goat", return_type="GeoJSON")
 
 # df = file2df("pois_prepared_goat.geojson")
-# df2geonode(df,"pois_prepared_goat")
+# df2database(df,"pois_prepared_goat")
 
 ##==============================================================School preparation===================================================================##
 
 # table_school = "jedeschule_geocode"
-# sc_df = geonode_table2df(con, table_school, geometry_column="geom")
+# sc_df = database_table2df(con, table_school, geometry_column="geom")
 # school_categorization(sc_df, config, table_school, "GeoJSON")
 
 # df = file2df("childcare_bayern.geojson")
 # kindergarten_deaggrgation(df, "childcare_bayern_de", "GeoJSON")
 
-##======================= Landuse Collection + Preparation + Export to GeoNode ==================##
+##======================= Landuse Collection + Preparation + Export to Remote DB ==================##
 
 # config = Config("landuse")
 # df_res = pd.DataFrame()
@@ -75,7 +73,7 @@ data_name = "pois_bayern"
 
 #df.to_postgis(con=Database().connect_sqlalchemy(), name="landuse_bayern",if_exists='replace')
 
-##======================= Buildings Collection + Export to GeoNode ==============================##
+##======================= Buildings Collection + Export to Remote DB ==============================##
 
 # config = Config("buildings")
 # df_res = pd.DataFrame()
@@ -91,11 +89,9 @@ data_name = "pois_bayern"
 
 # df = gdf_conversion(df_res, "buildings_osm_bavaria", return_type=None)[0]
 
-#!!!nicht vergessen DB.yaml zu verändern von localhost zu Geonode!!!!
+#!!!nicht vergessen DB.yaml zu verändern von localhost zu Remote DB!!!!
 # df.to_postgis(con=Database().connect_sqlalchemy(), name="landuse_bayern",if_exists='replace')
 
 ##============================================TESTS==============================================##
 
 #==============================================================CHECK===============================================================================##
-
-# %%

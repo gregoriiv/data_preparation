@@ -1,44 +1,43 @@
-import os
-import sys
 import geopandas as gpd
 import pandas as pd
 import numpy as np
 from scipy.spatial.distance import cdist
 from scipy.spatial import cKDTree
 from shapely import geometry
-from collection import gdf_conversion, Config
-from preparation import file2df
+from other.utility_functions import gdf_conversion, file2df
+from config.config import Config
 from db.db import Database
 from db.config import DATABASE
 
-# Create connection to geonode db
-def geonode_connection():
+# Create connection to database db
+def database_connection():
     db = Database()
-    con = db.connect()
+    con = db.connect_rd()
     return con
 
-# Publish dataframe in geonode datastore 
+# Publish dataframe in remote database  
 # df - dataframe, name - table name to store, if_exists="replace" to overwrite datatable
-def df2geonode(df,name,if_exists='replace'):
+def df2database(df,name,if_exists='replace'):
     db = Database()
-    con = db.connect_sqlalchemy()
+    con = db.connect_rd_sqlalchemy()
     df.to_postgis(con=con, name=name, if_exists=if_exists)
 
-# Returns geonode table as a dataframe 
-def geonode_table2df(con, table_name, geometry_column='geometry'):
+# Returns remote database table as a dataframe 
+def database_table2df(con, table_name, geometry_column='geometry'):
     query = "SELECT * FROM %s" % table_name
     df = gpd.read_postgis(con=con,sql=query, geom_col=geometry_column)
     return df
 
-# Returns study area as df from geonode db (germany_municipalities) according to rs code 
-def study_area2df(con,rs):
-    query = "SELECT * FROM germany_municipalities WHERE rs = '%s'" % rs
-    df_area = gpd.read_postgis(con=con,sql=query, geom_col='geom')
-    df_area = df_area.filter(['geom'], axis=1)
-    return df_area
-
 # Creates DataFrame with buffer (default 8300 meters) of geometries, provided as a list of dataframes
 def area_n_buffer2df(con, rs_set, buffer=8300):
+    
+    # Returns study area as df from remote db (germany_municipalities) according to rs code 
+    def study_area2df(con,rs):
+        query = "SELECT * FROM germany_municipalities WHERE rs = '%s'" % rs
+        df_area = gpd.read_postgis(con=con,sql=query, geom_col='geom')
+        df_area = df_area.filter(['geom'], axis=1)
+        return df_area
+    
     list_areas = []
     for rs in rs_set:
         df_area = study_area2df(con,rs)
@@ -124,7 +123,7 @@ def find_nearest(gdA, gdB, max_dist):
 # - return_name - str name of data, can be used as filename
 # - return_type - str ("GeoJSON", "GPKG") file type for storage return
 def replace_data_area(df_base2area, df_area, df_input, amenity_replace=None, amenity_set=False, amenity_brand_replace=None, 
-                      columns2rename=None, columns2drop=None, column_set_value=None, return_name = None, return_type=None):
+                      columns2rename=None, column_set_value=None, columns2fuse=None, return_name = None, return_type=None):
     # Cut data to given area 
     df_input2area = gpd.overlay(df_input, df_area, how='intersection')
 
@@ -138,8 +137,8 @@ def replace_data_area(df_base2area, df_area, df_input, amenity_replace=None, ame
         print("Amenity (and brand) were not specified.. ")
 
     # Prepare input data for concatination
-    if columns2drop:
-        df_input2area = df_input2area.drop(columns={*columns2drop})
+    # if columns2drop:
+    #     df_input2area = df_input2area.drop(columns={*columns2drop})
     if columns2rename:
         df_input2area = df_input2area.rename(columns=columns2rename)
 
@@ -167,20 +166,18 @@ def replace_data_area(df_base2area, df_area, df_input, amenity_replace=None, ame
         for col in column_set_value.keys():
             df_input2area[col] = column_set_value[col]
 
+    df_input2area = df_input2area[columns2fuse]
 
     # Concatination of dataframes
     df_result = pd.concat([df_base2area,df_input2area],sort=False).reset_index(drop=True)
     df_result = df_result.replace({np.nan: None})
 
-
     # Writedown result of fusion
     return gdf_conversion(df_result, return_name, return_type=return_type)
 
 
-    # function to replace old fusion
-
 def fuse_data_area(df_base2area, df_area, df_input, amenity_fuse=None, amenity_set=False, amenity_brand_fuse=None, 
-                   columns2rename=None, columns2drop=None, column_set_value=None, columns2fuse=None, return_name = None, return_type=None):
+                   columns2rename=None, column_set_value=None, columns2fuse=None, return_name = None, return_type=None):
     # Cut input data to given area 
     df_input2area = gpd.overlay(df_input, df_area, how='intersection')
 
@@ -215,24 +212,25 @@ def fuse_data_area(df_base2area, df_area, df_input, amenity_fuse=None, amenity_s
     # return 2 df - find closests and not
     df_fus, df_not_fus = find_nearest(df_input2area, df_base_temp, 500)
 
-    fus_col_fus = columns2fuse
+    fus_col_fus = columns2fuse.copy()
     fus_col_fus.append("osm_id")
+    fus_col_fus.remove("source")
     df_fus = df_fus[fus_col_fus]
 
     # Prepare input data for concatination
-    if columns2drop:
-        df_not_fus = df_not_fus.drop(columns={*columns2drop})
+    # if columns2drop:
+    #     df_not_fus = df_not_fus.drop(columns={*columns2drop})
     if columns2rename:
         df_not_fus = df_not_fus.rename(columns=columns2rename)
 
     if amenity_brand_fuse:
         df_not_fus['amenity'] = amenity_brand_fuse[0]
         df_not_fus['operator'] = amenity_brand_fuse[1].lower()
-        columns2fuse.extend(('amenity', 'operator', 'source', 'geometry'))
+        columns2fuse.extend(('amenity', 'operator', 'geometry'))
         df_not_fus = df_not_fus[columns2fuse]
     elif amenity_set:
         df_not_fus['amenity'] = amenity_fuse.lower()
-        columns2fuse.extend(('amenity', 'source', 'geometry'))
+        columns2fuse.extend(('amenity', 'geometry'))
         df_not_fus = df_not_fus[columns2fuse]
     # df_not_fus['amenity'] = df_not_fus['amenity'].str.lower()
 
@@ -247,14 +245,17 @@ def fuse_data_area(df_base2area, df_area, df_input, amenity_fuse=None, amenity_s
 
     return gdf_conversion(df_result, return_name, return_type=return_type)
 
-def fusion_set(config, result_name=None, return_type=None):
-    con = geonode_connection()
+def pois_fusion(config=None, result_name=None, return_type=None):
+
+    con = database_connection()
+    if not config:
+        config = Config("pois")
 
     table_base = config.fusion["table_base"]
     rs_set = config.fusion["rs_set"]
-    typen = ["geonode","geojson"]
+    typen = ["database","geojson"]
 
-    df_base = geonode_table2df(con, table_base, geometry_column="geometry")
+    df_base = database_table2df(con, table_base, geometry_column="geometry")
     df_area = area_n_buffer2df(con, rs_set, buffer=8300)
     df_base2area = df2area(df_base, df_area)
 
@@ -267,14 +268,14 @@ def fusion_set(config, result_name=None, return_type=None):
             if typ == 'geojson':
                 filename = key + '.' + typ
                 df_input = file2df(filename)
-            elif typ == 'geonode':
-                df_input = geonode_table2df(con, key)
+            elif typ == 'database':
+                df_input = database_table2df(con, key)
             df_input2area = df2area(df_input, df_area)
             
             if config.fusion_type(typ, key) == "fuse":
                 df_base2area = fuse_data_area(df_base2area, df_area, df_input, *fusion_set, return_name = None, return_type=None)[0]
             elif config.fusion_type(typ, key) == "replace":
-                df_base2area = replace_data_area(df_base2area, df_area, df_input, *fusion_set[:-1], return_name = None, return_type=None)[0]
+                df_base2area = replace_data_area(df_base2area, df_area, df_input, *fusion_set, return_name = None, return_type=None)[0]
             else:
                 print("Fusion type for %s was not defined. Fusion was not done." % key)
                 pass

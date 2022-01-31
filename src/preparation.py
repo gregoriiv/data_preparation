@@ -1,61 +1,48 @@
-import os
 import time
-import sys
 import ast
-import yaml
 from pathlib import Path
 from difflib import SequenceMatcher
 import numpy as np
 import pandas as pd
 import geopandas as gp
-from pandas.core.accessor import PandasDelegate
-from collection import gdf_conversion, osm_collect_filter, bus_stop_conversion, join_osm_pois_n_busstops
+#from pandas.core.accessor import PandasDelegate
+from collection import osm_collect_filter, bus_stop_conversion, join_osm_pois_n_busstops
+from config.config import Config
+from other.utility_functions import gdf_conversion
 gp.options.use_pygeos = True
 
 #================================== POIs preparation =============================================#
-# Func asses probability of string similarity
-def similar(a,b):
-	return SequenceMatcher(None,a,b).ratio()
 
-# Function search in config
-def poi_return_search_condition(name, var_dict):
-    for key,value in var_dict.items():
-        for v in value:
-            if (similar(name, v) > 0.8 or (name in v  or v in name)) and name != '': 
-                return key
-            else:
-                pass
+def pois_preparation_region(dataframe, config, return_type=None,result_name="pois_preparation_result"):
+    # Function search in config
+    def poi_return_search_condition(name, var_dict):
+    # Func asses probability of string similarity
+        def similar(a,b):
+            return SequenceMatcher(None,a,b).ratio()
 
-# Convert polygons to points and set origin geometry for all elements
-def osm_obj2points(df, geom_column = "geom"):
+        for key,value in var_dict.items():
+            for v in value:
+                if (similar(name, v) > 0.8 or (name in v  or v in name)) and name != '': 
+                    return key
+                else:
+                    pass
 
-    df.at[df[geom_column].geom_type == "Point", 'origin_geometry'] = 'point'
+    # Convert polygons to points and set origin geometry for all elements
+    def osm_obj2points(df, geom_column = "geom"):
 
-    df.at[df[geom_column].geom_type == "MultiPolygon", 'origin_geometry'] = 'polygon'
-    df.at[df[geom_column].geom_type == "MultiPolygon", 'geom'] = df['geom'].centroid
-    df.at[df[geom_column].geom_type == "Polygon", 'origin_geometry'] = 'polygon'
-    df.at[df[geom_column].geom_type == "Polygon", 'geom'] = df['geom'].centroid
+        df.at[df[geom_column].geom_type == "Point", 'origin_geometry'] = 'point'
 
-    df.at[df[geom_column].geom_type == "LineString", 'origin_geometry'] = 'line'
-    df.at[df[geom_column].geom_type == "MultiLineString", 'origin_geometry'] = 'line'
+        df.at[df[geom_column].geom_type == "MultiPolygon", 'origin_geometry'] = 'polygon'
+        df.at[df[geom_column].geom_type == "MultiPolygon", 'geom'] = df['geom'].centroid
+        df.at[df[geom_column].geom_type == "Polygon", 'origin_geometry'] = 'polygon'
+        df.at[df[geom_column].geom_type == "Polygon", 'geom'] = df['geom'].centroid
 
-    #df['geom'] = df['geom'].to_crs(4326)
-    return df
+        df.at[df[geom_column].geom_type == "LineString", 'origin_geometry'] = 'line'
+        df.at[df[geom_column].geom_type == "MultiLineString", 'origin_geometry'] = 'line'
 
-def file2df(filename):
-    name, extens = filename.split(".")
-    if extens == "geojson":
-        file = open(Path(__file__).parent/'data'/'input'/filename, encoding="utf-8")
-        df = gp.read_file(file)
-    elif extens == "gpkg":
-        file =  Path(__file__).parent/'data'/'input'/filename
-        df = gp.read_file(file)
-    else:
-        print("Extension of file %s currently doen not support with file2df() function." % filename)
-        sys.exit()
-    return df     
+        #df['geom'] = df['geom'].to_crs(4326)
+        return df
 
-def pois_preparation(dataframe, config, return_type=None,result_name="pois_preparation_result"):
 
     df = dataframe
 
@@ -343,8 +330,13 @@ def pois_preparation(dataframe, config, return_type=None,result_name="pois_prepa
 
     return gdf_conversion(df,result_name,return_type)
 
-def pois_preparation_set(config,config_buses,update=False,filename=None,return_type=None):
+def pois_preparation(config=None,config_buses=None,update=False,filename=None,return_type=None):
     df_res = pd.DataFrame()
+    if not config:
+        config = Config("pois")
+    if not config_buses:
+        config_buses = Config("bus_stops")
+        
     data_set = config.pbf_data
 
     for d in data_set:
@@ -352,7 +344,7 @@ def pois_preparation_set(config,config_buses,update=False,filename=None,return_t
         pois_bus_collection = join_osm_pois_n_busstops(pois_collection[0],
                                                     bus_stop_conversion(osm_collect_filter(config_buses,d)[0]),
                                                     pois_collection[1])
-        temp_df = pois_preparation(dataframe=pois_bus_collection[0], config=config, result_name=pois_bus_collection[1])[0]
+        temp_df = pois_preparation_region(dataframe=pois_bus_collection[0], config=config, result_name=pois_bus_collection[1])[0]
         if data_set.index(d) == 0:
             df_res = temp_df
         else:
@@ -396,12 +388,12 @@ def school_categorization(df, config, result_name, return_type):
 
 # function deaggregates childacare amenities to four groups according to value in "age_group" column
 def kindergarten_deaggrgation(df, result_name, return_type):
-    df.loc[df['age_group'] == '0-3', 'amenity_t'] = 'krippe'
+    df.loc[df['age_group'] == '0-3', 'amenity_t'] = 'nursery'
     df.loc[(df['age_group'] == '3-6') | (df['age_group'] == '2-6'), 'amenity_t'] = 'kindergarten'
     df.loc[df['age_group'] == '6+', 'amenity_t'] = 'kinderhort'
 
     df_temp = df[(df['age_group'] == '0-6') | (df['age_group'] == '1-6')]
-    df_temp['amenity_t'] = 'krippe'
+    df_temp['amenity_t'] = 'nursery'
 
     df.loc[(df['age_group'] == '0-6') | (df['age_group'] == '1-6'), 'amenity_t'] = 'kindergarten'
 
