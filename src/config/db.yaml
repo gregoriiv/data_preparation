@@ -2,4 +2,5 @@ HOST: "localhost"
 PORT: 55432
 DB_NAME: "goat"
 USER: "goat"
-PASSWORD: "earlmanigault"
+# PASSWORD: "earlmanigault"
+PASSWORD: "postgres"
