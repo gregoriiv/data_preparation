@@ -13,7 +13,10 @@ gp.options.use_pygeos = True
 
 #================================== POIs preparation =============================================#
 
-def pois_preparation_region(dataframe, config, return_type=None,result_name="pois_preparation_result"):
+def pois_preparation_region(dataframe, config=None, return_type=None,result_name="pois_preparation_result"):
+    if not config:
+        config = Config("pois")
+  
     # Function search in config
     def poi_return_search_condition(name, var_dict):
     # Func asses probability of string similarity
