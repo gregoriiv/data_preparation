@@ -85,16 +85,6 @@ class Config:
                         collect.append(f"https://download.geofabrik.de/europe/germany/{v}-latest.osm.pbf")                    
         return collect
 
-    def create_variable_container(self,db_conn):
-        self.db_conn.perform('''DROP TABLE IF EXISTS variable_container;
-        CREATE TABLE public.variable_container (
-        identifier varchar(100) NOT NULL,
-        variable_simple text NULL,
-        variable_array text[] NULL,
-        variable_object jsonb NULL,
-        CONSTRAINT variable_container_pkey PRIMARY KEY (identifier)
-        )''')
-
 def classify_osm_tags(name):
     """helper function to help assign osm tags to their corresponding feature"""
     # import dict from conf_yaml
