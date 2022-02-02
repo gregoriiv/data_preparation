@@ -1,11 +1,12 @@
-#%%
 import json
 import sys
 sys.path.insert(0,"..")
-import collection
+import os
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir)))
+from config.config import Config
 
-config_ways = collection.Config("ways")
-variable_container_ways = config_ways.variable_container
+config_ways = Config("ways")
+variable_container_ways = config_ways.preparation['variable_container']
 
 network_preparation1 = f'''
 
@@ -25,7 +26,7 @@ ALTER TABLE ways alter column source type int4;
 CREATE INDEX ON ways USING GIST(geom);
 
 ALTER TABLE ways 
-ADD COLUMN bicycle text, ADD COLUMN foot TEXT, ADD COLUMN oneway TEXT; 
+ADD COLUMN bicycle text, ADD COLUMN foot TEXT; /*, ADD COLUMN oneway TEXT;*/ 
 
 UPDATE ways 
 SET foot = p.foot
@@ -35,11 +36,6 @@ AND p.highway NOT IN('bridleway','cycleway','footway');
 
 UPDATE ways 
 SET bicycle = p.bicycle
-FROM planet_osm_line p
-WHERE ways.osm_id = p.osm_id;
-
-UPDATE ways 
-SET oneway = p.oneway
 FROM planet_osm_line p
 WHERE ways.osm_id = p.osm_id;
 
@@ -80,8 +76,8 @@ CREATE TABLE ways_crossed AS
 SELECT w.*, c.gid AS crossing_gid, c.crossing
 FROM street_crossings c, ways w 
 WHERE ST_Intersects(c.geom,w.geom)
-AND w.class_id::text NOT IN (SELECT UNNEST(ARRAY{variable_container_ways["excluded_class_id_walking"]}::text[]))
-AND w.class_id::text NOT IN (SELECT UNNEST(ARRAY{variable_container_ways["excluded_class_id_cycling"]}::text[]))
+AND w.tag_id::text NOT IN (SELECT UNNEST(ARRAY{variable_container_ways["excluded_class_id_walking"]}::text[]))
+AND w.tag_id::text NOT IN (SELECT UNNEST(ARRAY{variable_container_ways["excluded_class_id_cycling"]}::text[]))
 AND (
 (w.foot NOT IN (SELECT UNNEST(ARRAY{variable_container_ways["categories_no_foot"]})) OR foot IS NULL)
 OR
@@ -137,7 +133,7 @@ SELECT (features).new_vgeom
 FROM w_split;
 
 --Insert routing network into ways table 
-INSERT INTO ways(class_id,length_m,name,SOURCE,target,one_way,maxspeed_forward,maxspeed_backward,osm_id,geom,bicycle,foot,crossing,one_link_crossing)
+INSERT INTO ways(tag_id,length_m,name,SOURCE,target,one_way,maxspeed_forward,maxspeed_backward,osm_id,geom,bicycle,foot,crossing,one_link_crossing)
 WITH new_ways AS (
 	SELECT id,(features).new_geom1 AS geom,(features).source1 AS SOURCE,(features).target1 AS target, length1 AS length_m, (features).new_vgeom AS v_geom
 	FROM w_split s
@@ -145,7 +141,7 @@ WITH new_ways AS (
 	SELECT id,(features).new_geom2 AS geom, (features).source2 AS SOURCE,(features).target2 AS target, length2 AS length_m, (features).new_vgeom AS v_geom
 	FROM w_split s
 )
-SELECT w.class_id, n.length_m, w.name, 
+SELECT w.tag_id, n.length_m, w.name, 
 CASE WHEN n.SOURCE IS NULL THEN v.id ELSE n.SOURCE END AS SOURCE, 
 CASE WHEN n.target IS NULL THEN v.id ELSE n.target END AS target, 
 w.one_way, w.maxspeed_forward, w.maxspeed_backward, w.osm_id, n.geom, w.bicycle, w.foot, 'traffic_signals',FALSE
@@ -206,8 +202,9 @@ SET highway = p.highway, surface = p.surface, width = (CASE WHEN p.width ~ '^[0-
 	parking_lane_both = (tags -> 'parking:lane:both') , parking_lane_right = (tags -> 'parking:lane:right'), 
 	parking_lane_left = (tags -> 'parking:lane:left'), segregated = (tags -> 'segregated'),
 	sidewalk = (tags -> 'sidewalk'), smoothness = (tags -> 'smoothness'), wheelchair = (tags -> 'wheelchair'),
-	lanes = (tags -> 'lanes')::numeric, sidewalk_both_width = (tags -> 'sidewalk:both:width')::numeric, sidewalk_left_width = (tags -> 'sidewalk:left:width')::numeric,
-	sidewalk_right_width = (tags -> 'sidewalk:right:width')::numeric
+	lanes = (tags -> 'lanes')::numeric, sidewalk_both_width = (case when (tags -> 'sidewalk:both:width') ~ '^[0-9.]*$' then (tags -> 'sidewalk:both:width')::numeric else null end),
+	sidewalk_left_width = (case when (tags -> 'sidewalk:left:width') ~ '^[0-9.]*$' then (tags -> 'sidewalk:left:width')::numeric else null end),
+	sidewalk_right_width = (case when (tags -> 'sidewalk:right:width') ~ '^[0-9.]*$' then (tags -> 'sidewalk:right:width')::numeric else null end)
 FROM planet_osm_line p
 WHERE ways.osm_id = p.osm_id;
 
@@ -280,7 +277,7 @@ FROM
                 OR surface IN (SELECT jsonb_array_elements_text((wheelchair ->> 'surface_no')::jsonb) FROM variables)
                 OR (incline_percent IS NOT NULL AND incline_percent > 6))
             )
-			OR class_id::text IN (SELECT UNNEST(excluded_class_id_walking) FROM variables)
+			OR tag_id::text IN (SELECT UNNEST(excluded_class_id_walking) FROM variables)
 			OR foot IN (SELECT UNNEST(categories_no_foot) FROM variables)
         THEN 'no'
     ELSE 'unclassified'
@@ -289,10 +286,10 @@ FROM
     ) x
 WHERE w.id = x.id;
 
-
-
+/*
 --Mark network islands in the network
-Update  osm_way_classes set class_id = 701, name = 'network_island' WHERE NOT EXISTS (Select class_id, name From osm_way_classes where class_id = 701 and name = 'network_island');
+--Update  "configuration" set tag_id = 701, tag_value = 'network_island' WHERE NOT EXISTS (Select tag_id, tag_value From "configuration" where tag_id = 701 and tag_value = 'network_island');
+INSERT INTO "configuration" (tag_id, tag_value) VALUES (701, 'network_island');
 
 DROP TABLE IF EXISTS network_islands; 
 CREATE TABLE network_islands AS 
@@ -300,8 +297,8 @@ WITH RECURSIVE ways_no_islands AS (
 	SELECT id,geom FROM 
 	(SELECT id,geom
 	FROM ways w
-	WHERE w.class_id::text NOT IN (SELECT UNNEST(ARRAY{variable_container_ways["excluded_class_id_walking"]}::text[]))
-	AND w.class_id::text NOT IN (SELECT UNNEST(ARRAY{variable_container_ways["excluded_class_id_cycling"]}::text[]))
+	WHERE w.tag_id NOT IN (SELECT UNNEST(ARRAY{variable_container_ways["excluded_class_id_walking"]}))
+	AND w.tag_id NOT IN (SELECT UNNEST(ARRAY{variable_container_ways["excluded_class_id_cycling"]}))
 	AND (
 	(w.foot NOT IN (SELECT UNNEST(ARRAY{variable_container_ways["categories_no_foot"]})) OR foot IS NULL)
 	OR
@@ -311,8 +308,8 @@ WITH RECURSIVE ways_no_islands AS (
 	SELECT w.id,w.geom
 	FROM ways w, ways_no_islands n
 	WHERE ST_Intersects(n.geom,w.geom)
-	AND w.class_id::text NOT IN (SELECT UNNEST(ARRAY{variable_container_ways["excluded_class_id_walking"]}::text[]))
-	AND w.class_id::text NOT IN (SELECT UNNEST(ARRAY{variable_container_ways["excluded_class_id_cycling"]}::text[]))
+	AND w.tag_id NOT IN (SELECT UNNEST(ARRAY{variable_container_ways["excluded_class_id_walking"]}))
+	AND w.tag_id NOT IN (SELECT UNNEST(ARRAY{variable_container_ways["excluded_class_id_cycling"]}))
 	AND (w.foot NOT IN (SELECT UNNEST(ARRAY{variable_container_ways["categories_no_foot"]})) OR foot IS NULL)
 ) 
 SELECT w.id  
@@ -324,30 +321,32 @@ FROM (
 	WHERE n.id IS null
 ) x, ways w
 WHERE w.id = x.id
-AND w.class_id::text NOT IN (SELECT UNNEST(ARRAY{variable_container_ways["excluded_class_id_walking"]}::text[]))
-AND w.class_id::text NOT IN (SELECT UNNEST(ARRAY{variable_container_ways["excluded_class_id_cycling"]}::text[]))
+AND w.tag_id NOT IN (SELECT UNNEST(ARRAY{variable_container_ways["excluded_class_id_walking"]}))
+AND w.tag_id NOT IN (SELECT UNNEST(ARRAY{variable_container_ways["excluded_class_id_cycling"]}))
 AND (w.foot NOT IN (SELECT UNNEST(ARRAY{variable_container_ways["categories_no_foot"]})) OR foot IS NULL); 
 
 ALTER TABLE network_islands ADD PRIMARY KEY(id);
-UPDATE ways w SET class_id = 701
+UPDATE ways w SET tag_id = 701
 FROM network_islands n
 WHERE w.id = n.id; 
 
-ALTER TABLE ways_vertices_pgr ADD COLUMN class_ids int[];
+*/
+
+ALTER TABLE ways_vertices_pgr ADD COLUMN tag_ids int[];
 ALTER TABLE ways_vertices_pgr ADD COLUMN foot text[];
 ALTER TABLE ways_vertices_pgr ADD COLUMN bicycle text[];
 ALTER TABLE ways_vertices_pgr ADD COLUMN lit_classified text[];
 ALTER TABLE ways_vertices_pgr ADD COLUMN wheelchair_classified text[];
 
 WITH ways_attributes AS (
-	SELECT vv.id, array_remove(array_agg(DISTINCT x.class_id),NULL) class_ids,
+	SELECT vv.id, array_remove(array_agg(DISTINCT x.tag_id),NULL) tag_ids,
 	array_remove(array_agg(DISTINCT x.foot),NULL) AS foot,
 	array_remove(array_agg(DISTINCT x.bicycle),NULL) bicycle,
 	array_remove(array_agg(DISTINCT x.lit_classified),NULL) lit_classified,
 	array_remove(array_agg(DISTINCT x.wheelchair_classified),NULL) wheelchair_classified
 	FROM ways_vertices_pgr vv
 	LEFT JOIN
-	(	SELECT v.id, w.class_id, w.foot, w.bicycle, w.lit_classified, w.wheelchair_classified 
+	(	SELECT v.id, w.tag_id, w.foot, w.bicycle, w.lit_classified, w.wheelchair_classified 
 		FROM ways_vertices_pgr v, ways w 
 		WHERE st_intersects(v.geom,w.geom)
 	) x
@@ -355,7 +354,7 @@ WITH ways_attributes AS (
 	GROUP BY vv.id
 )
 UPDATE ways_vertices_pgr v
-SET class_ids = w.class_ids, 
+SET tag_ids = w.tag_ids, 
 foot = w.foot,
 bicycle = w.bicycle,
 lit_classified = w.lit_classified,
@@ -407,3 +406,10 @@ ALTER TABLE ways ADD COLUMN rs_imp FLOAT;
 # geom, 'mapillary' AS SOURCE
 # FROM no_dups p --rename to: mapillary_features 
 # WHERE value IN ('zebra');
+
+
+# test = f'''
+# (SELECT UNNEST(ARRAY{variable_container_ways["categories_no_foot"]}))
+# '''
+
+# print(test)

@@ -1,27 +1,28 @@
 import os
 import sys
 import yaml
-#import paramiko
 import numpy as np
 import pandas as pd
 import geopandas as gpd
 from pathlib import Path
+from other.utility_functions import gdf_conversion, file2df
+from config.config import Config
+from network.network_collection import network_collection
+from network.ways import PrepareLayers
 
-from collection import Config, osm_collect_filter, gdf_conversion, bus_stop_conversion, join_osm_pois_n_busstops
-from preparation import file2df, landuse_preparation, pois_preparation, buildings_preparation, school_categorization,pois_preparation_set,kindergarten_deaggrgation
+
+from collection import osm_collect_filter, gdf_conversion, bus_stop_conversion, join_osm_pois_n_busstops
+from preparation import landuse_preparation, pois_preparation, buildings_preparation, school_categorization,kindergarten_deaggrgation
 
 # from fusion import database_connection, fusion_data_areas_rs_set
-from fusion import replace_data_area, database_connection, database_table2df, area_n_buffer2df, df2area, df2database, fuse_data_area, fusion_set
+from fusion import replace_data_area, database_connection, database_table2df, area_n_buffer2df, df2area, df2database, fuse_data_area, pois_fusion
 from db.db import Database
+
 
 # POIS Collection + Preparation
 
-# data_set = ["Mittelfranken","Niederbayern","Oberbayern","Oberfranken","Oberpfalz","Schwaben",\
-#             "Unterfranken"]
-data_set = ["Mittelfranken"]
-
-config = Config("pois")
-config_buses = Config("bus_stops")
+# config = Config("pois")
+# config_buses = Config("bus_stops")
 
 ##============================================================Collection + Preparation POIs==========================================================##
 
@@ -39,7 +40,7 @@ data_name = "pois_bayern"
 #==============================================================Fusion POIs===========================================================================##
 # ======  Fusion with config settings ====== #
 
-# df = fusion_set(config, "pois_prepared_goat", return_type="GeoJSON")
+# df = pois_fusion(None, "pois_prepared_goat", "GeoJSON")
 
 # df = file2df("pois_prepared_goat.geojson")
 # df2database(df,"pois_prepared_goat")
@@ -91,7 +92,21 @@ data_name = "pois_bayern"
 
 #!!!nicht vergessen DB.yaml zu verändern von localhost zu Remote DB!!!!
 # df.to_postgis(con=Database().connect_sqlalchemy(), name="landuse_bayern",if_exists='replace')
+##======================= Network Collection and Preparation ==============================##
+#network_collection()
+prep_layers = PrepareLayers('ways')
+prep_layers.ways()
+
+
+
+
 
 ##============================================TESTS==============================================##
+
+
+
+
+
+
 
 #==============================================================CHECK===============================================================================##
