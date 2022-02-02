@@ -130,6 +130,9 @@ def pois_preparation_region(dataframe, config, return_type=None,result_name="poi
     df['amenity'] = np.where((df['leisure'] == 'playground') & (df['leisure'] != df['amenity']) & (df['amenity']), df['leisure'], df['amenity'])
     df['amenity'] = np.where((df['leisure'] == 'playground') & (df['amenity'] == ''), df['leisure'], df['amenity'])
 
+    # drop operator value for supermarkets
+    df.loc[df['shop'] == 'supermarket', 'operator'] = None
+ 
     # Iterate through the rows
     for i in df.index:
         df_row = df.iloc[i]
@@ -351,6 +354,8 @@ def pois_preparation(config=None,config_buses=None,update=False,filename=None,re
             df_res = pd.concat([df_res,temp_df],sort=False).reset_index(drop=True)
 
     return gdf_conversion(df_res, filename, return_type=return_type)
+
+
 
 # Preparation jedeschule table ->> conversion to fusable format
 def school_categorization(df, config, result_name, return_type):

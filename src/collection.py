@@ -7,6 +7,7 @@ from pyrosm import get_data, OSM
 import pandas as pd
 import numpy as np
 from other.utility_functions import gdf_conversion
+from config.config import Config
 
 # Function for collection data from OSM dbf and conversion to GeoJSON
 # Could be extended with varios type of searches and filters
@@ -75,6 +76,28 @@ def join_osm_pois_n_busstops(df_pois,  df_stops, df_pois_name=None, return_type=
 
     return gdf_conversion(df, return_name ,return_type)
 
+def pois_collection(config=None,config_buses=None,update=False,filename=None,return_type=None):
+    df_res = pd.DataFrame()
+    if not config:
+        config = Config("pois")
+    if not config_buses:
+        config_buses = Config("bus_stops")
+        
+    data_set = config.pbf_data
+
+    for d in data_set:
+        pois_collection = osm_collect_filter(config, d, update=update)
+        temp_df = join_osm_pois_n_busstops(pois_collection[0],
+                                                    bus_stop_conversion(osm_collect_filter(config_buses,d)[0]),
+                                                    pois_collection[1])
+        if data_set.index(d) == 0:
+            df_res = temp_df
+        else:
+            df_res = pd.concat([df_res,temp_df],sort=False).reset_index(drop=True)
+
+    return gdf_conversion(df_res, filename, return_type=return_type)
+
+
 #======================================== Buildings collection ===================================#
 
 def osm_collect_buildings(name='buildings', driver=None):
@@ -99,3 +122,4 @@ def osm_collect_buildings(name='buildings', driver=None):
     buildings = osm.get_buildings()
 
     return gdf_conversion(buildings, name, return_type=driver)
+

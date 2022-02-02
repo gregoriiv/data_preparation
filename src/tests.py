@@ -11,7 +11,7 @@ from network.network_collection import network_collection
 from network.ways import PrepareLayers
 
 
-from collection import osm_collect_filter, gdf_conversion, bus_stop_conversion, join_osm_pois_n_busstops
+from collection import pois_collection, osm_collect_filter, gdf_conversion, bus_stop_conversion, join_osm_pois_n_busstops
 from preparation import landuse_preparation, pois_preparation, buildings_preparation, school_categorization,kindergarten_deaggrgation
 
 # from fusion import database_connection, fusion_data_areas_rs_set
@@ -23,6 +23,8 @@ from db.db import Database
 
 # config = Config("pois")
 # config_buses = Config("bus_stops")
+##============================================================Collection=============================================================================##
+pois_collection(update=True,filename="pois_bayern_collected",return_type="GeoJSON")
 
 ##============================================================Collection + Preparation POIs==========================================================##
 
