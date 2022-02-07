@@ -20,6 +20,64 @@ class Config:
             print("unknown config format")
             sys.exit()
 
+    def osm_object_filter(self):
+        osm_tags = self.collection["osm_tags"]
+        osm_nodes = self.collection["points"]
+        osm_poly = self.collection["polygons"]
+        osm_lines = self.collection["lines"]
+        object_filter = ''
+        for i in osm_tags:
+            string = i
+            for j in osm_tags[i]:
+                string += ('=' + j)
+                string += (' ')
+            object_filter += string
+        object_filter = '"' + object_filter + '" '
+
+        if not osm_nodes:
+            object_filter += '--drop-nodes '
+        if not osm_poly:
+            object_filter += '--drop-relations '
+        if not osm_lines:
+            object_filter += '--drop-ways '
+
+        request = f'osmfilter pois-merged_osm.osm --keep={object_filter} -o=pois_collection.osm'
+
+        return request
+
+    def osm2pgsql_create_style(self):
+        add_columns = self.collection['additional_columns']
+        osm_tags = self.collection["osm_tags"]
+        #pois_columns = add_columns + [*osm_tags]
+
+
+        f = open("src/config/pois_p4b.style", "r")
+        sep = '#######################CUSTOM###########################'
+        text = f.read()
+        text = text.split(sep,1)[0]
+
+        f1 = open("src/config/pois_p4b.style", "w")
+        f1.write(text)
+        f1.write(sep)
+        f1.write('\n')
+
+        print("Creating osm2pgsql style file(pois_p4b.style)...")
+        for column in add_columns:
+            style_line = f'node,way  {column}  text  linear'
+            f1.write(style_line)
+            f1.write('\n')
+        
+        for tag in osm_tags:
+            if tag != 'railway' or tag != 'highway':
+                style_line = f'node,way  {tag}  text  polygon'
+                f1.write(style_line)
+                f1.write('\n')  
+            else:
+                style_line = f'node,way  {tag}  text  linear'
+                f1.write(style_line)
+                f1.write('\n')                  
+
+
     def pyrosm_filter(self):
         """creates a filter based on user input in the config to filter the OSM import"""
         coll = self.collection
@@ -62,10 +120,23 @@ class Config:
         fus_type = fus["fusion_type"]
         return fus_type
 
-    def network_collection_regions(self):
-        regions = self.collection['regions']
+    def collection_regions(self):
+        regions = self.pbf_data
         collect = []
-        if regions != ['all']:
+        if regions == ['all']:
+            for key, value in OSM_germany.items():
+                for v in value:
+                    if key != "regions": 
+                        name = key + "/" + v
+                        collect.append(f"https://download.geofabrik.de/europe/germany/{name}-latest.osm.pbf")
+                    else:
+                        collect.append(f"https://download.geofabrik.de/europe/germany/{v}-latest.osm.pbf")   
+
+        elif regions == ['Germany']:
+            collect.append(f"https://download.geofabrik.de/europe/germany-latest.osm.pbf")
+        elif regions == ['Bayern']:
+            collect.append(f"https://download.geofabrik.de/europe/germany/bayern-latest.osm.pbf")
+        else:
             for r in regions:
                 for key, value in OSM_germany.items():
                     for v in value:
@@ -75,14 +146,7 @@ class Config:
                                 collect.append(f"https://download.geofabrik.de/europe/germany/{name}-latest.osm.pbf")
                             else:
                                 collect.append(f"https://download.geofabrik.de/europe/germany/{v}-latest.osm.pbf")
-        else:
-            for key, value in OSM_germany.items():
-                for v in value:
-                    if key != "regions": 
-                        name = key + "/" + v
-                        collect.append(f"https://download.geofabrik.de/europe/germany/{name}-latest.osm.pbf")
-                    else:
-                        collect.append(f"https://download.geofabrik.de/europe/germany/{v}-latest.osm.pbf")                    
+                 
         return collect
 
 def classify_osm_tags(name):

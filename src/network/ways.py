@@ -1,4 +1,3 @@
-#%%
 import sys
 import os
 from types import prepare_class
@@ -9,15 +8,16 @@ from db.db import Database
 db = Database()
 from config.config import Config
 
-class Profiles:
-    def __init__(self, db_suffix, ways_table, filter_ways):
 
-        self.db_suffix = db_suffix
-        db = Database(self.db_suffix)
+class Profiles:
+    def __init__(self, ways_table, filter_ways):
+
+        db = Database()
         self.ways_table = ways_table
         self.filter_ways = filter_ways
         self.batch_size = 200
         self.elevs_interval = 25
+        self.var_container = Config('ways').preparation['variable_container']
 
         conn = db.connect()
         cur = conn.cursor()
@@ -25,8 +25,7 @@ class Profiles:
         cur.execute('''SELECT count(*) FROM {0} {1};'''.format(self.ways_table, self.filter_ways))
         self.total_cnt = cur.fetchall()[0][0]
         
-        cur.execute('''SELECT select_from_variable_container_s('one_meter_degree');''')
-        self.meter_degree = float(cur.fetchall()[0][0])
+        self.meter_degree = self.var_container['one_meter_degree']
 
         cur.execute('''SELECT id FROM {0} {1};'''.format(self.ways_table, self.filter_ways))
         ids = cur.fetchall()
@@ -36,7 +35,7 @@ class Profiles:
         
         
     def elevation_profile(self): 
-        db = Database(self.db_suffix)
+        db = Database()
         conn = db.connect() 
         cur = conn.cursor()
 
@@ -89,7 +88,7 @@ class Profiles:
         conn.close()
 
     def compute_cycling_impedance(self):
-        db = Database(self.db_suffix)
+        db = Database()
         conn = db.connect() 
         cur = conn.cursor()
         sql_create_table = '''
@@ -127,7 +126,7 @@ class Profiles:
         conn.close()
     
     def compute_average_slope(self):
-        db = Database(self.db_suffix)
+        db = Database()
         conn = db.connect() 
         cur = conn.cursor()
 
@@ -161,7 +160,7 @@ class Profiles:
         conn.close()
 
     def create_export_table(self):
-        db = Database(self.db_suffix)
+        db = Database()
         conn = db.connect() 
         cur = conn.cursor()
         
@@ -183,7 +182,7 @@ class Profiles:
         conn.close()
     
     def update_line_tables(self):
-        db = Database(self.db_suffix)
+        db = Database()
         conn = db.connect() 
         cur = conn.cursor()
         if self.ways_table == 'ways':
@@ -207,45 +206,73 @@ class Profiles:
         conn.commit()
         conn.close()
 
+# class PrepareLayers():
+#     """Data layers such as population as prepared with this class."""
+#     def __init__(self,Database ,is_temp = True):
+#         with open(Path(__file__).parent.parent/'config/config.yaml', encoding="utf-8") as stream:
+#             config = yaml.safe_load(stream)
+#         var = config['Population']
+#         self.variable_container = var['variable_container']
+#         #self.read_yaml_config = read_yaml_config
+#         #self.prepare_db = prepare_db
+#         #self.db_conn = db_conn
+#         with open(Path(__file__).parent.parent/'config/db.yaml', encoding="utf-8") as stream:
+#             db_conf = yaml.safe_load(stream)
+#         #self.db_conf = read_yaml_config.return_db_conf()
+#         self.db_name = db_conf["DB_NAME"]
+#         self.user = db_conf["USER"]
+#         self.host = db_conf["HOST"]
+#         self.db_suffix = ''
+#         if is_temp == True: 
+#             self.db_name = self.db_name + 'temp'
+#             self.db_suffix = 'temp'
+#         self.db = Database()
+
 class PrepareLayers():
     """Data layers such as population as prepared with this class."""
-    def __init__(self,Database ,is_temp = True):
-        with open(Path(__file__).parent.parent/'config/config.yaml', encoding="utf-8") as stream:
-            config = yaml.safe_load(stream)
-        var = config['Population']
+    def __init__(self,layer):
+        config = Config(layer)
+        var = config.preparation
         self.variable_container = var['variable_container']
-        #self.read_yaml_config = read_yaml_config
-        #self.prepare_db = prepare_db
-        #self.db_conn = db_conn
-        with open(Path(__file__).parent.parent/'config/db.yaml', encoding="utf-8") as stream:
-            db_conf = yaml.safe_load(stream)
-        #self.db_conf = read_yaml_config.return_db_conf()
-        self.db_name = db_conf["DB_NAME"]
-        self.user = db_conf["USER"]
-        self.host = db_conf["HOST"]
-        self.db_suffix = ''
-        if is_temp == True: 
-            self.db_name = self.db_name + 'temp'
-            self.db_suffix = 'temp'
         self.db = Database()
+
+    def check_table_exists(self, table_name):
+        self.db_conn = self.db.connect()
+        return self.db_conn.select('''SELECT EXISTS (
+            SELECT FROM information_schema.tables 
+            WHERE  table_schema = 'public'
+            AND    table_name   = %(table_name)s);''', params={"table_name": table_name})[0][0]
+
 
     def ways(self):
         from network_preparation1 import network_preparation1
         self.db.perform(query = network_preparation1)
-        # vars_container = self.read_yaml_config.return_goat_conf()["DATA_REFINEMENT_VARIABLES"]["variable_container"]
-        vars_container = self.variable_container
-
-        if vars_container["compute_slope_impedance"][1:-1] == 'yes':
-            slope_profiles = Profiles(db_suffix=self.db_suffix, ways_table='ways', filter_ways='''WHERE class_id::text NOT IN(SELECT UNNEST(select_from_variable_container(\'excluded_class_id_cycling\')))''' )
-            if self.check_table_exists('slope_profile_ways') == True: 
-                slope_profiles.update_line_tables()
-            else:
-                print("The table slope_profile_way does not exist") 
-                # self.prepare_db.execute_script_psql('/opt/data_preparation/SQL/prepare_dem.sql')
-                # slope_profiles.elevation_profile()
-                # slope_profiles.compute_cycling_impedance()
-                # slope_profiles.compute_average_slope()
-        
+        from network_islands import network_islands
+        self.db.perform(query=network_islands)
         from network_preparation2 import network_preparation2
         self.db.perform(query = network_preparation2)
 
+
+        # if self.variable_container["compute_slope_impedance"][1:-1] == 'yes':
+        #     slope_profiles = Profiles(ways_table='ways', filter_ways=f'''WHERE tag_id::text NOT IN(SELECT UNNEST({self.variable_container['excluded_class_id_cycling']}))''')
+        #     if self.check_table_exists('slope_profile_ways') == True: 
+        #         slope_profiles.update_line_tables()
+        #     else:
+        #         print("The table slope_profile_way does not exist")
+        #         # import dem
+
+        #         from prepare_dem import prepare_dem 
+        #         self.db.perform(query=prepare_dem)
+        #         slope_profiles.elevation_profile()
+        #         slope_profiles.compute_cycling_impedance()
+        #         slope_profiles.compute_average_slope()
+        
+import time
+start_time = time.time()
+print("Collection started...")
+
+prep_layers = PrepareLayers('ways')
+prep_layers.ways()
+
+
+print(f"Collection took {time.time() - start_time} seconds ---")
