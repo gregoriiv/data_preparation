@@ -245,17 +245,25 @@ def fuse_data_area(df_base2area, df_area, df_input, amenity_fuse=None, amenity_s
 
     return gdf_conversion(df_result, return_name, return_type=return_type)
 
-def pois_fusion(config=None, result_name=None, return_type=None):
+def pois_fusion(df=None, config=None, result_name=None, return_type=None):
 
     con = database_connection()
     if not config:
         config = Config("pois")
 
-    table_base = config.fusion["table_base"]
     rs_set = config.fusion["rs_set"]
     typen = ["database","geojson"]
 
-    df_base = database_table2df(con, table_base, geometry_column="geometry")
+    table_base = config.fusion["table_base"]
+    if table_base:
+        print('Data from remote database will be used as a base for fusion.')
+        df_base = database_table2df(con, table_base, geometry_column="geometry")
+    elif df is not None:
+        print('Data from dataframe will be used as a base for fusion.')
+        df_base = df
+    else:
+        print('Please specify dataframe in pois_fusion() variables or table_name in config.yaml')
+    
     df_area = area_n_buffer2df(con, rs_set, buffer=8300)
     df_base2area = df2area(df_base, df_area)
 

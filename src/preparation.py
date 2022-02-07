@@ -13,7 +13,7 @@ gp.options.use_pygeos = True
 
 #================================== POIs preparation =============================================#
 
-def pois_preparation_region(dataframe, config=None, return_type=None,result_name="pois_preparation_result"):
+def pois_preparation_region(dataframe, config=None,filename="pois_preparation_result", return_type=None):
     if not config:
         config = Config("pois")
   
@@ -48,15 +48,20 @@ def pois_preparation_region(dataframe, config=None, return_type=None,result_name
 
 
     df = dataframe
+    print(df)
 
     # Timer start
     print("Preparation started...")
     start_time = time.time()
 
-    df["osm_id"] = df["id"]
+    df["id"] = df["osm_id"]
 
-    df = df.drop(columns={"lat", "lon", "version", "timestamp", "changeset"})
-    df = df.rename(columns={"geometry": "geom", "addr:housenumber": "housenumber", "osm_type" : "origin_geometry"})
+    #df = df.drop(columns={"lat", "lon", "version", "timestamp", "changeset"})
+    if 'geometry' in df.columns:
+        df = df.rename(columns={"geometry": "geom"})
+    if 'way'in df.columns:
+        df = df.rename(columns={"way": "geom"})
+    df = df.rename(columns={"addr:housenumber": "housenumber"}) #, "osm_type" : "origin_geometry"
     df = df.assign(source = "osm")
 
     # Replace None values with empty strings in "name" column and dict in "tags" column
@@ -64,10 +69,10 @@ def pois_preparation_region(dataframe, config=None, return_type=None,result_name
     df["name"] = df["name"].fillna(value="")
     df["amenity"] = df["amenity"].fillna(value="")
     # Convert Null tags value to dict and str values to dict
-    if dataframe is not None:
-        df["tags"] = df["tags"].apply(lambda x: dict() if not x else ast.literal_eval(x))
-    else:
-        df["tags"] = df["tags"].apply(lambda x: dict() if not x else x)
+    # if dataframe is not None:
+    #     df["tags"] = df["tags"].apply(lambda x: dict() if not x else ast.literal_eval(x))
+    # else:
+    #     df["tags"] = df["tags"].apply(lambda x: dict() if not x else x)
     
     # variables for preparation
     # !!! Some columns could be not in the list 
@@ -123,6 +128,7 @@ def pois_preparation_region(dataframe, config=None, return_type=None,result_name
     # community_sport_centre_var = var["community_sport_centre"]
 
     # Convert polygons to points and set origin geometry for all elements
+
     df = osm_obj2points(df)
 
     # remove lines from 
@@ -331,32 +337,32 @@ def pois_preparation_region(dataframe, config=None, return_type=None,result_name
     print("Preparation took %s seconds ---" % (time.time() - start_time)) 
     df = gp.GeoDataFrame(df, geometry='geom')
     
-    if config.pbf_data and not result_name:
-        result_name = config.pbf_data + "prepared"
+    if config.pbf_data and not filename:
+        filename = config.pbf_data + "prepared"
 
-    return gdf_conversion(df,result_name,return_type)
+    return gdf_conversion(df,filename,return_type)
 
-def pois_preparation(config=None,config_buses=None,update=False,filename=None,return_type=None):
-    df_res = pd.DataFrame()
-    if not config:
-        config = Config("pois")
-    if not config_buses:
-        config_buses = Config("bus_stops")
+# def pois_preparation(config=None,config_buses=None,update=False,filename=None,return_type=None):
+#     df_res = pd.DataFrame()
+#     if not config:
+#         config = Config("pois")
+#     if not config_buses:
+#         config_buses = Config("bus_stops")
         
-    data_set = config.pbf_data
+#     data_set = config.pbf_data
 
-    for d in data_set:
-        pois_collection = osm_collect_filter(config, d, update=update)
-        pois_bus_collection = join_osm_pois_n_busstops(pois_collection[0],
-                                                    bus_stop_conversion(osm_collect_filter(config_buses,d)[0]),
-                                                    pois_collection[1])
-        temp_df = pois_preparation_region(dataframe=pois_bus_collection[0], config=config, result_name=pois_bus_collection[1])[0]
-        if data_set.index(d) == 0:
-            df_res = temp_df
-        else:
-            df_res = pd.concat([df_res,temp_df],sort=False).reset_index(drop=True)
+#     for d in data_set:
+#         pois_collection = osm_collect_filter(config, d, update=update)
+#         pois_bus_collection = join_osm_pois_n_busstops(pois_collection[0],
+#                                                     bus_stop_conversion(osm_collect_filter(config_buses,d)[0]),
+#                                                     pois_collection[1])
+#         temp_df = pois_preparation_region(dataframe=pois_bus_collection[0], config=config, result_name=pois_bus_collection[1])[0]
+#         if data_set.index(d) == 0:
+#             df_res = temp_df
+#         else:
+#             df_res = pd.concat([df_res,temp_df],sort=False).reset_index(drop=True)
 
-    return gdf_conversion(df_res, filename, return_type=return_type)
+#     return gdf_conversion(df_res, filename, return_type=return_type)
 
 
 

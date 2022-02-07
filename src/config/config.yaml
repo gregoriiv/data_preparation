@@ -2,7 +2,7 @@
 VARIABLES_SET : 
   # variables for Pyrosm collector
   # region to download - could be "Bayern"
-  region_pbf : ["Mittelfranken","Niederbayern","Oberbayern","Oberfranken","Oberpfalz","Schwaben","Unterfranken"]
+  region_pbf : ['Bayern'] # "Mittelfranken","Niederbayern","Oberbayern","Oberfranken","Oberpfalz","Schwaben","Unterfranken"
 
   landuse:
     collection:
@@ -70,9 +70,11 @@ VARIABLES_SET :
         railway : ["station", "platform", "stop", "tram_stop", "subway_entrance"]
         leisure : ["playground", "fitness_station", "water_park", "pitch", "sports_centre", 'sports_hall', "fitness_centre"]
         sport   : ["yoga", "fitness"]
+        highway          : ["bus_stop"]
+        public_transport : ["stop_position", "station"]
 
       additional_columns: ["name", "brand", "addr:street","addr:housenumber", "addr:postcode", "addr:city", "addr:country", "phone", "website", 
-                           "opening_hours", "operator", "origin", "organic", "public_transport", "subway"]
+                           "opening_hours", "operator", "origin", "organic", "subway"]
       points    : True
       polygons  : True
       lines     : True
@@ -109,14 +111,15 @@ VARIABLES_SET :
   
       supermarket: 
         rewe     : ["rewe", "rewe city"]
-        edeka    : ["e center", "edeka", "e-", "e express", "e xpress", "e aktiv", "e kauf", "nah und gut", "nah & gut", "cap markt",
-                    "cap-markt", "diska", "beckesepp", "elli", "frischemarkt ", "frischmarkt ", "inkoop", "kiezmarkt", "marktkauf", "simmel",
-                    "scheck-in"] # a lot of places impossible to define z.B."NP"
+        # edeka    : ["e center", "edeka", "e-", "e express", "e xpress", "e aktiv", "e kauf", "nah und gut", "nah & gut", "cap markt",
+        #             "cap-markt", "diska", "beckesepp", "elli", "frischemarkt ", "frischmarkt ", "inkoop", "kiezmarkt", "marktkauf", "simmel",
+        #             "scheck-in"] # a lot of places impossible to define z.B."NP" replace data from edeka file all super without operator defined
         tegut    : ["tegut"]
         feneberg : ["feneberg"]
         nahkauf  : ["nahkauf"]
         kupsch   : ["kupsch"]
         aez      : ["aez"]
+        #dorfladen: ["dorfladen"]
      
       discount_gym: 
         fitx           : ["fitx"]
@@ -154,7 +157,7 @@ VARIABLES_SET :
         exclude: ['privat','priv.','montessori','waldorf']
 
     fusion:
-      table_base  : "pois_bayern"
+      table_base  : #"pois_bayern"
       rs_set      : ["091620000","095640000","097610000","093620000","091610000","096630000","095630000","095620000","094610000",
                      "094620000","092610000","096610000","097630000","091630000","096620000","092620000","091780124","092630000",
                      "091740115","094640000","097620000","097640000","093630000","093610000","095610000","094630000","095650000",

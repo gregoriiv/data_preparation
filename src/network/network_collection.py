@@ -23,7 +23,7 @@ def network_collection(conf=None,database=None):
         database = DATABASE
 
     dbname, host, username, port, password = DATABASE['dbname'], DATABASE['host'], DATABASE['user'], DATABASE['port'], DATABASE['password']
-    region_links = conf.network_collection_regions()
+    region_links = conf.collection_regions()
     work_dir = os.getcwd()
     os.chdir('src/data/input') 
     for i, rl in enumerate(region_links):

@@ -19,34 +19,32 @@ from fusion import replace_data_area, database_connection, database_table2df, ar
 from db.db import Database
 
 
-# POIS Collection + Preparation
+# POIS Collection + Preparation + Fusion
+ 
+##============================================================POIs Collection=============================================================================##
 
-# config = Config("pois")
-# config_buses = Config("bus_stops")
-##============================================================Collection=============================================================================##
-df = pois_collection(update=True,filename="pois_bayern_collected",return_type="GeoJSON")
-df = pois_preparation_region(df, config=None, return_type="GeoJSON",result_name="pois_bayern_prepared")
+df = pois_collection(filename="pois_germany_collected",return_type="GeoJSON")[0]
 
-##============================================================Collection + Preparation POIs==========================================================##
-
+##OUTDATED##
 #osm_collect_filter(config, pbf_region="Oberbayern", driver="GeoJSON", update=False)
 
+##============================================================POIs Preparation==========================================================##
 
-data_name = "pois_bayern"
+df = pois_preparation_region(df,filename="pois_germany_prepared", return_type="GeoJSON")[0]
 
-# df = pois_preparation_set(config, config_buses, update=False, filename=data_name, return_type="GeoJSON")[0]
-
+# # NOT DEFAULT
 # # Convert pois_bayern file to remote DB (necessary to update layer manually then)
 # df = file2df("pois_bayern.geojson")
 # df2database(df,data_name)
 
-#==============================================================Fusion POIs===========================================================================##
+##OUTDATED##
+# df = pois_preparation_set(config, config_buses, update=False, filename=data_name, return_type="GeoJSON")[0]
+
+#==============================================================POIs Fusion===========================================================================##
 # ======  Fusion with config settings ====== #
 
-# df = pois_fusion(None, "pois_prepared_goat", "GeoJSON")
-
-# df = file2df("pois_prepared_goat.geojson")
-# df2database(df,"pois_prepared_goat")
+#df = file2df("pois_bayern_prepared.geojson")
+df = pois_fusion(df ,None, "pois_bayern_fused", "GeoJSON")
 
 ##==============================================================School preparation===================================================================##
 
@@ -97,8 +95,8 @@ data_name = "pois_bayern"
 # df.to_postgis(con=Database().connect_sqlalchemy(), name="landuse_bayern",if_exists='replace')
 ##======================= Network Collection and Preparation ==============================##
 #network_collection()
-prep_layers = PrepareLayers('ways')
-prep_layers.ways()
+# prep_layers = PrepareLayers('ways')
+# prep_layers.ways()
 
 
 
