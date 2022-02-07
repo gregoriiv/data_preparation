@@ -6,6 +6,7 @@ import pandas as pd
 import geopandas as gpd
 import sys, os
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir)))
+
 from db.db import Database
 import fiona
 import logging as LOGGER
@@ -94,7 +95,7 @@ class BulkImport:
             insert geodataframe created into postgres table
         """
         try:
-            data.to_postgis(table_name, engine, if_exists='append')
+            data.to_postgis(table_name, engine, if_exists='replace')
         except Exception as e :
             raise e
 

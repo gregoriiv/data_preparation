@@ -11,11 +11,15 @@
 # roof_Levels == number of roof levels
 # height == height of the building
 
-import sys
-sys.path.insert(0,"..")
-import collection
+import sys, os
+# sys.path.insert(0,"..")
+parentdir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0,parentdir)
+from config.config import Config
 
-config_population = collection.Config("population")
+
+
+config_population = Config("population")
 variable_container_population = config_population.variable_container
 
 data_fusion_buildings = f'''
