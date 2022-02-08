@@ -1,12 +1,20 @@
 #%%
 '''This script produces a SQL table with population points.'''
-
 import sys
 import os
 import importlib
+import geopandas as gpd
+# from winreg import QueryInfoKey
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir)))
 from db.db import Database
-
+from data_fusion_buildings import data_fusion_buildings as sql_data_fusion_buildings
+from classify_buildings import classify_buildings as sql_classify_buildings
+from classify_buildings import intersect_landuse as sql_intersection_landuse
+from classify_buildings import intersect_landuse_additional as sql_intersect_landuse_additional
+from classify_buildings import intersect_osm_landuse as sql_intersect_osm_landuse
+from classify_buildings import finalized_classification as sql_finalized_classification
+from classify_buildings import buildings_update as sql_buildings_update
+from building_classifier import building_prediction
 
 ### The following files are required to be in the data directory to run the script:
 
@@ -57,18 +65,18 @@ class Population():
     def __init__(self, Database):
         self.db = Database()
 
-    def _database_preparation_population(self):
-        """This function prepares the database to run the function produce_population_points()."""
-        # helper functions
-        helper_functions = importlib.import_module("helper_functions", "src")
-        self.db.perform(query = helper_functions.get_id_for_max_val.get_id_for_max_val)
-        self.db.perform(query = helper_functions.classify_building.classify_building)
-        self.db.perform(query = helper_functions.jsonb_array_int_array.jsonb_array_int_array)
-        self.db.perform(query = helper_functions.derive_dominant_class.derive_dominant_class)
-        self.db.perform(query = helper_functions.meter_degree.meter_degree)
+    # def _database_preparation_population(self):
+    #     """This function prepares the database to run the function produce_population_points()."""
+    #     # helper functions
+    #     helper_functions = importlib.import_module("helper_functions", "src")
+    #     self.db.perform(query = helper_functions.get_id_for_max_val.get_id_for_max_val)
+    #     self.db.perform(query = helper_functions.classify_building.classify_building)
+    #     self.db.perform(query = helper_functions.jsonb_array_int_array.jsonb_array_int_array)
+    #     self.db.perform(query = helper_functions.derive_dominant_class.derive_dominant_class)
+    #     self.db.perform(query = helper_functions.meter_degree.meter_degree)
 
-        # Create db extensions (should be added when creating the database?)
-        self.db.perform(query = "CREATE EXTENSION IF NOT EXISTS intarray;")
+    #     # Create db extensions (should be added when creating the database?)
+    #     self.db.perform(query = "CREATE EXTENSION IF NOT EXISTS intarray;")
 
     def produce_population_points(self, source_population):
         '''This function produces a SQL table with population points.'''
@@ -78,34 +86,79 @@ class Population():
         # give user feedback e.g. there are additional columns
 
         # prepare database
-        self._database_preparation_population()
+        # self._database_preparation_population()
 
         # execute scripts
-        scripts = importlib.import_module("population", "src")
+        # scripts = importlib.import_module("population", "src")
+
         print ('It was chosen to use population from: ', source_population)
-        self.db.perform(query = scripts.data_fusion_buildings.data_fusion_buildings)
-        self.db.perform(query = scripts.classify_buildings.classify_buildings)
-        self.db.perform(query = scripts.create_residential_addresses.create_residential_addresses)
+        self.db.perform(query = sql_data_fusion_buildings)
+        print('------ data fusion finished! ------')
+        self.db.perform(query = sql_classify_buildings)
+        print('------ buildings classificaton finished! ------')
+        self.db.perform(query = sql_intersection_landuse)
+        print ('------ landuse intersection finished! ------')
+        self.db.perform(query = sql_intersect_landuse_additional)
+        print ('------ landuse additional intersection finished! ------')
+        #self.db.perform(query = sql_intersect_osm_landuse)
+        print ('------ osm landuse intersection finished! ------')
+        #self.db.perform(query = sql_finalized_classification)
+        print ('------ finilized classification finished! ------')
+        #self.db.perform(query = sql_buildings_update)
+        print ('------ buildings upate finished! ------')
 
-        if source_population == 'census_standard':
-            self.db.perform(query = scripts.prepare_census.prepare_census)
-            self.db.perform(query = scripts.population_census.population_census)
-        elif source_population == 'census_extrapolation':
-            self.db.perform(query = scripts.prepare_census.prepare_census)
-            self.db.perform(query = scripts.population_extrapolated_census.population_extrapolated_census)
-        elif source_population == 'disaggregation':
-            # census_disaggregation: population_disaggregation
-            self.db.perform(query = scripts.population_disaggregation.population_disaggregation)
-        else:
-            print('No valid population mode was provided. Therefore the population scripts cannot be executed.') 
+        # self.db.perform(query = scripts.create_residential_addresses.create_residential_addresses)
 
+        # if source_population == 'census_standard':
+        #     self.db.perform(query = scripts.prepare_census.prepare_census)
+        #     self.db.perform(query = scripts.population_census.population_census)
+        # elif source_population == 'census_extrapolation':
+        #     self.db.perform(query = scripts.prepare_census.prepare_census)
+        #     self.db.perform(query = scripts.population_extrapolated_census.population_extrapolated_census)
+        # elif source_population == 'disaggregation':
+        #     # census_disaggregation: population_disaggregation
+        #     self.db.perform(query = scripts.population_disaggregation.population_disaggregation)
+        # else:
+        #     print('No valid population mode was provided. Therefore the population scripts cannot be executed.') 
+
+        # further classification: select residential_status = potential_residents 
+        sql_potential_residents = "SELECT gid, residential_status, geom FROM buildings b WHERE b.residential_status = 'potential_residents'"
+        gdf_potential_residents = gpd.GeoDataFrame.from_postgis(sql_potential_residents,self.db.connect_sqlalchemy())
+        print('------ data fetching finished! ------')
+        print('the number of rows: ', len(gdf_potential_residents))
+
+        # data prediction: save it to database
+        prediction_type = building_prediction(gdf_potential_residents)
+        prediction_type.to_postgis('prediction_type', self.db.connect_sqlalchemy(), if_exists='replace')
+        print(prediction_type.head())
+
+        # updating database with prediction results
+        sql_update_building_types = f'''
+        UPDATE buildings b 
+        SET residential_status = 'with_residents'
+        FROM prediction_type pt
+        WHERE b.gid = pt.gid AND pt.pred_label = 1;
+
+        UPDATE buildings b
+        SET residential_status = 'no_residents'
+        FROM prediction_type pt
+        WHERE b.gid = pt.gid AND pt.pred_label = 2;'''
+
+        self.db.perform(query = sql_update_building_types)  
+
+    
 ### tests
 
-def main():
-    population = Population(Database = Database)
-    population.produce_population_points(source_population = 'census_standard')
+population = Population(Database=Database)
+population.produce_population_points(source_population = 'census_standard')
 
-    return 0
 
-if __name__ == '__main__':
-    quit(main())
+
+# def main():
+#     population = Population(Database = Database)
+#     population.produce_population_points(source_population = 'census_standard')
+
+#     return 0
+
+# if __name__ == '__main__':
+#     quit(main())

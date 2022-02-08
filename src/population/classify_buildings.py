@@ -3,11 +3,13 @@
 # In this current implementation priority is given to the landuse_osm and landuse layers, while landuse_additional is only applied if 
 # none of the other landuse layers intersect.
 
-import sys
-sys.path.insert(0,"..")
-import collection
+import sys, os
+# sys.path.insert(0,"..")
+parentdir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0,parentdir)
+from config.config import Config
 
-config_population = collection.Config("population")
+config_population = Config("population")
 variable_container_population = config_population.variable_container
 
 classify_buildings = f'''
@@ -43,8 +45,9 @@ FROM buildings
 WHERE residential_status = 'potential_residents'; 
 
 ALTER TABLE buildings_classification ADD PRIMARY KEY(gid);
+'''
 
-
+intersect_landuse = f'''
 DO $$                  
     BEGIN 
         IF EXISTS
@@ -93,7 +96,9 @@ DO $$
         END IF ;
     END
 $$ ;
+'''
 
+intersect_landuse_additional = f'''
 DO $$                  
     DECLARE 
     	categories_no_residents TEXT[] := ARRAY{variable_container_population['custom_landuse_additional_no_residents']};
@@ -142,7 +147,9 @@ DO $$
         END IF ;
     END
 $$ ;
+'''
 
+intersect_osm_landuse = f'''
 DO $$
 	DECLARE 
     	categories_no_residents TEXT[] := ARRAY{variable_container_population['osm_landuse_no_residents']}
@@ -197,7 +204,8 @@ DO $$
         END IF ;
     END
 $$ ;
-
+'''
+finalized_classification = f'''
 CREATE INDEX ON buildings_classification USING gin (landuse_residential_status gin__int_ops);
 CREATE INDEX ON buildings_classification USING gin (landuse_additional_residential_status gin__int_ops);
 CREATE INDEX ON buildings_classification USING gin (landuse_osm_residential_status gin__int_ops);
@@ -247,7 +255,9 @@ WITH classification AS
 )
 SELECT gid, CASE WHEN classify_building = 0 THEN 'with_residents' ELSE 'no_residents' END AS residential_status 
 FROM classification;
+'''
 
+buildings_update = f'''
 UPDATE buildings b 
 SET residential_status = u.residential_status
 FROM buildings_to_update u 
@@ -257,7 +267,7 @@ WHERE b.gid = u.gid;
 
 WITH x AS (
     SELECT DISTINCT b.gid
-    FROM buildings b, pois p 
+    FROM buildings b, poi_prepared_goat p 
     WHERE st_intersects(b.geom,p.geom)
 )
 UPDATE buildings b
@@ -269,9 +279,9 @@ UPDATE buildings
 set building_levels_residential = building_levels
 WHERE building_levels_residential IS NULL;
 
-UPDATE buildings 
-SET residential_status = 'with_residents'
-WHERE residential_status = 'potential_residents';
+--UPDATE buildings 
+--SET residential_status = 'with_residents'
+--WHERE residential_status = 'potential_residents';
 
 UPDATE buildings 
 SET gross_floor_area_residential = (building_levels_residential * area) + (roof_levels/2) * area 
