@@ -9,7 +9,7 @@ class Config:
             config = yaml.safe_load(stream)
         var = config['VARIABLES_SET']
         self.name = name
-        if list(var[name].keys()) == ['collection', 'preparation', 'fusion']:
+        if list(var[name].keys()) == ['region_pbf','collection', 'preparation', 'fusion']:
             self.pbf_data = var[name]['region_pbf']
             self.collection = var[name]['collection']
             self.preparation = var[name]['preparation']
@@ -55,6 +55,7 @@ class Config:
     def osm2pgsql_create_style(self):
         add_columns = self.collection['additional_columns']
         osm_tags = self.collection["osm_tags"]
+        pol_columns = ['amenity', 'leisure', 'tourism', 'shop', 'sport', 'public_transport']
 
         f = open("src/config/style_p4b.style", "r")
         sep = '#######################CUSTOM###########################'
@@ -68,17 +69,22 @@ class Config:
 
         print(f"Creating osm2pgsql style file({self.name}_p4b.style)...")
         for column in add_columns:
-            style_line = f'node,way  {column}  text  linear'
-            f1.write(style_line)
-            f1.write('\n')
+            if column in pol_columns:
+                style_line = f'node,way  {column}  text  polygon'
+                f1.write(style_line)
+                f1.write('\n')                 
+            else:
+                style_line = f'node,way  {column}  text  linear'
+                f1.write(style_line)
+                f1.write('\n')  
         
         for tag in osm_tags:
-            if tag != 'railway' or tag != 'highway':
-                style_line = f'node,way  {tag}  text  polygon'
+            if tag in ['railway', 'highway']:
+                style_line = f'node,way  {tag}  text  linear'
                 f1.write(style_line)
                 f1.write('\n')  
             else:
-                style_line = f'node,way  {tag}  text  linear'
+                style_line = f'node,way  {tag}  text  polygon'
                 f1.write(style_line)
                 f1.write('\n')                  
 
