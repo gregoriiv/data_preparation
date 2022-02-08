@@ -57,8 +57,8 @@ node,way  subway  text  linear
 node,way  amenity  text  polygon
 node,way  shop  text  polygon
 node,way  tourism  text  polygon
-node,way  railway  text  polygon
+node,way  railway  text  linear
 node,way  leisure  text  polygon
 node,way  sport  text  polygon
-node,way  highway  text  polygon
+node,way  highway  text  linear
 node,way  public_transport  text  polygon

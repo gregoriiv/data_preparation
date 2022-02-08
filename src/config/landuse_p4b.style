@@ -40,10 +40,9 @@ node,way    import                  text    delete
 node,way    it:fvg:*                text    delete
 
 #######################CUSTOM###########################
+node,way  tourism  text  polygon
+node,way  name  text  linear
+node,way  landuse  text  polygon
 node,way  amenity  text  polygon
 node,way  leisure  text  polygon
-node,way  addr:street  text  linear
-node,way  addr:housenumber  text  linear
-node,way  building:levels  text  linear
-node,way  roof:levels  text  linear
-node,way  building  text  polygon
+node,way  natural  text  polygon
