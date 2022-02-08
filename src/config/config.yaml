@@ -1,10 +1,7 @@
 # VARIABLES_SET 
 VARIABLES_SET : 
-  # variables for Pyrosm collector
-  # region to download - could be "Bayern"
-  region_pbf : ['Bayern'] # "Mittelfranken","Niederbayern","Oberbayern","Oberfranken","Oberpfalz","Schwaben","Unterfranken"
-
   landuse:
+    region_pbf :
     collection:
         # add all tags in a list associated to their osm feature that should be collected from geofabrik 
         # if you are not sure add feature not_sure: ["tag1", "tag2"] then a dict with all tags (value) and their assosicated feature (key) and one key 
@@ -39,6 +36,7 @@ VARIABLES_SET :
       lines     : True
 
     preparation:
+      region_pbf :
         # put all osm_tags from the collection into a category of landuse_simplified as well -> new column landuse_simplified with grouped tags
       landuse_simplified : 
         water          : ["basin","reservoir","salt_pond","waters", "swimming_pool"]
@@ -58,7 +56,8 @@ VARIABLES_SET :
 
     fusion: 
   
-  pois: 
+  pois:
+    region_pbf : 
     collection:
       osm_tags:
         amenity : ["fuel", "post_office", "taxi", "atm", "bank", "dentist", "doctors", "pharmacy", "post_box", "marketplace", "bar", "biergarten", "cafe", 
@@ -305,24 +304,9 @@ VARIABLES_SET :
               column_set_value : 
               columns2fuse : ["amenity", "source", "name", "addr:street" , "housenumber" ,"addr:city", "addr:postcode"]
 
-  # Following config set treat the bug issue
-  # Bug behavior "highway" -> "bus_stop"!!!!!!!!!!!!!!!!!!!!!!!!!! 
-  bus_stops :
-    collection:
-      osm_tags: 
-        highway          : ["bus_stop"]
-        public_transport : ["stop_position", "station"]
-
-      additional_columns : ["name", "brand", "addr:street","addr:housenumber", "addr:postcode", "addr:city", "addr:country", "phone", "website", 
-                           "opening_hours", "operator", "origin", "organic", "subway"]
-      points   : True
-      polygons : True
-      lines    : True
-    preparation:
-    fusion:
-
   # config to collect buildings from OSM
   buildings :
+    region_pbf: ["Mittelfranken","Niederbayern","Oberbayern","Oberfranken","Oberpfalz","Schwaben","Unterfranken"]
     collection:
       osm_tags: 
         building: [True]
@@ -335,6 +319,7 @@ VARIABLES_SET :
 
   # Variable container to perform the population scripts      
   population:
+    region_pbf: ["Mittelfranken","Niederbayern","Oberbayern","Oberfranken","Oberpfalz","Schwaben","Unterfranken"]
     collection:
     preparation:
       average_building_levels: '4'
@@ -370,34 +355,53 @@ VARIABLES_SET :
 
   # temporary variable container to generate ways table
   ways:
+    region_pbf: ["Mittelfranken","Niederbayern","Oberbayern","Oberfranken","Oberpfalz","Schwaben","Unterfranken"]
     collection: 
-      regions: ["Mittelfranken","Niederbayern","Oberbayern","Oberfranken","Oberpfalz","Schwaben","Unterfranken"]
     preparation:
-      variable_container:
-        excluded_class_id_walking: [0,101,102,103,104,105,106,107,501,502,503,504,701,801]
-        excluded_class_id_cycling: [0,101,102,103,104,105,106,107,501,502,503,504,701,801]
-        categories_no_foot: ["use_sidepath","no"]
-        categories_no_bicycle: ["use_sidepath","no"]
-        wheelchair:
-          smoothness_no: ["very_bad","horrible","very_horrible","impassable"]
-          smoothness_limited: ['bad']
-          surface_no: ['ground','grass','sand','dirt','unhewn_cobblestone','unpaved']
-          surface_limited: ['gravel']
-          highway_onstreet_yes: ['living_street']
-          highway_onstreet_limited: ['residential','service']
-        categories_sidewalk_no_foot: ["separate"]
-        cycling_surface:
-          paving_stones: '0.2'
-          sett: '0.3'
-          unhewn_cobblestone: '0.3'
-          cobblestone: '0.3'
-          pebblestone: '0.3'
-          unpaved: '0.2'
-          compacted: '0.05'
-          fine_gravel: '0.05'
-          gravel: '0.3'
-          sand: '0.4'
-          grass: '0.25'
-          mud: '0.4'
-        one_meter_degree : 0.000009
+      excluded_class_id_walking: [0,101,102,103,104,105,106,107,501,502,503,504,701,801]
+      excluded_class_id_cycling: [0,101,102,103,104,105,106,107,501,502,503,504,701,801]
+      categories_no_foot: ["use_sidepath","no"]
+      categories_no_bicycle: ["use_sidepath","no"]
+      wheelchair:
+        smoothness_no: ["very_bad","horrible","very_horrible","impassable"]
+        smoothness_limited: ['bad']
+        surface_no: ['ground','grass','sand','dirt','unhewn_cobblestone','unpaved']
+        surface_limited: ['gravel']
+        highway_onstreet_yes: ['living_street']
+        highway_onstreet_limited: ['residential','service']
+      categories_sidewalk_no_foot: ["separate"]
+      cycling_surface:
+        paving_stones: '0.2'
+        sett: '0.3'
+        unhewn_cobblestone: '0.3'
+        cobblestone: '0.3'
+        pebblestone: '0.3'
+        unpaved: '0.2'
+        compacted: '0.05'
+        fine_gravel: '0.05'
+        gravel: '0.3'
+        sand: '0.4'
+        grass: '0.25'
+        mud: '0.4'
+      one_meter_degree : 0.000009
     fusion:
+
+
+
+##=============================================================================================================================================##
+  # Following config set treat the bug issue
+  # Bug behavior "highway" -> "bus_stop"!!!!!!!!!!!!!!!!!!!!!!!!!! 
+  # bus_stops :
+  #   region_pbf :
+  #   collection:
+  #     osm_tags: 
+  #       highway          : ["bus_stop"]
+  #       public_transport : ["stop_position", "station"]
+
+  #     additional_columns : ["name", "brand", "addr:street","addr:housenumber", "addr:postcode", "addr:city", "addr:country", "phone", "website", 
+  #                          "opening_hours", "operator", "origin", "organic", "subway"]
+  #     points   : True
+  #     polygons : True
+  #     lines    : True
+  #   preparation:
+  #   fusion:

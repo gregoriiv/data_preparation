@@ -9,8 +9,8 @@ class Config:
             config = yaml.safe_load(stream)
         var = config['VARIABLES_SET']
         self.name = name
-        if list(var[name].keys()) == ['collection', 'preparation', 'fusion']:
-            self.pbf_data = var['region_pbf']
+        if list(var[name].keys()) == ['region_pbf','collection', 'preparation', 'fusion']:
+            self.pbf_data = var[name]['region_pbf']
             self.collection = var[name]['collection']
             self.preparation = var[name]['preparation']
             self.fusion = var[name]['fusion']
@@ -29,8 +29,15 @@ class Config:
         for i in osm_tags:
             string = i
             for j in osm_tags[i]:
-                string += ('=' + j)
-                string += (' ')
+                if j == True:
+                    all_tags = OSM_tags[i]
+                    string = i
+                    for t in all_tags:
+                        string += ('=' + t)
+                        string += (' ') 
+                else:
+                    string += ('=' + j)
+                    string += (' ')
             object_filter += string
         object_filter = '"' + object_filter + '" '
 
@@ -48,32 +55,36 @@ class Config:
     def osm2pgsql_create_style(self):
         add_columns = self.collection['additional_columns']
         osm_tags = self.collection["osm_tags"]
-        #pois_columns = add_columns + [*osm_tags]
+        pol_columns = ['amenity', 'leisure', 'tourism', 'shop', 'sport', 'public_transport']
 
-
-        f = open("src/config/pois_p4b.style", "r")
+        f = open("src/config/style_p4b.style", "r")
         sep = '#######################CUSTOM###########################'
         text = f.read()
         text = text.split(sep,1)[0]
 
-        f1 = open("src/config/pois_p4b.style", "w")
+        f1 = open(f"src/config/{self.name}_p4b.style", "w")
         f1.write(text)
         f1.write(sep)
         f1.write('\n')
 
-        print("Creating osm2pgsql style file(pois_p4b.style)...")
+        print(f"Creating osm2pgsql style file({self.name}_p4b.style)...")
         for column in add_columns:
-            style_line = f'node,way  {column}  text  linear'
-            f1.write(style_line)
-            f1.write('\n')
+            if column in pol_columns:
+                style_line = f'node,way  {column}  text  polygon'
+                f1.write(style_line)
+                f1.write('\n')                 
+            else:
+                style_line = f'node,way  {column}  text  linear'
+                f1.write(style_line)
+                f1.write('\n')  
         
         for tag in osm_tags:
-            if tag != 'railway' or tag != 'highway':
-                style_line = f'node,way  {tag}  text  polygon'
+            if tag in ['railway', 'highway']:
+                style_line = f'node,way  {tag}  text  linear'
                 f1.write(style_line)
                 f1.write('\n')  
             else:
-                style_line = f'node,way  {tag}  text  linear'
+                style_line = f'node,way  {tag}  text  polygon'
                 f1.write(style_line)
                 f1.write('\n')                  
 
@@ -133,9 +144,9 @@ class Config:
                         collect.append(f"https://download.geofabrik.de/europe/germany/{v}-latest.osm.pbf")   
 
         elif regions == ['Germany']:
-            collect.append(f"https://download.geofabrik.de/europe/germany-latest.osm.pbf")
+            collect.append("https://download.geofabrik.de/europe/germany-latest.osm.pbf")
         elif regions == ['Bayern']:
-            collect.append(f"https://download.geofabrik.de/europe/germany/bayern-latest.osm.pbf")
+            collect.append("https://download.geofabrik.de/europe/germany/bayern-latest.osm.pbf")
         else:
             for r in regions:
                 for key, value in OSM_germany.items():
