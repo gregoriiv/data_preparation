@@ -22,13 +22,14 @@ from fusion import database_table2df
 # !! Notice if driver is specified it creates GeoJSON, but function still returns DF.
 # !! If it is not specified func returns only DF
 
-def pois_collection(conf=None,database=None, filename=None, return_type=None):
-    if not conf:
-        conf = Config('pois')
-    else:
-        print("Specify configuration!")
+def osm_collection(conf,database, filename=None, return_type=None):
+
+    conf = Config(conf)
     if not database:
         database = DATABASE
+
+    print(f"Collection and filtering {conf.name} started...")
+    start_time = time.time()
 
     dbname, host, username, port, password = DATABASE['dbname'], DATABASE['host'], DATABASE['user'], DATABASE['port'], DATABASE['password']
     region_links = conf.collection_regions()
@@ -53,13 +54,13 @@ def pois_collection(conf=None,database=None, filename=None, return_type=None):
     os.chdir(work_dir)
     conf.osm2pgsql_create_style()
     print(os.getcwd())
-    subprocess.run(f'osm2pgsql -d {dbname} -H {host} -U {username} --port {port} --hstore -E 4326 -W -r .osm -c src/data/input/pois_collection.osm -s --drop -C 24000 --style src/config/pois_p4b.style --prefix osm_pois', shell=True, check=True)
+    subprocess.run(f'osm2pgsql -d {dbname} -H {host} -U {username} --port {port} --hstore -E 4326 -W -r .osm -c src/data/input/pois_collection.osm -s --drop -C 24000 --style src/config/{conf.name}_p4b.style --prefix osm_{conf.name}', shell=True, check=True)
     os.chdir('src/data/input')
     subprocess.run('rm pois-merged_osm.osm', shell=True, check=True)
     subprocess.run('rm pois_collection.osm', shell=True, check=True)
     os.chdir(work_dir)
 
-    tables = ['osm_pois_line', 'osm_pois_point', 'osm_pois_polygon', 'osm_pois_roads']
+    tables = [f'osm_{conf.name}_line', f'osm_{conf.name}_point', f'osm_{conf.name}_polygon', f'osm_{conf.name}_roads']
 
     db = Database()
     con = db.connect()
@@ -72,6 +73,8 @@ def pois_collection(conf=None,database=None, filename=None, return_type=None):
         df_result = pd.concat([df_result,df], sort=False).reset_index(drop=True)
     
     df_result["osm_id"] = abs(df_result["osm_id"])
+    
+    print(f"Collection and filtering took {time.time() - start_time} seconds ---")
 
     return gdf_conversion(df_result, filename, return_type)
 
