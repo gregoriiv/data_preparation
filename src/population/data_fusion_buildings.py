@@ -17,14 +17,10 @@ parentdir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0,parentdir)
 from config.config import Config
 
-
-
-config_population = Config("population")
-variable_container_population = config_population.variable_container
+variable_container_population = Config("population").preparation
 
 data_fusion_buildings = f'''
-
-ALTER TABLE study_area ADD COLUMN IF NOT EXISTS default_building_levels SMALLINT; 
+ALTER TABLE study_area ADD COLUMN IF NOT EXISTS default_building_levels SMALLINT;
 ALTER TABLE study_area ADD COLUMN IF NOT EXISTS default_roof_levels SMALLINT; 
 
 ALTER TABLE study_area ALTER COLUMN sum_pop TYPE integer using sum_pop::integer;
@@ -204,5 +200,4 @@ $$
 		END IF;
 	END
 $$;
-
 '''

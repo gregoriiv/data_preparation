@@ -102,9 +102,9 @@ class Population():
         print ('------ landuse additional intersection finished! ------')
         #self.db.perform(query = sql_intersect_osm_landuse)
         print ('------ osm landuse intersection finished! ------')
-        #self.db.perform(query = sql_finalized_classification)
+        self.db.perform(query = sql_finalized_classification)
         print ('------ finilized classification finished! ------')
-        #self.db.perform(query = sql_buildings_update)
+        self.db.perform(query = sql_buildings_update)
         print ('------ buildings upate finished! ------')
 
         # self.db.perform(query = scripts.create_residential_addresses.create_residential_addresses)
@@ -144,7 +144,7 @@ class Population():
         FROM prediction_type pt
         WHERE b.gid = pt.gid AND pt.pred_label = 2;'''
 
-        self.db.perform(query = sql_update_building_types)  
+        #self.db.perform(query = sql_update_building_types)  
 
     
 ### tests
