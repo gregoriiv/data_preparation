@@ -6,7 +6,6 @@ import numpy as np
 import pandas as pd
 import geopandas as gp
 #from pandas.core.accessor import PandasDelegate
-from collection import osm_collect_filter, bus_stop_conversion, join_osm_pois_n_busstops
 from config.config import Config
 from other.utility_functions import gdf_conversion
 gp.options.use_pygeos = True
@@ -17,11 +16,12 @@ def pois_preparation_region(dataframe, config=None,filename="pois_preparation_re
     if not config:
         config = Config("pois")
   
+    def similar(a,b):
+        return SequenceMatcher(None,a,b).ratio()
+    
     # Function search in config
     def poi_return_search_condition(name, var_dict):
     # Func asses probability of string similarity
-        def similar(a,b):
-            return SequenceMatcher(None,a,b).ratio()
 
         for key,value in var_dict.items():
             for v in value:
@@ -48,7 +48,6 @@ def pois_preparation_region(dataframe, config=None,filename="pois_preparation_re
 
 
     df = dataframe
-    print(df)
 
     # Timer start
     print("Preparation started...")
@@ -56,7 +55,6 @@ def pois_preparation_region(dataframe, config=None,filename="pois_preparation_re
 
     df["id"] = df["osm_id"]
 
-    #df = df.drop(columns={"lat", "lon", "version", "timestamp", "changeset"})
     if 'geometry' in df.columns:
         df = df.rename(columns={"geometry": "geom"})
     if 'way'in df.columns:
@@ -68,12 +66,7 @@ def pois_preparation_region(dataframe, config=None,filename="pois_preparation_re
     # To be able to search within the values
     df["name"] = df["name"].fillna(value="")
     df["amenity"] = df["amenity"].fillna(value="")
-    # Convert Null tags value to dict and str values to dict
-    # if dataframe is not None:
-    #     df["tags"] = df["tags"].apply(lambda x: dict() if not x else ast.literal_eval(x))
-    # else:
-    #     df["tags"] = df["tags"].apply(lambda x: dict() if not x else x)
-    
+
     # variables for preparation
     # !!! Some columns could be not in the list 
     # REVISE it (probabaly check columns - if value from config is not there - create column)
@@ -483,8 +476,10 @@ def landuse_preparation(dataframe=None, filename=None, config=None, return_type=
 
     #================================ Buildings preparation ======================================#
 
-def buildings_preparation(dataframe=None, filename=None, config=None ,return_type=None, result_name="buildings_preparation_result"):
+def buildings_preparation(dataframe=None, config=None ,return_type=None, result_name="buildings_preparation_result"):
     """introduces the landuse_simplified column and classifies it according to the config input"""
+    if not config:
+        config = Config('buildings')
 
     df = dataframe
 
@@ -492,8 +487,8 @@ def buildings_preparation(dataframe=None, filename=None, config=None ,return_typ
     print("Preparation started...")
     start_time = time.time()
     # Preprocessing: removing, renaming, reordering and data type adjustments of columns
-    df = df.drop(columns={"timestamp", "version", "changeset"})
-    df = df.rename(columns={"geometry": "geom", "id": "osm_id", "osm_type": "origin_geometry",\
+    #df = df.drop(columns={"timestamp", "version", "changeset"})
+    df = df.rename(columns={"geometry": "geom", "id": "osm_id",\
                             "addr:street": "street", "addr:housenumber": "housenumber",\
                             "building:levels": "building_levels", "roof:levels": "roof_levels"})
     df["residential_status"] = None
@@ -526,9 +521,5 @@ def buildings_preparation(dataframe=None, filename=None, config=None ,return_typ
 
     # Timer finish
     print(f"Preparation took {time.time() - start_time} seconds ---")
-
-
-    if filename and not result_name:
-        result_name = filename + "prepared"
 
     return gdf_conversion(df, result_name, return_type)
