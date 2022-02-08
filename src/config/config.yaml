@@ -1,7 +1,7 @@
 # VARIABLES_SET 
 VARIABLES_SET : 
   landuse:
-    region_pbf :
+    region_pbf : ["Mittelfranken"]
     collection:
         # add all tags in a list associated to their osm feature that should be collected from geofabrik 
         # if you are not sure add feature not_sure: ["tag1", "tag2"] then a dict with all tags (value) and their assosicated feature (key) and one key 
@@ -31,7 +31,7 @@ VARIABLES_SET :
       additional_columns: ["tourism", "name"]
 
           # define which geometry types should be collected from OSM (do not turn off lines -> not all data will be collected)
-      points    : False
+      points    : True
       polygons  : True
       lines     : True
 
@@ -57,7 +57,7 @@ VARIABLES_SET :
     fusion: 
   
   pois:
-    region_pbf : 
+    region_pbf : ["Mittelfranken"]
     collection:
       osm_tags:
         amenity : ["fuel", "post_office", "taxi", "atm", "bank", "dentist", "doctors", "pharmacy", "post_box", "marketplace", "bar", "biergarten", "cafe", 
@@ -306,12 +306,12 @@ VARIABLES_SET :
 
   # config to collect buildings from OSM
   buildings :
-    region_pbf: ["Mittelfranken","Niederbayern","Oberbayern","Oberfranken","Oberpfalz","Schwaben","Unterfranken"]
+    region_pbf: ["Mittelfranken"]
     collection:
       osm_tags: 
         building: [True]
       additional_columns : ["amenity", "leisure", "addr:street", "addr:housenumber", "building:levels", "roof:levels"]
-      points: False
+      points: True
       polygons: True
       lines: True
     preparation:

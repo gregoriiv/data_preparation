@@ -32,7 +32,7 @@ def file2df(filename):
         file = open(os.path.join('src', 'data', 'input', filename), encoding="utf-8")
         df = gp.read_file(file)
     elif extens == "gpkg":
-        file =  open(os.path.join('src', 'data', 'input',filename))
+        file = os.path.join('src', 'data', 'input',filename)
         df = gp.read_file(file)
     else:
         print("Extension of file %s currently doen not support with file2df() function." % filename)

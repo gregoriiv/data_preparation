@@ -1,11 +1,9 @@
-"""This module contains all functions for the OSM data collection
-with the Pyrosm package."""
 import os
 import time
 import yaml
 import subprocess
 from pathlib import Path
-from pyrosm import get_data, OSM
+#from pyrosm import get_data, OSM
 import pandas as pd
 import numpy as np
 import geopandas as gpd
@@ -22,7 +20,7 @@ from fusion import database_table2df
 # !! Notice if driver is specified it creates GeoJSON, but function still returns DF.
 # !! If it is not specified func returns only DF
 
-def osm_collection(conf,database, filename=None, return_type=None):
+def osm_collection(conf, database, filename=None, return_type=None):
 
     conf = Config(conf)
     if not database:
@@ -34,7 +32,7 @@ def osm_collection(conf,database, filename=None, return_type=None):
     dbname, host, username, port, password = DATABASE['dbname'], DATABASE['host'], DATABASE['user'], DATABASE['port'], DATABASE['password']
     region_links = conf.collection_regions()
     work_dir = os.getcwd()
-    os.chdir('src/data/input') 
+    os.chdir('src/data/temp') 
     for i, rl in enumerate(region_links):
         subprocess.run(f'wget --no-check-certificate --output-document="pois-osm.osm.pbf" {rl}', shell=True, check=True)
         if i == 0:
@@ -54,8 +52,8 @@ def osm_collection(conf,database, filename=None, return_type=None):
     os.chdir(work_dir)
     conf.osm2pgsql_create_style()
     print(os.getcwd())
-    subprocess.run(f'osm2pgsql -d {dbname} -H {host} -U {username} --port {port} --hstore -E 4326 -W -r .osm -c src/data/input/pois_collection.osm -s --drop -C 24000 --style src/config/{conf.name}_p4b.style --prefix osm_{conf.name}', shell=True, check=True)
-    os.chdir('src/data/input')
+    subprocess.run(f'osm2pgsql -d {dbname} -H {host} -U {username} --port {port} --hstore -E 4326 -W -r .osm -c src/data/temp/pois_collection.osm -s --drop -C 24000 --style src/config/{conf.name}_p4b.style --prefix osm_{conf.name}', shell=True, check=True)
+    os.chdir('src/data/temp')
     subprocess.run('rm pois-merged_osm.osm', shell=True, check=True)
     subprocess.run('rm pois_collection.osm', shell=True, check=True)
     os.chdir(work_dir)
@@ -73,37 +71,10 @@ def osm_collection(conf,database, filename=None, return_type=None):
         df_result = pd.concat([df_result,df], sort=False).reset_index(drop=True)
     
     df_result["osm_id"] = abs(df_result["osm_id"])
-    
+
     print(f"Collection and filtering took {time.time() - start_time} seconds ---")
 
     return gdf_conversion(df_result, filename, return_type)
-
-
-#======================================== Buildings collection ===================================#
-
-def osm_collect_buildings(name='buildings', driver=None):
-    #import data from pois_coll_conf.yaml
-    with open(Path(__file__).parent/'config/config.yaml', encoding="utf-8") as stream:
-        config = yaml.safe_load(stream)
-    var = config['VARIABLES_SET']
-
-    # get region name desired pois types from yaml settings
-    pbf_data = var['region_pbf']
-    # query_values = var[name]['query_values']
-    # filter = var[name]['tags']['filter']
-    # additional = var[name]['tags']['additional']
-    # point = var[name]['points']
-    # polygon = var[name]['polygons']
-    # line = var[name]['lines']
-
-    # Get defined data from Geofabrik
-    fp = get_data(pbf_data)
-    osm = OSM(fp)
-
-    buildings = osm.get_buildings()
-
-    return gdf_conversion(buildings, name, return_type=driver)
-
 
 
 #============================================OUTDATED=============================================#

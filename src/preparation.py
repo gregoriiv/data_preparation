@@ -12,10 +12,13 @@ gp.options.use_pygeos = True
 
 #================================== POIs preparation =============================================#
 
-def pois_preparation_region(dataframe, config=None,filename="pois_preparation_result", return_type=None):
+def pois_preparation(dataframe, config=None,filename="pois_preparation_result", return_type=None):
+    
     if not config:
         config = Config("pois")
-  
+    else:
+        config = Config(config)
+
     def similar(a,b):
         return SequenceMatcher(None,a,b).ratio()
     
@@ -411,18 +414,39 @@ def kindergarten_deaggrgation(df, result_name, return_type):
 #================================ Landuse preparation ============================================#
 
 
-def landuse_preparation(dataframe=None, filename=None, config=None, return_type=None, result_name="landuse_preparation_result"):
+def landuse_preparation(dataframe=None, config=None, filename=None, return_type=None):
     """introduces the landuse_simplified column and classifies it according to the config input"""
     
     df = dataframe
+
+    if not config:
+        config = Config('landuse') 
 
     # Timer start
     print("Preparation started...")
     start_time = time.time()
 
+    df = df.rename(columns={"id": "osm_id"})
+
     # Preprocessing: removing, renaming and reordering of columns
-    df = df.drop(columns={"timestamp", "version", "changeset"})
-    df = df.rename(columns={"geometry": "geom", "id": "osm_id", "osm_type": "origin_geometry"})
+    #df = df.drop(columns={"timestamp", "version", "changeset"})
+    if 'geometry' in df.columns:
+        df = df.rename(columns={"geometry": "geom"})
+    if 'way'in df.columns:
+        df = df.rename(columns={"way": "geom"})
+
+    # classify by geometry
+    df.at[df['geom'].geom_type == "Point", 'origin_geometry'] = 'point'
+    df.at[df['geom'].geom_type == "MultiPolygon", 'origin_geometry'] = 'polygon'
+    df.at[df['geom'].geom_type == "Polygon", 'origin_geometry'] = 'polygon'
+    df.at[df['geom'].geom_type == "LineString", 'origin_geometry'] = 'line'
+
+    # remove lines and points from dataset
+    df = df[df.origin_geometry != 'line']
+    df = df.reset_index(drop=True)
+    df = df[df.origin_geometry != 'point']
+    df = df.reset_index(drop=True)
+
     df["landuse_simplified"] = None
     df = df[["landuse_simplified", "landuse", "tourism", "amenity", "leisure", "natural", "name",
              "tags", "osm_id", "origin_geometry", "geom"]]
@@ -430,7 +454,7 @@ def landuse_preparation(dataframe=None, filename=None, config=None, return_type=
     df = df.assign(source = "osm")
 
     # Fill landuse_simplified coulmn with values from the other columns
-    custom_filter = config.pyrosm_filter()[0]
+    custom_filter = config.collection['osm_tags']
 
     if custom_filter is None:
         print("landuse_simplified can only be generated if the custom_filter of collection\
@@ -469,44 +493,56 @@ def landuse_preparation(dataframe=None, filename=None, config=None, return_type=
     # Timer finish
     print(f"Preparation took {time.time() - start_time} seconds ---")
 
-    if filename and not result_name:
-        result_name = filename + "prepared"
-
-    return gdf_conversion(df, result_name, return_type)
+    return gdf_conversion(df, filename, return_type)
 
     #================================ Buildings preparation ======================================#
 
-def buildings_preparation(dataframe=None, config=None ,return_type=None, result_name="buildings_preparation_result"):
+def buildings_preparation(dataframe=None, config=None, filename=None ,return_type=None):
     """introduces the landuse_simplified column and classifies it according to the config input"""
     if not config:
         config = Config('buildings')
 
     df = dataframe
 
+    config_pop = Config('population')
+
     # Timer start
     print("Preparation started...")
     start_time = time.time()
     # Preprocessing: removing, renaming, reordering and data type adjustments of columns
-    #df = df.drop(columns={"timestamp", "version", "changeset"})
-    df = df.rename(columns={"geometry": "geom", "id": "osm_id",\
-                            "addr:street": "street", "addr:housenumber": "housenumber",\
+
+    if 'geometry' in df.columns:
+        df = df.rename(columns={"geometry": "geom"})
+    if 'way'in df.columns:
+        df = df.rename(columns={"way": "geom"})
+
+    df = df.rename(columns={"addr:street": "street", "addr:housenumber": "housenumber",\
                             "building:levels": "building_levels", "roof:levels": "roof_levels"})
     df["residential_status"] = None
     df["area"]               = None
+
+    # classify by geometry
+    df.at[df['geom'].geom_type == "Point", 'origin_geometry'] = 'point'
+    df.at[df['geom'].geom_type == "MultiPolygon", 'origin_geometry'] = 'polygon'
+    df.at[df['geom'].geom_type == "Polygon", 'origin_geometry'] = 'polygon'
+    df.at[df['geom'].geom_type == "LineString", 'origin_geometry'] = 'line'
+
+    # remove lines and points from dataset
+    df = df[df.origin_geometry != 'line']
+    df = df.reset_index(drop=True)
+    df = df[df.origin_geometry != 'point']
+    df = df.reset_index(drop=True)
+
     df = df[["osm_id", "building", "amenity", "leisure", "residential_status", "street", "housenumber",
              "area", "building_levels", "roof_levels", "origin_geometry","geom"]]
-    df["building_levels"] = pd.to_numeric(df["building_levels"], downcast="float")
-    df["roof_levels"] = pd.to_numeric(df["roof_levels"], downcast="float")
+    df["building_levels"] = pd.to_numeric(df["building_levels"], errors='coerce', downcast="float")
+    df["roof_levels"] = pd.to_numeric(df["roof_levels"], errors='coerce', downcast="float")
     df = df.assign(source = "osm")
 
     # classifying residential_status in 'with_residents', 'potential_residents', 'no_residents'
     df.loc[((df.building.str.contains("yes")) & (df.amenity.isnull()) & (df.amenity.isnull())), "residential_status"] = "potential_residents"
-    df.loc[df.building.isin(config.variable_container["building_types_residential"]), "residential_status"] = "with_residents"
+    df.loc[df.building.isin(config_pop.preparation["building_types_residential"]), "residential_status"] = "with_residents"
     df.residential_status.fillna("no_residents", inplace=True)
-
-    # remove lines from dataset
-    df = df[df.origin_geometry != 'line']
-    df = df.reset_index(drop=True)
 
     # Convert DataFrame back to GeoDataFrame (important for saving geojson)
     df = gp.GeoDataFrame(df, geometry="geom")
@@ -522,4 +558,4 @@ def buildings_preparation(dataframe=None, config=None ,return_type=None, result_
     # Timer finish
     print(f"Preparation took {time.time() - start_time} seconds ---")
 
-    return gdf_conversion(df, result_name, return_type)
+    return gdf_conversion(df, filename, return_type)

@@ -14,8 +14,6 @@ class Config:
             self.collection = var[name]['collection']
             self.preparation = var[name]['preparation']
             self.fusion = var[name]['fusion']
-        elif list(var[name].keys()) == ['variable_container']:
-            self.variable_container = var[name]['variable_container']
         else:
             print("unknown config format")
             sys.exit()
@@ -88,7 +86,7 @@ class Config:
                 f1.write(style_line)
                 f1.write('\n')                  
 
-
+    # OUTDATED
     def pyrosm_filter(self):
         """creates a filter based on user input in the config to filter the OSM import"""
         coll = self.collection
