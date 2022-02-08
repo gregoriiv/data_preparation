@@ -1,13 +1,11 @@
-import os
-import sys
 import geopandas as gpd
 import pandas as pd
 import numpy as np
 from scipy.spatial.distance import cdist
 from scipy.spatial import cKDTree
 from shapely import geometry
-from collection import gdf_conversion, Config
-from preparation import file2df
+from other.utility_functions import gdf_conversion, file2df
+from config.config import Config
 from db.db import Database
 from db.config import DATABASE
 
@@ -30,15 +28,16 @@ def database_table2df(con, table_name, geometry_column='geometry'):
     df = gpd.read_postgis(con=con,sql=query, geom_col=geometry_column)
     return df
 
-# Returns study area as df from remote db (germany_municipalities) according to rs code 
-def study_area2df(con,rs):
-    query = "SELECT * FROM germany_municipalities WHERE rs = '%s'" % rs
-    df_area = gpd.read_postgis(con=con,sql=query, geom_col='geom')
-    df_area = df_area.filter(['geom'], axis=1)
-    return df_area
-
 # Creates DataFrame with buffer (default 8300 meters) of geometries, provided as a list of dataframes
 def area_n_buffer2df(con, rs_set, buffer=8300):
+    
+    # Returns study area as df from remote db (germany_municipalities) according to rs code 
+    def study_area2df(con,rs):
+        query = "SELECT * FROM germany_municipalities WHERE rs = '%s'" % rs
+        df_area = gpd.read_postgis(con=con,sql=query, geom_col='geom')
+        df_area = df_area.filter(['geom'], axis=1)
+        return df_area
+    
     list_areas = []
     for rs in rs_set:
         df_area = study_area2df(con,rs)
@@ -246,16 +245,25 @@ def fuse_data_area(df_base2area, df_area, df_input, amenity_fuse=None, amenity_s
 
     return gdf_conversion(df_result, return_name, return_type=return_type)
 
-def fusion_set(config=None, result_name=None, return_type=None):
+def pois_fusion(df=None, config=None, result_name=None, return_type=None):
+
     con = database_connection()
     if not config:
         config = Config("pois")
 
-    table_base = config.fusion["table_base"]
     rs_set = config.fusion["rs_set"]
     typen = ["database","geojson"]
 
-    df_base = database_table2df(con, table_base, geometry_column="geometry")
+    table_base = config.fusion["table_base"]
+    if table_base:
+        print('Data from remote database will be used as a base for fusion.')
+        df_base = database_table2df(con, table_base, geometry_column="geometry")
+    elif df is not None:
+        print('Data from dataframe will be used as a base for fusion.')
+        df_base = df
+    else:
+        print('Please specify dataframe in pois_fusion() variables or table_name in config.yaml')
+    
     df_area = area_n_buffer2df(con, rs_set, buffer=8300)
     df_base2area = df2area(df_base, df_area)
 

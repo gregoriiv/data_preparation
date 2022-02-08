@@ -2,7 +2,7 @@ HOST: "localhost"
 PORT: 55432
 DB_NAME: "goat"
 USER: "goat"
-PASSWORD: "earlmanigault"
+PASSWORD: "postgres"
 
 # Remote DB connection creditentials
 HOST_RD: 

@@ -1,10 +1,10 @@
 import json
 import sys
 sys.path.insert(0,"..")
-import collection
+from config.config import Config
 
-config_ways = collection.Config("ways")
-variable_container_ways = config_ways.variable_container
+config_ways = Config("ways")
+variable_container_ways = config_ways.preparation['variable_container']
 
 network_preparation2 = f'''
 
@@ -49,7 +49,7 @@ vertices_to_update AS (
 	WHERE v.id = x.id
 )
 UPDATE ways_vertices_pgr 
-SET class_ids = array[0]
+SET tag_ids = array[0]
 FROM vertices_to_update v
 WHERE ways_vertices_pgr.id = v.id;
 
@@ -112,24 +112,4 @@ CREATE SEQUENCE ways_id_seq;
 ALTER TABLE ways ALTER COLUMN id SET DEFAULT nextval('ways_id_seq');
 ALTER SEQUENCE ways_id_seq OWNED BY ways.id;
 SELECT setval('ways_id_seq', COALESCE(max(id), 0)) FROM ways;
-
-CREATE TABLE ways_userinput (LIKE ways INCLUDING ALL);
-INSERT INTO ways_userinput
-SELECT * FROM ways;
-
-CREATE TABLE ways_userinput_vertices_pgr (LIKE ways_vertices_pgr INCLUDING ALL);
-INSERT INTO ways_userinput_vertices_pgr
-SELECT * FROM ways_vertices_pgr;
-
-ALTER TABLE ways_userinput add column userid int4;
-ALTER TABLE ways_userinput_vertices_pgr add column userid int4;
-ALTER TABLE ways_userinput add column scenario_id int4;
-ALTER TABLE ways_userinput_vertices_pgr add column scenario_id int4;
-ALTER TABLE ways_userinput ADD COLUMN original_id BIGINT;
-CREATE INDEX ON ways_userinput USING btree (userid);
-CREATE INDEX ON ways_userinput_vertices_pgr USING btree (userid);
-CREATE INDEX ON ways_userinput USING btree (scenario_id);
-CREATE INDEX ON ways_userinput_vertices_pgr USING btree (scenario_id);
-CREATE INDEX ON ways_userinput (original_id);
-
 '''

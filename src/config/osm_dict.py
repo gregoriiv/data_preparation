@@ -199,3 +199,15 @@ OSM_tags = {
                   'fairway', 'dock', 'boatyard', 'dam', 'weir', 'waterfall', 'lock_gate', 'soakhole', 'turning_point',
                   'water_point', 'fuel']
 }
+
+OSM_germany = {
+    'regions':             ["brandenburg", "bremen", "hamburg", "hessen","mecklenburg_vorpommern",
+                            "niedersachsen", "rheinland_pfalz", "saarland", "sachsen_anhalt", "sachsen",
+                            "schleswig_holstein", "thueringen"],
+    'baden-wuerttemberg' : ['freiburg-regbez', 'karlsruhe-regbez', 'stuttgart-regbez', 'tuebingen-regbez'],
+    'bayern' :             ["mittelfranken", "niederbayern", "oberbayern", "oberfranken", "oberpfalz", "schwaben", "unterfranken"],
+    'nordrhein_westfalen': ["arnsberg_regbez", "detmold_regbez", "duesseldorf_regbez", "koeln_regbez", "muenster_regbez"],
+
+}
+
+    

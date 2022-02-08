@@ -1,10 +1,13 @@
-#%%
-
 """This module contains all classes and functions for database interactions."""
 # Code based on
 # https://github.com/hackersandslackers/psycopg2-tutorial/blob/master/psycopg2_tutorial/db.py
 import logging as LOGGER
+from multiprocessing import connection
 import psycopg2
+import sys,os
+parentdir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0,parentdir)
+
 from sqlalchemy import create_engine
 from db.config import DATABASE, DATABASE_RD
 
@@ -17,18 +20,35 @@ class Database:
     def __init__(self):
         self.conn = None
 
+    def connect_geopandas(self):
+        if self.conn is None:
+            try:
+                # connection object
+                self.conn = psycopg2.connect(database = dbname, user = user, password = password,host=host, port=port)
+            
+            except Exception as e:
+                LOGGER.error(e)
+                raise e
+            finally:
+                LOGGER.getLogger().setLevel(LOGGER.INFO)   # To show logging.info in the console
+                LOGGER.info('Connection opened successfully.')
+        return self.conn
+
     def connect(self):
         """Connect to a Postgres database."""
         if self.conn is None:
             try:
                 connection_string = " ".join(("{}={}".format(*i) for i in DATABASE.items()))
+                # print(connection_string)
                 self.conn = psycopg2.connect(connection_string)
             except psycopg2.DatabaseError as e:
                 LOGGER.error(e)
                 raise e
             finally:
+                LOGGER.getLogger().setLevel(LOGGER.INFO)   # To show logging.info in the console
                 LOGGER.info('Connection opened successfully.')
         return self.conn
+      
     def connect_rd(self):
         """Connect to a Postgres database."""
         if self.conn is None:
@@ -41,7 +61,9 @@ class Database:
             finally:
                 LOGGER.info('Connection opened successfully.')
         return self.conn
+      
     def connect_sqlalchemy(self):
+        print ("Connect to a Postgres database with engine")
         """Connect to a Postgres database with engine"""
         if self.conn is None:
             try:
@@ -113,5 +135,3 @@ class Database:
         self.connect()
         self.conn.cursor()
         return self.conn.cursor()
-
-#%%

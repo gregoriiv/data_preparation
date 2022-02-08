@@ -1,18 +1,14 @@
-#%%
-
+import os,sys
+from pyexpat import model
 import geopandas as gpd
 import pandas as pd
-import os
-import sys
 import numpy as np
 from sklearn import svm
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import cohen_kappa_score
 from joblib import dump, load
 
-#%%
-
-def building_classifier(out_name):
+def building_classifier_SVM(out_name):
     '''
     use labeled dataset to train and optimzie model. save the model for further prediction
     '''
@@ -79,39 +75,40 @@ def building_classifier(out_name):
     building_out.to_file(os.path.join(sys.path[0],"data", out_name + ".geojson"))
 
 
-#%%
-building_classifier("predict_Nord-Rhein-Westfalen")
+# building_classifier_SVM("predict_Nord-Rhein-Westfalen")
 
+def building_prediction(buildings):
 
-#%%
-def building_prediction(model_file, input_file, output_name):
-
-    buildings = gpd.read_file(os.path.join(sys.path[0],"data", input_file), encoding='utf-8')
-    buildings = buildings.to_crs({'init': 'epsg:3857'})
-
-    buildings['area'] = buildings['geometry'].area
+    # buildings = gpd.read._file(os.path.join(sys.path[0],"data", input_file), encoding='utf-8')
+    buildings = buildings.to_crs(3857)   # convert unit to meter
+    print ("------ reference system converted! ------")
+    buildings['area'] = buildings['geom'].area
     # geometry have polygon and linestring, remove the linestring geometry
     buildings = buildings[buildings.area != 0]
-    buildings['perimeter'] = buildings['geometry'].length
+    buildings['perimeter'] = buildings['geom'].length
     buildings['compactness'] = (buildings['area']*4*np.pi)/buildings['perimeter']**2    # compactness
-    buildings['convex'] = buildings['geometry'].convex_hull
+    buildings['convex'] = buildings['geom'].convex_hull
     buildings['peri_convex'] = buildings['convex'].length
     buildings['area_convex'] = buildings['convex'].area
     buildings['convexity'] = buildings['peri_convex']/buildings['perimeter']    # convexity
     buildings['solidality'] = buildings['area']/buildings['area_convex']     # solidality
     buildings['roundness'] = 4*np.pi*buildings['area']/buildings['peri_convex']**2    # roundness
-    print('--1--')
+    print('------ feature calculated! ------')
+
     # load model:
+    model_file = os.path.join(sys.path[0],"data","input/building_classifier_model.joblib")
     clf = load(model_file)
+    print ('------ prediction model loaded ------')
     test_feature = np.array(buildings[["area","compactness","convexity","solidality", "roundness"]]).tolist()
-    print('--2--')
+    print ('------ start predicting ------')
     type_pred = clf.predict(test_feature) 
     buildings['pred_label'] = type_pred
+    print('------ prediction gernerated ! ------')
 
-    buildings = buildings[['gid', 'ags', 'area','pred_label','geometry']]
-    buildings.to_file(os.path.join(sys.path[0],"data", output_name + ".gpkg"))
-    # print ('--- finished ---')
+    # write predicted types of buildigns into database
+    buildings = buildings[['gid','pred_label','geom']]
+    # buildings.to_file(os.path.join(sys.path[0],"data", output_name + ".gpkg"))
+    # print ('------ buildings prediction finished! ------')
+    return buildings
 
-#%%
-building_prediction("building_classifier.joblib", "germany_buildings.zip", 'bayern_builidngs_labeled')
-
+# building_prediction("building_classifier.joblib", "germany_buildings.zip", 'bayern_builidngs_labeled')
