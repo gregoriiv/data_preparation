@@ -2,8 +2,6 @@ import os
 import time
 import yaml
 import subprocess
-from pathlib import Path
-#from pyrosm import get_data, OSM
 import pandas as pd
 import numpy as np
 import geopandas as gpd
@@ -26,36 +24,41 @@ def osm_collection(conf, database, filename=None, return_type=None):
     if not database:
         database = DATABASE
 
-    print(f"Collection and filtering {conf.name} started...")
+    print(f"Collection of osm data for {conf.name} started...")
     start_time = time.time()
 
     dbname, host, username, port, password = DATABASE['dbname'], DATABASE['host'], DATABASE['user'], DATABASE['port'], DATABASE['password']
     region_links = conf.collection_regions()
     work_dir = os.getcwd()
-    os.chdir('src/data/temp') 
+    os.chdir('src/data/temp')
+    files = ["raw-osm.osm.pbf", "raw-merged-osm.osm.pbf", "raw-merged-osm-new.osm.pbf", "raw-merged-osm.osm", "raw-merged-osm.osm", "raw-merged-osm-reduced.osm", "osm-filtered.osm"]
+    for f in files:
+        try:
+            os.remove(f)
+        except:
+            pass 
     for i, rl in enumerate(region_links):
-        subprocess.run(f'wget --no-check-certificate --output-document="pois-osm.osm.pbf" {rl}', shell=True, check=True)
+        subprocess.run(f'wget --no-check-certificate --output-document="raw-osm.osm.pbf" {rl}', shell=True, check=True)
         if i == 0:
-            subprocess.run('cp pois-osm.osm.pbf pois-merged-osm.osm.pbf', shell=True, check=True)
+            subprocess.run('cp raw-osm.osm.pbf raw-merged-osm.osm.pbf', shell=True, check=True)
         else:
-            subprocess.run('osmosis --read-pbf pois-merged-osm.osm.pbf --read-pbf pois-osm.osm.pbf --merge --write-pbf pois-merged-osm-new.osm.pbf', shell=True, check=True)
-            subprocess.run('rm pois-merged-osm.osm.pbf | mv pois-merged-osm-new.osm.pbf pois-merged-osm.osm.pbf', shell=True, check=True)
+            subprocess.run('osmosis --read-pbf raw-merged-osm.osm.pbf --read-pbf raw-osm.osm.pbf --merge --write-pbf raw-merged-osm-new.osm.pbf', shell=True, check=True)
+            subprocess.run('rm raw-merged-osm.osm.pbf | mv raw-merged-osm-new.osm.pbf raw-merged-osm.osm.pbf', shell=True, check=True)
         
-        subprocess.run('rm pois-osm.osm.pbf', shell=True, check=True)
+        subprocess.run('rm raw-osm.osm.pbf', shell=True, check=True)
 
-    subprocess.run('osmosis --read-pbf file="pois-merged-osm.osm.pbf" --write-xml file="pois-merged_osm.osm"', shell=True, check=True)
-    subprocess.run('osmconvert pois-merged_osm.osm --drop-author --drop-version --out-osm -o=pois-merged_osm_reduced.osm', shell=True, check=True)
-    subprocess.run('rm pois-merged_osm.osm | mv pois-merged_osm_reduced.osm pois-merged_osm.osm', shell=True, check=True)
-    subprocess.run('rm pois-merged-osm.osm.pbf', shell=True, check=True)
+    subprocess.run('osmosis --read-pbf file="raw-merged-osm.osm.pbf" --write-xml file="raw-merged-osm.osm"', shell=True, check=True)
+    subprocess.run('osmconvert raw-merged-osm.osm --drop-author --drop-version --out-osm -o=raw-merged-osm-reduced.osm', shell=True, check=True)
+    subprocess.run('rm raw-merged-osm.osm | mv raw-merged-osm-reduced.osm raw-merged-osm.osm', shell=True, check=True)
+    subprocess.run('rm raw-merged-osm.osm.pbf', shell=True, check=True)
     obj_filter = conf.osm_object_filter()
     subprocess.run(obj_filter, shell=True, check=True)
     os.chdir(work_dir)
     conf.osm2pgsql_create_style()
-    print(os.getcwd())
-    subprocess.run(f'osm2pgsql -d {dbname} -H {host} -U {username} --port {port} --hstore -E 4326 -W -r .osm -c src/data/temp/pois_collection.osm -s --drop -C 24000 --style src/config/{conf.name}_p4b.style --prefix osm_{conf.name}', shell=True, check=True)
+    subprocess.run(f'osm2pgsql -d {dbname} -H {host} -U {username} --port {port} --hstore -E 4326 -W -r .osm -c src/data/temp/osm-filtered.osm -s --drop -C 24000 --style src/config/{conf.name}_p4b.style --prefix osm_{conf.name}', shell=True, check=True)
     os.chdir('src/data/temp')
-    subprocess.run('rm pois-merged_osm.osm', shell=True, check=True)
-    subprocess.run('rm pois_collection.osm', shell=True, check=True)
+    subprocess.run('rm raw-merged-osm.osm', shell=True, check=True)
+    subprocess.run('rm osm-filtered.osm', shell=True, check=True)
     os.chdir(work_dir)
 
     tables = [f'osm_{conf.name}_line', f'osm_{conf.name}_point', f'osm_{conf.name}_polygon', f'osm_{conf.name}_roads']
@@ -71,8 +74,9 @@ def osm_collection(conf, database, filename=None, return_type=None):
         df_result = pd.concat([df_result,df], sort=False).reset_index(drop=True)
     
     df_result["osm_id"] = abs(df_result["osm_id"])
+    df_result = df_result.replace({np.nan: None})
 
-    print(f"Collection and filtering took {time.time() - start_time} seconds ---")
+    print(f"Collection of osm data for {conf.name} took {time.time() - start_time} seconds ---")
 
     return gdf_conversion(df_result, filename, return_type)
 
