@@ -8,25 +8,8 @@ from other.utility_functions import gdf_conversion, file2df
 from config.config import Config
 from db.db import Database
 from db.config import DATABASE
+from other.utility_functions import rdatabase_connection, database_table2df
 
-# Create connection to database db
-def database_connection():
-    db = Database()
-    con = db.connect_rd()
-    return con
-
-# Publish dataframe in remote database  
-# df - dataframe, name - table name to store, if_exists="replace" to overwrite datatable
-def df2database(df,name,if_exists='replace'):
-    db = Database()
-    con = db.connect_rd_sqlalchemy()
-    df.to_postgis(con=con, name=name, if_exists=if_exists)
-
-# Returns remote database table as a dataframe 
-def database_table2df(con, table_name, geometry_column='geometry'):
-    query = "SELECT * FROM %s" % table_name
-    df = gpd.read_postgis(con=con,sql=query, geom_col=geometry_column)
-    return df
 
 # Creates DataFrame with buffer (default 8300 meters) of geometries, provided as a list of dataframes
 def area_n_buffer2df(con, rs_set, buffer=8300):
@@ -247,7 +230,7 @@ def fuse_data_area(df_base2area, df_area, df_input, amenity_fuse=None, amenity_s
 
 def pois_fusion(df=None, config=None, result_name=None, return_type=None):
 
-    con = database_connection()
+    con = rdatabase_connection()
     if not config:
         config = Config("pois")
 

@@ -3,6 +3,7 @@ import sys
 import time
 from pathlib import Path
 import geopandas as gp
+from db.db import Database
 
 # Function for creation backupfiles
 # Convert and save dataframe as GPKG or GeoJSON file formats
@@ -39,3 +40,28 @@ def file2df(filename):
         sys.exit()
     return df     
     
+# Create connection to remote database
+def rdatabase_connection():
+    db = Database()
+    con = db.connect_rd()
+    return con
+
+# Publish dataframe in REMOTE database  
+# df - dataframe, name - table name to store, if_exists="replace" to overwrite datatable
+def df2rdatabase(df,name,if_exists='replace'):
+    db = Database()
+    con = db.connect_rd_sqlalchemy()
+    df.to_postgis(con=con, name=name, if_exists=if_exists)
+
+
+# Returns remote database table as a dataframe 
+def database_table2df(con, table_name, geometry_column='geometry'):
+    query = "SELECT * FROM %s" % table_name
+    df = gp.read_postgis(con=con,sql=query, geom_col=geometry_column)
+    return df
+
+# Create table from dataframe in local database (goat) 
+def df2database(df,name,if_exists='replace'):
+    db = Database()
+    con = db.connect_sqlalchemy()
+    df.to_postgis(con=con, name=name, if_exists=if_exists)

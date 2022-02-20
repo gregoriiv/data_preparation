@@ -57,7 +57,7 @@ VARIABLES_SET :
     fusion: 
   
   pois:
-    region_pbf : ["Mittelfranken"]
+    region_pbf : ["Bayern"]
     collection:
       osm_tags:
         amenity : ["fuel", "post_office", "taxi", "atm", "bank", "dentist", "doctors", "pharmacy", "post_box", "marketplace", "bar", "biergarten", "cafe", 
@@ -110,9 +110,9 @@ VARIABLES_SET :
   
       supermarket: 
         rewe     : ["rewe", "rewe city"]
-        # edeka    : ["e center", "edeka", "e-", "e express", "e xpress", "e aktiv", "e kauf", "nah und gut", "nah & gut", "cap markt",
-        #             "cap-markt", "diska", "beckesepp", "elli", "frischemarkt ", "frischmarkt ", "inkoop", "kiezmarkt", "marktkauf", "simmel",
-        #             "scheck-in"] # a lot of places impossible to define z.B."NP" replace data from edeka file all super without operator defined
+        edeka    : ["e center", "edeka", "e-", "e express", "e xpress", "e aktiv", "e kauf", "nah und gut", "nah & gut", "cap markt",
+                     "cap-markt", "diska", "beckesepp", "elli", "frischemarkt ", "frischmarkt ", "inkoop", "kiezmarkt", "marktkauf", "simmel",
+                     "scheck-in"] # a lot of places impossible to define z.B."NP" replace data from edeka file all super without operator defined
         tegut    : ["tegut"]
         feneberg : ["feneberg"]
         nahkauf  : ["nahkauf"]
