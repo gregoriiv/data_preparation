@@ -338,30 +338,6 @@ def pois_preparation(dataframe, config=None,filename="pois_preparation_result", 
 
     return gdf_conversion(df,filename,return_type)
 
-# def pois_preparation(config=None,config_buses=None,update=False,filename=None,return_type=None):
-#     df_res = pd.DataFrame()
-#     if not config:
-#         config = Config("pois")
-#     if not config_buses:
-#         config_buses = Config("bus_stops")
-        
-#     data_set = config.pbf_data
-
-#     for d in data_set:
-#         pois_collection = osm_collect_filter(config, d, update=update)
-#         pois_bus_collection = join_osm_pois_n_busstops(pois_collection[0],
-#                                                     bus_stop_conversion(osm_collect_filter(config_buses,d)[0]),
-#                                                     pois_collection[1])
-#         temp_df = pois_preparation_region(dataframe=pois_bus_collection[0], config=config, result_name=pois_bus_collection[1])[0]
-#         if data_set.index(d) == 0:
-#             df_res = temp_df
-#         else:
-#             df_res = pd.concat([df_res,temp_df],sort=False).reset_index(drop=True)
-
-#     return gdf_conversion(df_res, filename, return_type=return_type)
-
-
-
 # Preparation jedeschule table ->> conversion to fusable format
 def school_categorization(df, config, result_name, return_type):
     var = config.preparation

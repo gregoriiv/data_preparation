@@ -74,6 +74,7 @@ class Database:
             finally:
                 LOGGER.info('Connection opened successfully.')
         return self.conn
+        
     def connect_rd_sqlalchemy(self):
         """Connect to a Postgres database with engine"""
         if self.conn is None:

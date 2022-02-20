@@ -46,7 +46,7 @@ class Config:
         if not osm_lines:
             object_filter += '--drop-ways '
 
-        request = f'osmfilter pois-merged_osm.osm --keep={object_filter} -o=pois_collection.osm'
+        request = f'osmfilter raw-merged-osm.osm --keep={object_filter} -o=osm-filtered.osm'
 
         return request
 
@@ -85,31 +85,6 @@ class Config:
                 style_line = f'node,way  {tag}  text  polygon'
                 f1.write(style_line)
                 f1.write('\n')                  
-
-    # OUTDATED
-    def pyrosm_filter(self):
-        """creates a filter based on user input in the config to filter the OSM import"""
-        coll = self.collection
-
-        # check if input osm_tags, osm_features are valid and print non valid ones
-        for i in coll["osm_tags"].keys():
-            if i not in OSM_tags.keys():
-                print(f"{i} is not a valid osm_feature")
-        for i in [item for sublist in coll["osm_tags"].values() for item in sublist]:
-            if i not in [item for sublist in OSM_tags.values() for item in sublist] + ['all', True]:
-                print(f"{i} is not a valid osm_feature")
-
-        # loop collects all tags of a feature from osm_feature_tags_dict.py if "all" in config file
-        temp = {}
-        for key, values in coll["osm_tags"].items():
-            for value in values:
-                if value == 'all':
-                    temp = temp | {key:OSM_tags[key]}
-        
-        po_filter = coll["osm_tags"] | temp,None,"keep",list(coll["osm_tags"].keys())+\
-                    coll["additional_columns"],coll["points"], coll["lines"],coll["polygons"], None
-
-        return po_filter
 
     def fusion_key_set(self, typ):
         fus = self.fusion
@@ -187,3 +162,28 @@ def classify_osm_tags(name):
                                 temp["no_valid_osm_tag"].append(i)
             print(temp)
             sys.exit()
+
+    # # OUTDATED
+    # def pyrosm_filter(self):
+    #     """creates a filter based on user input in the config to filter the OSM import"""
+    #     coll = self.collection
+
+    #     # check if input osm_tags, osm_features are valid and print non valid ones
+    #     for i in coll["osm_tags"].keys():
+    #         if i not in OSM_tags.keys():
+    #             print(f"{i} is not a valid osm_feature")
+    #     for i in [item for sublist in coll["osm_tags"].values() for item in sublist]:
+    #         if i not in [item for sublist in OSM_tags.values() for item in sublist] + ['all', True]:
+    #             print(f"{i} is not a valid osm_feature")
+
+    #     # loop collects all tags of a feature from osm_feature_tags_dict.py if "all" in config file
+    #     temp = {}
+    #     for key, values in coll["osm_tags"].items():
+    #         for value in values:
+    #             if value == 'all':
+    #                 temp = temp | {key:OSM_tags[key]}
+        
+    #     po_filter = coll["osm_tags"] | temp,None,"keep",list(coll["osm_tags"].keys())+\
+    #                 coll["additional_columns"],coll["points"], coll["lines"],coll["polygons"], None
+
+    #     return po_filter
