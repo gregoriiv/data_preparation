@@ -42,12 +42,12 @@ def osm_collection(conf, database, filename=None, return_type=None):
         if i == 0:
             subprocess.run('cp raw-osm.osm.pbf raw-merged-osm.osm.pbf', shell=True, check=True)
         else:
-            subprocess.run('osmosis --read-pbf raw-merged-osm.osm.pbf --read-pbf raw-osm.osm.pbf --merge --write-pbf raw-merged-osm-new.osm.pbf', shell=True, check=True)
+            subprocess.run('/osmosis/bin/osmosis --read-pbf raw-merged-osm.osm.pbf --read-pbf raw-osm.osm.pbf --merge --write-pbf raw-merged-osm-new.osm.pbf', shell=True, check=True)
             subprocess.run('rm raw-merged-osm.osm.pbf | mv raw-merged-osm-new.osm.pbf raw-merged-osm.osm.pbf', shell=True, check=True)
         
         subprocess.run('rm raw-osm.osm.pbf', shell=True, check=True)
 
-    subprocess.run('osmosis --read-pbf file="raw-merged-osm.osm.pbf" --write-xml file="raw-merged-osm.osm"', shell=True, check=True)
+    subprocess.run('/osmosis/bin/osmosis --read-pbf file="raw-merged-osm.osm.pbf" --write-xml file="raw-merged-osm.osm"', shell=True, check=True)
     subprocess.run('osmconvert raw-merged-osm.osm --drop-author --drop-version --out-osm -o=raw-merged-osm-reduced.osm', shell=True, check=True)
     subprocess.run('rm raw-merged-osm.osm | mv raw-merged-osm-reduced.osm raw-merged-osm.osm', shell=True, check=True)
     subprocess.run('rm raw-merged-osm.osm.pbf', shell=True, check=True)

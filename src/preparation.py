@@ -136,7 +136,7 @@ def pois_preparation(dataframe, config=None,filename="pois_preparation_result", 
     df['amenity'] = np.where((df['leisure'] == 'playground') & (df['amenity'] == ''), df['leisure'], df['amenity'])
 
     # drop operator value for supermarkets
-    df.loc[df['shop'] == 'supermarket', 'operator'] = None
+    df.loc[df['shop'] == 'supermarket', 'operator'] = ''
  
     # Iterate through the rows
     for i in df.index:
