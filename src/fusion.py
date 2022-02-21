@@ -105,7 +105,7 @@ def find_nearest(gdA, gdB, max_dist):
 # - columns2drop_input - list(str) with column names which are not merging to base os df 
 # - return_name - str name of data, can be used as filename
 # - return_type - str ("GeoJSON", "GPKG") file type for storage return
-def replace_data_area(df_base2area, df_area, df_input, amenity_replace=None, amenity_set=False, amenity_brand_replace=None, 
+def replace_data_area(df_base2area, df_area, df_input, amenity_replace=None, amenity_set=False, amenity_operator_replace=None, 
                       columns2rename=None, column_set_value=None, columns2fuse=None, return_name = None, return_type=None):
     # Cut data to given area 
     df_input2area = gpd.overlay(df_input, df_area, how='intersection')
@@ -113,26 +113,20 @@ def replace_data_area(df_base2area, df_area, df_input, amenity_replace=None, ame
     # Remove amenity class from base dataframe
     if amenity_replace:
         df_base2area = df_base2area[df_base2area.amenity != amenity_replace]
-    elif amenity_brand_replace:
-        amenity_brand_replace = eval(amenity_brand_replace)
-        df_base2area = df_base2area[(df_base2area.operator.str.lower() != amenity_brand_replace[1].lower()) & (df_base2area.amenity.str.lower() != amenity_brand_replace[0].lower())]
+    elif amenity_operator_replace:
+        amenity_operator_replace = eval(amenity_operator_replace)
+        df_base_amenity = df_base2area[((df_base2area.operator.str.lower() == amenity_operator_replace[1].lower())) & 
+                                        (df_base2area.amenity.str.lower() == amenity_operator_replace[0].lower())]
+        df_base2area = df_base2area[~df_base2area.apply(tuple,1).isin(df_base_amenity.apply(tuple,1))]
+        #df_base2area = df_base2area[(df_base2area.operator.str.lower() != amenity_operator_replace[1].lower()) & (df_base2area.amenity.str.lower() != amenity_operator_replace[0].lower())]
     else:
-        print("Amenity (and brand) were not specified.. ")
+        print("Amenity (and operator were not specified.. ")
 
     # Prepare input data for concatination
     # if columns2drop:
     #     df_input2area = df_input2area.drop(columns={*columns2drop})
     if columns2rename:
         df_input2area = df_input2area.rename(columns=columns2rename)
-
-    if amenity_brand_replace:
-        df_input2area['amenity'] = amenity_brand_replace[0]
-        df_input2area['brand'] = amenity_brand_replace[1]
-        df_input2area['operator'] = amenity_brand_replace[1].lower()
-    elif amenity_set:
-        df_input2area['amenity'] = amenity_replace
-
-    df_input2area['amenity'] = df_input2area['amenity'].str.lower()
 
     # Set tags and geom from osm data to input
 
@@ -149,8 +143,25 @@ def replace_data_area(df_base2area, df_area, df_input, amenity_replace=None, ame
         for col in column_set_value.keys():
             df_input2area[col] = column_set_value[col]
 
-    df_input2area = df_input2area[columns2fuse]
 
+    def remove_all_by_values(list_obj, values):
+        for value in values:
+            while value in list_obj:
+                list_obj.remove(value)
+
+    if amenity_operator_replace:
+        def_values = ['amenity', 'operator']
+        remove_all_by_values(columns2fuse, def_values)
+        df_input2area['amenity'] = amenity_operator_replace[0].lower()
+        columns2fuse.extend((*def_values, 'geometry'))
+        df_input2area = df_input2area[columns2fuse]
+    elif amenity_set:
+        def_values = ['amenity']
+        remove_all_by_values(columns2fuse, def_values)
+        df_input2area['amenity'] = amenity_replace.lower()
+        columns2fuse.extend((*def_values, 'geometry'))
+        df_input2area = df_input2area[columns2fuse]      
+ 
     # Concatination of dataframes
     df_result = pd.concat([df_base2area,df_input2area],sort=False).reset_index(drop=True)
     df_result = df_result.replace({np.nan: None})

@@ -57,7 +57,7 @@ VARIABLES_SET :
     fusion: 
   
   pois:
-    region_pbf : ["Bayern"]
+    region_pbf : ["Mittelfranken","Oberpfalz"]
     collection:
       osm_tags:
         amenity : ["fuel", "post_office", "taxi", "atm", "bank", "dentist", "doctors", "pharmacy", "post_box", "marketplace", "bar", "biergarten", "cafe", 
@@ -110,9 +110,9 @@ VARIABLES_SET :
   
       supermarket: 
         rewe     : ["rewe", "rewe city"]
-        edeka    : ["e center", "edeka", "e-", "e express", "e xpress", "e aktiv", "e kauf", "nah und gut", "nah & gut", "cap markt",
-                     "cap-markt", "diska", "beckesepp", "elli", "frischemarkt ", "frischmarkt ", "inkoop", "kiezmarkt", "marktkauf", "simmel",
-                     "scheck-in"] # a lot of places impossible to define z.B."NP" replace data from edeka file all super without operator defined
+        # edeka    : ["e center", "edeka", "e-", "e express", "e xpress", "e aktiv", "e kauf", "nah und gut", "nah & gut", "cap markt",
+        #              "cap-markt", "diska", "beckesepp", "elli", "frischemarkt ", "frischmarkt ", "inkoop", "kiezmarkt", "marktkauf", "simmel",
+        #              "scheck-in"] # a lot of places impossible to define z.B."NP" replace data from edeka file all super without operator defined
         tegut    : ["tegut"]
         feneberg : ["feneberg"]
         nahkauf  : ["nahkauf"]
@@ -278,7 +278,7 @@ VARIABLES_SET :
               amenity_operator :
               columns2rename : {"official_i": "osm_id"}
               column_set_value : {"source": "jedeschule"} # for all values in osm related to brand
-              columns2fuse : ["name", "source", "osm_id", "amenity"] # , "addr:street", "housenumber", "addr:city", "addr:postcode", "addr:country", "opening_hours"
+              columns2fuse : ["name", "source", "osm_id"] # , "addr:street", "housenumber", "addr:city", "addr:postcode", "addr:country", "opening_hours"
             vitalia:
               fusion_type : "fuse"
               amenity : 
@@ -302,7 +302,23 @@ VARIABLES_SET :
               amenity_operator :
               columns2rename : {"street" : "addr:street", "zipcode" : "addr:postcode", "municipality" : "addr:city"}
               column_set_value : 
-              columns2fuse : ["amenity", "source", "name", "addr:street" , "housenumber" ,"addr:city", "addr:postcode"]
+              columns2fuse : ["source", "name", "addr:street" , "housenumber" ,"addr:city", "addr:postcode"]
+            zahnarzt_de:
+              fusion_type : "replace"
+              amenity : "dentist"
+              amenity_set : True
+              amenity_operator :
+              columns2rename : 
+              column_set_value : {"source": "datenbörse.net"}
+              columns2fuse : ["name", "addr:street" , "housenumber" ,"addr:city", "addr:postcode", "addr:country", "phone", "website", "source"]
+            edeka:
+              fusion_type : "replace"
+              amenity : 
+              amenity_set : False
+              amenity_operator : ("supermarket", "")
+              columns2rename : {"@spider" : "source"}
+              column_set_value : {"operator" : "edeka"}
+              columns2fuse : ["name", "addr:street" , "housenumber" ,"addr:city", "addr:postcode", "addr:country", "phone", "source", "opening_hours", "brand"]
 
   # config to collect buildings from OSM
   buildings :
