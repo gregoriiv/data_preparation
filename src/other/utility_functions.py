@@ -3,6 +3,8 @@ import sys
 import time
 from pathlib import Path
 import geopandas as gp
+from decouple import config
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir)))
 from db.db import Database
 
 # Function for creation backupfiles
@@ -65,3 +67,12 @@ def df2database(df,name,if_exists='replace'):
     db = Database()
     con = db.connect_sqlalchemy()
     df.to_postgis(con=con, name=name, if_exists=if_exists)
+
+def create_pgpass():
+    db_name = config("POSTGRES_DB")    
+    try:
+        os.system(f'rm ~/.pgpass_{db_name}')
+    except:
+        pass
+    os.system('echo '+':'.join([config("POSTGRES_HOST"),'5432',db_name,config("POSTGRES_USER"),config("POSTGRES_PASSWORD")])+f' > ~/.pgpass_{db_name}')
+    os.system(f'chmod 600  ~/.pgpass_{db_name}')

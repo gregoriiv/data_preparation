@@ -6,7 +6,7 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardi
 from config.config import Config
 
 config_ways = Config("ways")
-variable_container_ways = config_ways.preparation['variable_container']
+variable_container_ways = config_ways.preparation
 
 network_preparation1 = f'''
 

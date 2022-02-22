@@ -1,10 +1,12 @@
 import json
 import sys
+import os
 sys.path.insert(0,"..")
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir)))
 from config.config import Config
 
 config_ways = Config("ways")
-variable_container_ways = config_ways.preparation['variable_container']
+variable_container_ways = config_ways.preparation
 
 network_preparation2 = f'''
 

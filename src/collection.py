@@ -5,7 +5,7 @@ import subprocess
 import pandas as pd
 import numpy as np
 import geopandas as gpd
-from other.utility_functions import gdf_conversion
+from other.utility_functions import gdf_conversion, create_pgpass
 from config.config import Config
 from db.db import DATABASE, Database
 from fusion import database_table2df
@@ -19,6 +19,7 @@ from fusion import database_table2df
 # !! If it is not specified func returns only DF
 
 def osm_collection(conf, database, filename=None, return_type=None):
+    create_pgpass()
 
     conf = Config(conf)
     if not database:
@@ -27,7 +28,7 @@ def osm_collection(conf, database, filename=None, return_type=None):
     print(f"Collection of osm data for {conf.name} started...")
     start_time = time.time()
 
-    dbname, host, username, port, password = DATABASE['dbname'], DATABASE['host'], DATABASE['user'], DATABASE['port'], DATABASE['password']
+    dbname, host, username, port = DATABASE['dbname'], DATABASE['host'], DATABASE['user'], DATABASE['port']
     region_links = conf.collection_regions()
     work_dir = os.getcwd()
     os.chdir('src/data/temp')
@@ -55,7 +56,7 @@ def osm_collection(conf, database, filename=None, return_type=None):
     subprocess.run(obj_filter, shell=True, check=True)
     os.chdir(work_dir)
     conf.osm2pgsql_create_style()
-    subprocess.run(f'osm2pgsql -d {dbname} -H {host} -U {username} --port {port} --hstore -E 4326 -W -r .osm -c src/data/temp/osm-filtered.osm -s --drop -C 24000 --style src/config/{conf.name}_p4b.style --prefix osm_{conf.name}', shell=True, check=True)
+    subprocess.run(f'PGPASSFILE=~/.pgpass_{dbname} osm2pgsql -d {dbname} -H {host} -U {username} --port {port} --hstore -E 4326 -r .osm -c src/data/temp/osm-filtered.osm -s --drop -C 24000 --style src/config/{conf.name}_p4b.style --prefix osm_{conf.name}', shell=True, check=True)
     os.chdir('src/data/temp')
     subprocess.run('rm raw-merged-osm.osm', shell=True, check=True)
     subprocess.run('rm osm-filtered.osm', shell=True, check=True)
