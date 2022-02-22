@@ -5,7 +5,6 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardi
 import yaml
 from pathlib import Path
 from db.db import Database
-db = Database()
 from config.config import Config
 
 
@@ -232,8 +231,7 @@ class PrepareLayers():
     """Data layers such as population as prepared with this class."""
     def __init__(self,layer):
         config = Config(layer)
-        var = config.preparation
-        self.variable_container = var['variable_container']
+        self.variable_container = config.preparation
         self.db = Database()
 
     def check_table_exists(self, table_name):
@@ -253,26 +251,28 @@ class PrepareLayers():
         self.db.perform(query = network_preparation2)
 
 
-        # if self.variable_container["compute_slope_impedance"][1:-1] == 'yes':
-        #     slope_profiles = Profiles(ways_table='ways', filter_ways=f'''WHERE tag_id::text NOT IN(SELECT UNNEST({self.variable_container['excluded_class_id_cycling']}))''')
-        #     if self.check_table_exists('slope_profile_ways') == True: 
-        #         slope_profiles.update_line_tables()
-        #     else:
-        #         print("The table slope_profile_way does not exist")
-        #         # import dem
-
-        #         from prepare_dem import prepare_dem 
-        #         self.db.perform(query=prepare_dem)
-        #         slope_profiles.elevation_profile()
-        #         slope_profiles.compute_cycling_impedance()
-        #         slope_profiles.compute_average_slope()
-        
-import time
-start_time = time.time()
-print("Collection started...")
-
-prep_layers = PrepareLayers('ways')
-prep_layers.ways()
+        if self.variable_container["compute_slope_impedance"][1:-1] == 'yes':
+            slope_profiles = Profiles(ways_table='ways', filter_ways=f'''WHERE tag_id::text NOT IN(SELECT UNNEST({self.variable_container['excluded_class_id_cycling']}))''')
+            if self.check_table_exists('slope_profile_ways') == True: 
+                slope_profiles.update_line_tables()
+            else:
+                print("The table slope_profile_way does not exist")
+                # import dem
+                from prepare_dem import prepare_dem 
+                self.db.perform(query=prepare_dem)
+                slope_profiles.elevation_profile()
+                slope_profiles.compute_cycling_impedance()
+                slope_profiles.compute_average_slope()
 
 
-print(f"Collection took {time.time() - start_time} seconds ---")
+
+
+# import time
+# start_time = time.time()
+# print("Collection started...")
+
+# prep_layers = PrepareLayers('ways')
+# prep_layers.ways()
+
+
+# print(f"Collection took {time.time() - start_time} seconds ---")
