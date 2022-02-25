@@ -253,7 +253,7 @@ def pois_fusion(df=None, config=None, result_name=None, return_type=None):
         print('Data from remote database will be used as a base for fusion.')
         df_base = database_table2df(con, table_base, geometry_column="geometry")
     elif df is not None:
-        print('Data from dataframe will be used as a base for fusion.')
+        print('Fusion started.')
         df_base = df
     else:
         print('Please specify dataframe in pois_fusion() variables or table_name in config.yaml')
