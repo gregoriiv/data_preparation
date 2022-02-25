@@ -23,12 +23,20 @@ class PrepareDB:
         self.db.perform(query = self.read_as_str(path,'classify_building.sql'))
         self.db.perform(query = self.read_as_str(path, 'jsonb_array_int_array.sql'))
         self.db.perform(query = self.read_as_str(path,'derive_dominant_class.sql'))
+        #network preparation functions
+        self.db.perform(query = self.read_as_str(path,'get_idw_values.sql'))
+        self.db.perform(query = self.read_as_str(path,'get_slope_profile.sql'))
+        self.db.perform(query = self.read_as_str(path,'compute_impendances.sql'))
+
         print("==== preparation function finished ====")
         
     def create_db_extensions(self):
         # Create db extensions (should be added when creating the database?)
         self.db.perform(query = "CREATE EXTENSION IF NOT EXISTS intarray;")
+        self.db.perform(query = "CREATE EXTENSION IF NOT EXISTS postgis_raster;")
 
-preparation = PrepareDB(Database)
-preparation.create_db_functions()
-preparation.create_db_extensions()
+
+
+# preparation = PrepareDB(Database)
+# preparation.create_db_functions()
+# preparation.create_db_extensions()

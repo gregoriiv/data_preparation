@@ -1,9 +1,4 @@
-# import os
-# import yaml
 from decouple import config
-
-# with open(os.path.dirname(__file__) + "/../config/db.yaml", 'r') as stream:
-#     db_conf = yaml.load(stream, Loader=yaml.FullLoader)
 
 DATABASE = {
     'user':     config("POSTGRES_USER"),

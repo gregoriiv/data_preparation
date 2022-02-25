@@ -58,4 +58,3 @@ def network_collection(conf=None,database=None):
     os.chdir('src/data/temp')
     subprocess.run('rm merged_osm.osm', shell=True, check=True)
 
-

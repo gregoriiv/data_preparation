@@ -23,10 +23,11 @@ ALTER TABLE ways_vertices_pgr rename column the_geom to geom;
 ALTER TABLE ways alter column target type int4;
 ALTER TABLE ways alter column source type int4;
 
+
 CREATE INDEX ON ways USING GIST(geom);
 
 ALTER TABLE ways 
-ADD COLUMN bicycle text, ADD COLUMN foot TEXT; /*, ADD COLUMN oneway TEXT;*/ 
+ADD COLUMN bicycle text, ADD COLUMN foot TEXT, ADD COLUMN length_3857 float, ADD COLUMN coordinates_3857 json; /*, ADD COLUMN oneway TEXT;*/ 
 
 UPDATE ways 
 SET foot = p.foot
@@ -38,6 +39,12 @@ UPDATE ways
 SET bicycle = p.bicycle
 FROM planet_osm_line p
 WHERE ways.osm_id = p.osm_id;
+
+UPDATE ways
+SET length_3857 = ST_LENGTH(ST_TRANSFORM(geom, 3857));
+
+UPDATE ways
+SET coordinates_3857 = ST_ASGEOJSON(geom)::jsonb -> 'coordinates';
 
 --	ADD COLUMN crossing TEXT, ADD COLUMN one_link_crossing boolean;
 
