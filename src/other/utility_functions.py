@@ -58,7 +58,7 @@ def df2rdatabase(df,name,if_exists='replace'):
 
 # Returns remote database table as a dataframe 
 def database_table2df(con, table_name, geometry_column='geometry'):
-    query = "SELECT * FROM %s" % table_name
+    query = "SELECT * FROM %s;" % table_name
     df = gp.read_postgis(con=con,sql=query, geom_col=geometry_column)
     return df
 
@@ -68,6 +68,16 @@ def df2database(df,name,if_exists='replace'):
     con = db.connect_sqlalchemy()
     df.to_postgis(con=con, name=name, if_exists=if_exists)
 
+def drop_table(table):
+    db = Database()
+    conn = db.connect() 
+    cur = conn.cursor()
+    drop_table = '''DROP TABLE IF EXISTS {0};'''.format(table)
+    cur.execute(drop_table)
+    conn.commit()
+    conn.close()
+
+# Create pgpass function
 def create_pgpass():
     db_name = config("POSTGRES_DB")    
     try:
@@ -76,3 +86,4 @@ def create_pgpass():
         pass
     os.system('echo '+':'.join([config("POSTGRES_HOST"),'5432',db_name,config("POSTGRES_USER"),config("POSTGRES_PASSWORD")])+f' > ~/.pgpass_{db_name}')
     os.system(f'chmod 600  ~/.pgpass_{db_name}')
+

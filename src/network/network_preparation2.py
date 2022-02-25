@@ -114,4 +114,7 @@ CREATE SEQUENCE ways_id_seq;
 ALTER TABLE ways ALTER COLUMN id SET DEFAULT nextval('ways_id_seq');
 ALTER SEQUENCE ways_id_seq OWNED BY ways.id;
 SELECT setval('ways_id_seq', COALESCE(max(id), 0)) FROM ways;
+
+ALTER TABLE ways rename column tag_id to class_id;
+ALTER TABLE ways_vertices_pgr rename column tag_ids to class_ids;
 '''

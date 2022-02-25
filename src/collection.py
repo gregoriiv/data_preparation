@@ -18,7 +18,7 @@ from fusion import database_table2df
 # !! Notice if driver is specified it creates GeoJSON, but function still returns DF.
 # !! If it is not specified func returns only DF
 
-def osm_collection(conf, database, filename=None, return_type=None):
+def osm_collection(conf, database=None, filename=None, return_type=None):
     create_pgpass()
 
     conf = Config(conf)
@@ -80,6 +80,10 @@ def osm_collection(conf, database, filename=None, return_type=None):
     print(f"Collection of osm data for {conf.name} took {time.time() - start_time} seconds ---")
 
     return gdf_conversion(df_result, filename, return_type)
+
+
+
+
 
 
 #============================================OUTDATED=============================================#
