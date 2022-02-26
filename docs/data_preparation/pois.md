@@ -1,20 +1,20 @@
-# Prepare POIs
+# POIs
 HowTo for preparation of Points of Interest to GOAT database format.  
   
 All settings for the subsequent preprocessing of the data are used by the file **_config.yaml_**. The **"pois"** section provides settings for **_"collection"_, _"preparation"_** and **_"fusion"_** in the corresponding categories. 
 In the header of the configuration file there is an attribute _**"region_pbf"**_ in which as a list the regions for which the data collection and preparation will be performed. 
-!!! WARNING Be careful with the choice of region! Too large size and as a consequence, a large amount of data in the OSM for the region may significantly load the operating memory of the computer used and end in failure of the operation.!!!  
+_!!! WARNING Be careful with the choice of region! Too large size and as a consequence, a large amount of data in the OSM for the region may significantly load the operating memory of the computer used and end in failure of the operation.!!!_  
 ## Collection/Preparation
 ### Collection
 In the "collection" subsection, "osm_tags" is specified first. It specifies all kinds of points of interest to be collected from the OSM database. All tags should be correctly categorized by _"amenity", "shop",_ etc. according to the OSM documentation. When placing tags in the wrong category, selected points of interest will not be collected.  
 There is an auxiliary function that allows you to automatically assign the desired tags to existing categories.   
 The next sub-section contains the names of all attributes of the collected objects which will be converted into columns to be placed in the GOAT database. All attributes not specified here will be collected in the "tags" column in json format.  
-The subsequent _"points", "polygons"_ and _"lines"_ subsections can be defined as True or False, determining which types of geometries will be collected from the OSM database. !!! WARNING. Due to the existing bug in the **"pyrosm"** library it is NOT RECOMMENDED to change these settings!!! 
+The subsequent _"points", "polygons"_ and _"lines"_ subsections can be defined as True or False, determining which types of geometries will be collected from the OSM database. 
 ```yaml
 VARIABLES_SET:
-region_pbf : ["Mittelfranken", ...]
 ....
 pois: 
+    region_pbf : ["Mittelfranken", ...]
     collection:
       osm_tags:
         amenity : ["amenity_name1", "amenity_name2", ...]
@@ -22,9 +22,9 @@ pois:
         ...
 
       additional_columns: ["name", "brand", ...]
-      points    : True # Have to be saved as True
-      polygons  : True # Have to be saved as True
-      lines     : True # Have to be saved as True
+      points    : True # Have to be keeped as True
+      polygons  : True # Have to be keeped as True
+      lines     : True # Have to be keeped as True
 
 ```
 ### Preparation
@@ -56,7 +56,15 @@ The last subcategory **"schools"** specifies the configuration for preparing a f
         exclude: [...]
 ...
 ```
-Collection and preparation of data are possible in one step with the function **_pois_preparation_set()_**, where by default a dataframe is returned, which can subsequently be exported to the GOAT database. The function is able to accept the following variables (_config_, _config_buses_, _update_, _filename_, _return_type_). The variables **_config_**, **_config_buses_** can be user-defined, but are defined inside the function by default. The update(True or False) variable determines whether data will be downloaded from the OSM for processing or whether local data previously downloaded will be used. The default is **False**. Also the result of the operation can be saved as a file in _crs/data/output_. For this purpose, you can use variables **filename** and **return_type**, in which you can specify file name and extension respectively. At the moment, the extensions **"GeoJSON"** and **"GPKG"** are supported, which can be defined in **return_type**. 
+### Execution of Collection and Preparation
+ - See chapter **Quick Start - Command Line**
+
+### Manual execution of function for Collection
+Collection can be done manually with function **_osm_collection()_** , where by default a dataframe and its name are returned as a tuple, which can subsequently be used for preparation function exported to the GOAT database. Variable **_conf_** should be defined by user. It should be **_pois_**, **_landuse_** or **_buildings_**. Variable **_database_** by default is local GOAT database, but can be specified manually. The result of the operation can be saved as a file in _crs/data/output_. For this purpose, you it is neccessary to specify variables **filename** and **return_type**. By default it is None.
+
+### Manual execution of function for Preparation
+Preparation of data also is possible to execute manually with the function **_pois_preparation()_**, where by default a dataframe and its name are returned as a tuple, and dataframe can subsequently be exported to the GOAT database. The function is able to accept the following variables (_config_, _config_buses_, _update_, _filename_, _return_type_). The variables **_config_** can be user-defined, but are defined inside the function by default. The result of the operation can be saved as a file in _crs/data/output_. For this purpose, you can use variables **filename** and **return_type**, in which you can specify file name and extension respectively. At the moment, the extensions **"GeoJSON"** and **"GPKG"** are supported, which can be defined in **return_type**. 
+
 ## Fusion
 The fusion settings are in the corresponding subcategory. The fusion process uses data from remote database tables.  
 To communicate with a remote database, you need to configure the connection configuration. For this purpose it is necessary to correct the file **db.yaml** in the folder **_src/config_**.  
@@ -97,7 +105,9 @@ Next comes a subcategory containing settings for data that will be integrated in
   
 **column_set_value** - allows to create a column and assign a pre-fusion value to it. For example, create a source column and specify the value.
   
-**columns2fuse** - here should be specified the names of those columns in the input data whose contents will be integrated into the final table. **Important! "amenity", "operator" and "geometry" should not be defined in list, it will be attached automatically.**
+**columns2fuse** - here should be specified the names of those columns in the input data whose contents will be integrated into the final table. 
+
+**Important! "amenity", "operator" and "geometry" should not be defined in list, it will be attached automatically.**
 
 ```yaml
 ...
@@ -123,25 +133,8 @@ Next comes a subcategory containing settings for data that will be integrated in
               ...
 ...              
 ```
-Fusion is done with a single function **fusion_set()**, which by default returns the dataframe. It is possible to save the result of fusion as a file if the _result_filename_ and _return_type_ variables are defined. For example, **fusion_set(result_name="pois_result", return_type="GeoJSON")**. At the moment, the extensions **"GeoJSON"** and **"GPKG"** are supported. Result file will be saved in _crs/data/output_
-
-## 
-### Temporary Bug Fix
-  Following configuration set treat the bug issue of pyrosm library
-  !!! DO NOT CHANGE !!!
-```yaml
-...
-  bus_stops :
-    collection:
-      osm_tags: 
-        highway          : ["bus_stop"]
-        public_transport : ["stop_position", "station"]
-
-      additional_columns : ["name", "brand", "addr:street","addr:housenumber", "addr:postcode", "addr:city", "addr:country", "phone", "website", 
-                           "opening_hours", "operator", "origin", "organic", "subway"]
-      points   : True
-      polygons : True
-      lines    : True
-    preparation:
-    fusion:
-```
+### Execution of Fusion
+ - See chapter **Quick Start - Command Line**
+ 
+### Manual execution of function
+Fusion is done with a single function **pois_fusion()**, which by default returns the dataframe. It is possible to save the result of fusion as a file if the _result_filename_ and _return_type_ variables are defined. For example, **pois_fusion(df, config='pois', result_name="pois_result", return_type="GeoJSON")**. At the moment, the extensions **"GeoJSON"** and **"GPKG"** are supported. Result file will be saved in _crs/data/output_

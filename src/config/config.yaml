@@ -402,23 +402,3 @@ VARIABLES_SET :
         mud: '0.4'
       one_meter_degree : 0.000009
     fusion:
-
-
-
-##=============================================================================================================================================##
-  # Following config set treat the bug issue
-  # Bug behavior "highway" -> "bus_stop"!!!!!!!!!!!!!!!!!!!!!!!!!! 
-  # bus_stops :
-  #   region_pbf :
-  #   collection:
-  #     osm_tags: 
-  #       highway          : ["bus_stop"]
-  #       public_transport : ["stop_position", "station"]
-
-  #     additional_columns : ["name", "brand", "addr:street","addr:housenumber", "addr:postcode", "addr:city", "addr:country", "phone", "website", 
-  #                          "opening_hours", "operator", "origin", "organic", "subway"]
-  #     points   : True
-  #     polygons : True
-  #     lines    : True
-  #   preparation:
-  #   fusion:
