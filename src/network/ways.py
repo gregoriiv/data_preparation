@@ -126,13 +126,6 @@ class PrepareLayers():
             conn.close()
 
 
-
-            
-# prep_layers = PrepareLayers('ways')
-# prep_layers.ways()
-
-
-
 ##==========================================OUTDATED===============================================###
 
 # class Profiles:

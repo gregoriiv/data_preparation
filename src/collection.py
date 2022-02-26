@@ -82,10 +82,6 @@ def osm_collection(conf, database=None, filename=None, return_type=None):
     return gdf_conversion(df_result, filename, return_type)
 
 
-
-
-
-
 #============================================OUTDATED=============================================#
 #=================================================================================================#
 

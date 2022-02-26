@@ -390,7 +390,7 @@ def kindergarten_deaggrgation(df, result_name, return_type):
 #================================ Landuse preparation ============================================#
 
 
-def landuse_preparation(dataframe=None, config=None, filename=None, return_type=None):
+def landuse_preparation(dataframe, config=None, filename=None, return_type=None):
     """introduces the landuse_simplified column and classifies it according to the config input"""
     
     df = dataframe
@@ -473,7 +473,7 @@ def landuse_preparation(dataframe=None, config=None, filename=None, return_type=
 
     #================================ Buildings preparation ======================================#
 
-def buildings_preparation(dataframe=None, config=None, filename=None ,return_type=None):
+def buildings_preparation(dataframe, config=None, filename=None ,return_type=None):
     """introduces the landuse_simplified column and classifies it according to the config input"""
     if not config:
         config = Config('buildings')
