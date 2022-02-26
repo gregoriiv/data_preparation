@@ -4,7 +4,7 @@ from argparse import RawTextHelpFormatter
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir)))
 from src.other.utility_functions import database_table2df, df2database, drop_table
 from src.collection import osm_collection
-from src.preparation import pois_preparation
+from src.preparation import pois_preparation, landuse_preparation, buildings_preparation
 from src.fusion import pois_fusion
 from src.network.network_collection import network_collection
 from src.network.ways import PrepareLayers, Profiles
@@ -43,6 +43,16 @@ if prepare or prepare in(layers_prepare):
         pois = pois_preparation(pois)[0]
         drop_table('pois')
         df2database(pois, 'pois')
+    elif prepare == 'landuse':
+        landuse = osm_collection('landuse')[0]
+        landuse = landuse_preparation(landuse)[0]
+        drop_table('landuse')
+        df2database(landuse, 'landuse')
+    elif prepare == 'buildings':
+        buildings = osm_collection('buildings')[0]
+        buildings = buildings_preparation(buildings)[0]   
+        drop_table('buildings')
+        df2database(buildings, 'buildings')             
     else:
         print('Please specify a valid preparation type.')
 
@@ -54,4 +64,5 @@ if fuse or fuse in(layers_fuse):
         pois = pois_fusion(pois)[0]
         drop_table('pois_fused')
         df2database(pois, 'pois_fused')
-        
+    else:
+        print('Please specify a valid fusion type.')
