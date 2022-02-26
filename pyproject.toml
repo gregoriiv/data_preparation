@@ -23,6 +23,8 @@ cykhash = "1.0.2"
 Fiona = "1.8.20"
 h3 = "^3.7.3"
 python-decouple = "^3.6"
+mkdocs = "^1.2.3"
+mkdocs-material = "^8.2.2"
 
 [tool.poetry.dev-dependencies]
 mypy = "^0.770"
