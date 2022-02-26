@@ -155,7 +155,7 @@ def replace_data_area(df_base2area, df_area, df_input, amenity_replace=None, ame
         df_input2area['amenity'] = amenity_operator_replace[0].lower()
         columns2fuse.extend((*def_values, 'geometry'))
         df_input2area = df_input2area[columns2fuse]
-    elif amenity_set:
+    elif amenity_replace:
         def_values = ['amenity']
         remove_all_by_values(columns2fuse, def_values)
         df_input2area['amenity'] = amenity_replace.lower()
