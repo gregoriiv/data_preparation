@@ -270,16 +270,21 @@ def pois_fusion(df=None, config=None, result_name=None, return_type=None):
             if typ == 'geojson':
                 filename = key + '.' + typ
                 df_input = file2df(filename)
+                df_input = df2area(df_input, df_area)
             elif typ == 'database':
                 df_input = database_table2df(con, key)
-            df_input2area = df2area(df_input, df_area)
-            
-            if config.fusion_type(typ, key) == "fuse":
-                df_base2area = fuse_data_area(df_base2area, df_area, df_input, *fusion_set, return_name = None, return_type=None)[0]
-            elif config.fusion_type(typ, key) == "replace":
-                df_base2area = replace_data_area(df_base2area, df_area, df_input, *fusion_set, return_name = None, return_type=None)[0]
-            else:
-                print("Fusion type for %s was not defined. Fusion was not done." % key)
+                df_input = df2area(df_input, df_area)
+
+            if df_input.empty:
                 pass
+            else:
+                if config.fusion_type(typ, key) == "fuse":                                                            
+                    df_base2area = fuse_data_area(df_base2area, df_area, df_input, *fusion_set, return_name = None, return_type=None)[0]
+                elif config.fusion_type(typ, key) == "replace":
+                    df_base2area = replace_data_area(df_base2area, df_area, df_input, *fusion_set, return_name = None, return_type=None)[0]
+                else:
+                    print("Fusion type for %s was not defined. Fusion was not done." % key)
+                    pass
+
 
     return gdf_conversion(df_base2area, result_name, return_type=return_type)
