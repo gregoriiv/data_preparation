@@ -324,10 +324,12 @@ def pois_preparation(dataframe, config=None,filename="pois_preparation_result", 
         df = df.drop(columns={"id"})
 
 
-    # Remove irrelevant columns
+    # Remove irrelevant columns an rows with mot defined amenity
     df = df.drop(columns={"shop", "tourism", "leisure", "sport", "highway", "origin", "organic", "public_transport", "railway", "subway"})
 
     df = df.drop_duplicates(subset=['osm_id', 'amenity', 'name'], keep='first')
+
+    df = df.drop(df[df.amenity == ''].index)
 
     # Timer finish
     print("Preparation took %s seconds ---" % (time.time() - start_time)) 
@@ -388,7 +390,6 @@ def kindergarten_deaggrgation(df, result_name, return_type):
     return gdf_conversion(df_result, result_name,return_type)
 
 #================================ Landuse preparation ============================================#
-
 
 def landuse_preparation(dataframe, config=None, filename=None, return_type=None):
     """introduces the landuse_simplified column and classifies it according to the config input"""
@@ -471,7 +472,7 @@ def landuse_preparation(dataframe, config=None, filename=None, return_type=None)
 
     return gdf_conversion(df, filename, return_type)
 
-    #================================ Buildings preparation ======================================#
+#================================ Buildings preparation ======================================#
 
 def buildings_preparation(dataframe, config=None, filename=None ,return_type=None):
     """introduces the landuse_simplified column and classifies it according to the config input"""

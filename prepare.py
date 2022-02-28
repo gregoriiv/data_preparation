@@ -23,6 +23,7 @@ parser = argparse.ArgumentParser(formatter_class=argparse.RawTextHelpFormatter)
 parser.add_argument('-db',help='Create neccesary extensions and functions for fresh database', action='store_true')
 parser.add_argument('-prepare',help='Please specify layer name for data collection and preparation from osm (e.g. pois, network)')
 parser.add_argument('-fuse',help='Please specify layer name for data fusion from osm (e.g. pois, network)')
+
 args = parser.parse_args()
 prepare = args.prepare
 fuse = args.fuse
@@ -32,6 +33,7 @@ if args.db == True:
     prepare_db = PrepareDB(Database)
     prepare_db.create_db_functions()
     prepare_db.create_db_extensions()
+    prepare_db.create_db_tables()
 
 if prepare or prepare in(layers_prepare):
     if prepare == 'network':
@@ -64,5 +66,6 @@ if fuse or fuse in(layers_fuse):
         pois = pois_fusion(pois)[0]
         drop_table('pois_fused')
         df2database(pois, 'pois_fused')
+        db.perform(query = 'ALTER TABLE pois_fused RENAME COLUMN geometry TO geom;')
     else:
         print('Please specify a valid fusion type.')
