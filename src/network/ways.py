@@ -101,12 +101,11 @@ class PrepareLayers():
             AND    table_name   = %(table_name)s);''', params={"table_name": table_name})[0][0]
 
     def ways(self):
-        
-        from network_preparation1 import network_preparation1
+        from src.network.network_preparation1 import network_preparation1
         self.db.perform(query = network_preparation1)
-        from network_islands import network_islands
+        from src.network.network_islands import network_islands
         self.db.perform(query=network_islands)
-        from network_preparation2 import network_preparation2
+        from src.network.network_preparation2 import network_preparation2
         self.db.perform(query = network_preparation2)
 
         if self.variable_container["compute_slope_impedance"][1:-1] == 'yes':

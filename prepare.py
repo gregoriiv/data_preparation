@@ -8,6 +8,7 @@ from src.preparation import pois_preparation, landuse_preparation, buildings_pre
 from src.fusion import pois_fusion
 from src.network.network_collection import network_collection
 from src.network.ways import PrepareLayers, Profiles
+from src.network.conversion_dem import conversion_dem
 
 from src.db.db import Database
 from src.db.prepare import PrepareDB
@@ -35,9 +36,12 @@ if args.db == True:
     prepare_db.create_db_extensions()
     prepare_db.create_db_tables()
 
+
 if prepare or prepare in(layers_prepare):
     if prepare == 'network':
-        network_collection()
+        # network_collection()
+        print('Network collection has been finished.')
+        print('Starting network preparation..')
         prep_layers = PrepareLayers('ways')
         prep_layers.ways()
     elif prepare == 'pois':

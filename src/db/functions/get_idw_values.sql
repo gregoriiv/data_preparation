@@ -2,7 +2,7 @@ CREATE OR REPLACE FUNCTION get_idw_values(geom geometry)
 RETURNS TABLE (dp_geom geometry, distance float, val float )
  LANGUAGE sql
 AS $function$
-	
+	SET LOCAL check_function_bodies TO FALSE;
 	SELECT dp.geom, ST_DISTANCE(r.geom,dp.geom) distance, val
 	FROM  
 	(
