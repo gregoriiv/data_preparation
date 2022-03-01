@@ -8,7 +8,7 @@ DECLARE
 	length_degree NUMERIC;
 	translation_m_degree NUMERIC;
 BEGIN
-	
+	SET LOCAL check_function_bodies TO FALSE;
 	SELECT geom, length_m, ST_Length(geom) 
 	INTO way_geom, length_meters, length_degree
 	FROM ways

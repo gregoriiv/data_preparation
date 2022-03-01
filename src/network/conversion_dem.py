@@ -28,5 +28,3 @@ def conversion_dem(filepath=None):
     subprocess.run(f'raster2pgsql -c -C -s 4326 -f rast -F -I -M -t 100x100 {filepath}_conv.tif public.{table_name} > {filepath}.sql', shell=True, check=True)
     subprocess.run(f'PGPASSFILE=~/.pgpass_{dbname} psql -d %s -U %s -h %s -p %s postgres --command="DROP TABLE IF EXISTS dem" -q' % (dbname,username,host,port), shell=True, check=True)
     subprocess.run(f'PGPASSFILE=~/.pgpass_{dbname} psql -d %s -U %s -h %s -p %s postgres -f %s.sql -q' % (dbname,username,host,port,filepath), shell=True, check=True)
-
-#conversion_dem()

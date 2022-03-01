@@ -35,6 +35,8 @@ class PrepareDB:
         self.db.perform(query = "CREATE EXTENSION IF NOT EXISTS intarray;")
         self.db.perform(query = "CREATE EXTENSION IF NOT EXISTS postgis_raster;")
 
+    def create_db_tables(self):
+        self.db.perform(query = "CREATE TABLE IF NOT EXISTS poi_goat_id (poi_goat_id VARCHAR, index int, osm_id VARCHAR);")
 
 
 # preparation = PrepareDB(Database)

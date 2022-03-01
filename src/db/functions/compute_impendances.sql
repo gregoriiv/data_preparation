@@ -16,6 +16,7 @@ DECLARE
 	sumImpedance float := 0.0;
 	sumImpedanceReverse float := 0.0;
 BEGIN
+	SET LOCAL check_function_bodies TO FALSE;
 	IF linkLength > (2*lengthInterval) THEN
 		lengthLastSection = linkLength - ((len_array - 2) * lengthInterval);
 	ELSEIF linkLength > lengthInterval AND linkLength < (2*lengthInterval) THEN
