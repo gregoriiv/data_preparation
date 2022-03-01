@@ -286,7 +286,6 @@ def fuse_data_area(df_base2area, df_area, df_input, amenity_fuse=None, amenity_s
 
 def pois_fusion(df=None, config=None, result_name=None, return_type=None):
 
-    con = rdatabase_connection()
     if not config:
         config = Config("pois")
 
@@ -294,6 +293,9 @@ def pois_fusion(df=None, config=None, result_name=None, return_type=None):
     typen = ["database","geojson"]
 
     table_base = config.fusion["table_base"]
+    if table_base or config.fusion_key_set('database'):
+        con = rdatabase_connection()
+
     if table_base:
         print('Data from remote database will be used as a base for fusion.')
         df_base = database_table2df(con, table_base, geometry_column="geometry")
