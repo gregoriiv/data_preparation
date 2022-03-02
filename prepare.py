@@ -39,7 +39,8 @@ if args.db == True:
 
 if prepare or prepare in(layers_prepare):
     if prepare == 'network':
-        # network_collection()
+        print('Network collection started.')
+        network_collection()
         print('Network collection has been finished.')
         print('Starting network preparation..')
         prep_layers = PrepareLayers('ways')

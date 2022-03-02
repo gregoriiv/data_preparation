@@ -2,11 +2,14 @@ import sys
 import yaml
 import os
 from pathlib import Path
+import pandas as pd
+import geopandas as gpd 
 from config.osm_dict import OSM_tags, OSM_germany
+from src.other.utility_functions import rdatabase_connection, file2df
 
 class Config:
     def __init__(self,name):
-        with open('src/config/config.yaml', encoding="utf-8") as stream:
+        with open(os.path.join('src','config','config.yaml'), encoding="utf-8") as stream:
             config = yaml.safe_load(stream)
         var = config['VARIABLES_SET']
         self.name = name
@@ -56,12 +59,12 @@ class Config:
         osm_tags = self.collection["osm_tags"]
         pol_columns = ['amenity', 'leisure', 'tourism', 'shop', 'sport', 'public_transport']
 
-        f = open("src/config/style_p4b.style", "r")
+        f = open(os.path.join('src','config','style_p4b.style'), "r")
         sep = '#######################CUSTOM###########################'
         text = f.read()
         text = text.split(sep,1)[0]
 
-        f1 = open(f"src/config/{self.name}_p4b.style", "w")
+        f1 = open(os.path.join('src','config', (self.name + '_p4b.style'))  , "w")
         f1.write(text)
         f1.write(sep)
         f1.write('\n')
@@ -104,6 +107,63 @@ class Config:
         fus = self.fusion["fusion_data"]["source"][typ][key]
         fus_type = fus["fusion_type"]
         return fus_type
+
+    def get_areas_by_rs(self, buffer):
+
+        # Returns study area as df from remote db (germany_municipalities) according to rs code 
+        def study_area_remote2df(con,rs):
+            query = "SELECT * FROM germany_municipalities WHERE rs = '%s'" % rs
+            df_area = gpd.read_postgis(con=con,sql=query, geom_col='geom')
+            df_area = df_area.filter(['geom'], axis=1)
+            
+            return df_area
+
+        def study_area_file2df(rs_set):
+            filename = 'germany_municipalities.gpkg'
+            df_rs = file2df(filename)
+            df_bool = df_rs.rs.isin(rs_set)
+            df_res = df_rs[df_bool]
+            df_res = df_res.filter(['geometry'], axis=1)
+            return df_res
+
+        rs_set = self.fusion["rs_set"]
+
+        try:
+            df_area_union = study_area_file2df(rs_set)
+            print('File extraction..')
+        except:
+            try:
+                list_areas = []
+                con = rdatabase_connection()
+                for rs in rs_set:
+                    df_area = study_area_remote2df(con,rs)
+                    list_areas.append(df_area)
+                df_area_union = pd.concat(list_areas,sort=False).reset_index(drop=True)
+                print('DB connection..')
+            except:
+                print("Please make sure that in remote DB is table 'germany_municipalities' or in folder data/input is 'germany_municipalities.gpkg' file.")
+                sys.exit()
+        # if column geometry rename to geom
+        try:
+            df_area_union = df_area_union.rename(columns={"geom": "geometry"})
+        except:
+            pass
+
+        df_area_union["dis_field"] = 1
+        df_area_union = df_area_union.dissolve(by="dis_field")
+        area_union_buffer = df_area_union
+        area_union_buffer = area_union_buffer.to_crs(31468)
+        area_union_buffer["geometry"] = area_union_buffer["geometry"].buffer(buffer)
+        area_union_buffer = area_union_buffer.to_crs(4326)
+        buffer_serie = area_union_buffer.difference(df_area_union)
+        df_buffer_area = gpd.GeoDataFrame(geometry=buffer_serie)
+        df_buffer_area = df_buffer_area.set_crs('epsg:4326')
+        df_buffer_area = df_buffer_area.reset_index(drop=True)
+        #df_buffer_area = df_buffer_area.rename(columns={"geometry":"geom"})    
+        df = pd.concat([df_area_union,df_buffer_area], sort=False).reset_index(drop=True)
+        df["dis_field"] = 1
+        df = df.dissolve(by="dis_field").reset_index(drop=True)
+        return df
 
     def collection_regions(self):
         regions = self.pbf_data

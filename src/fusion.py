@@ -289,24 +289,19 @@ def pois_fusion(df=None, config=None, result_name=None, return_type=None):
     if not config:
         config = Config("pois")
 
-    rs_set = config.fusion["rs_set"]
-    typen = ["database","geojson"]
-
-    table_base = config.fusion["table_base"]
-
-    con = rdatabase_connection()
+#    rs_set = config.fusion["rs_set"]
+    typen = ["database","geojson", "gpkg"]
 
     # REMOVE OPTION FOR BASE TABLE FROM 
-    if table_base:
-        print('Data from remote database will be used as a base for fusion.')
-        df_base = database_table2df(con, table_base, geometry_column="geometry")
-    elif df is not None:
+    if df is not None:
         print('Fusion started.')
         df_base = df
     else:
         print('Please specify database table in pois_fusion() variables or table_name in config.yaml')
     
-    df_area = area_n_buffer2df(con, rs_set, buffer=8300)
+    #df_area = area_n_buffer2df(con, rs_set, buffer=8300)
+
+    df_area = config.get_areas_by_rs(buffer=8300)
     df_base2area = df2area(df_base, df_area)
 
     for typ in typen:
@@ -317,14 +312,30 @@ def pois_fusion(df=None, config=None, result_name=None, return_type=None):
             fusion_set = config.fusion_set(typ,key)
             if typ == 'geojson':
                 filename = key + '.' + typ
-                df_input = file2df(filename)
-                df_input = df2area(df_input, df_area)
+                try:
+                    df_input = file2df(filename)
+                    df_input = df2area(df_input, df_area)
+                except:
+                    print(f"File {filename} was not found in 'input' folder.")
+                    df_input = gpd.GeoDataFrame()
                 
-            # here should be GPKG option
+            elif typ == 'gpkg':
+                filename = key + '.' + typ
+                try:
+                    df_input = file2df(filename)
+                    df_input = df2area(df_input, df_area)
+                except:
+                   print(f"File {filename} was not found in 'input' folder.")
+                   df_input = gpd.GeoDataFrame()
 
             elif typ == 'database':
-                df_input = database_table2df(con, key)
-                df_input = df2area(df_input, df_area)
+                try:
+                    con = rdatabase_connection()
+                    df_input = database_table2df(con, key)
+                    df_input = df2area(df_input, df_area)
+                except:
+                    print(f"Table {key} was not found in 'goat' table.")
+                    df_input = gpd.GeoDataFrame()
 
             if df_input.empty:
                 pass
@@ -336,7 +347,7 @@ def pois_fusion(df=None, config=None, result_name=None, return_type=None):
                 else:
                     print("Fusion type for %s was not defined. Fusion was not done." % key)
                     pass
-    
+
     df_base2area = dataframe_goat_index(df_base2area)
 
     return gdf_conversion(df_base2area, result_name, return_type=return_type)
