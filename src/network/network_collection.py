@@ -2,6 +2,7 @@ import subprocess
 import os 
 import sys
 import time
+import psutil
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir)))
 from config.config import Config
 from db.config import DATABASE
@@ -15,6 +16,9 @@ def network_collection(conf=None,database=None):
         conf = Config("ways")
     if not database:
         database = DATABASE
+
+    memory = psutil.virtual_memory().total
+    cache = round(memory/1073741824 * 1000 * 0.75)   
 
     dbname, host, username, port= DATABASE['dbname'], DATABASE['host'], DATABASE['user'], DATABASE['port']
     region_links = conf.collection_regions()
@@ -54,7 +58,7 @@ def network_collection(conf=None,database=None):
     subprocess.run('rm merged_osm.osm | mv merged_osm_reduced.osm merged_osm.osm', shell=True, check=True)
     subprocess.run('rm merged-osm.osm.pbf', shell=True, check=True)
     os.chdir(work_dir)
-    subprocess.run(f'PGPASSFILE=~/.pgpass_{dbname} osm2pgsql -d {dbname} -H {host} -U {username} --port {port} --hstore -E 4326 -r .osm -c src/data/temp/merged_osm.osm -s --drop -C 24000', shell=True, check=True)
+    subprocess.run(f'PGPASSFILE=~/.pgpass_{dbname} osm2pgsql -d {dbname} -H {host} -U {username} --port {port} --hstore -E 4326 -r .osm -c src/data/temp/merged_osm.osm -s --drop -C {cache}', shell=True, check=True)
     os.chdir('src/data/temp')
     subprocess.run('rm merged_osm.osm', shell=True, check=True)
 

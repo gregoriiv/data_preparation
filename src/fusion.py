@@ -293,9 +293,10 @@ def pois_fusion(df=None, config=None, result_name=None, return_type=None):
     typen = ["database","geojson"]
 
     table_base = config.fusion["table_base"]
-    if table_base or config.fusion_key_set('database'):
-        con = rdatabase_connection()
 
+    con = rdatabase_connection()
+
+    # REMOVE OPTION FOR BASE TABLE FROM 
     if table_base:
         print('Data from remote database will be used as a base for fusion.')
         df_base = database_table2df(con, table_base, geometry_column="geometry")
@@ -303,7 +304,7 @@ def pois_fusion(df=None, config=None, result_name=None, return_type=None):
         print('Fusion started.')
         df_base = df
     else:
-        print('Please specify dataframe in pois_fusion() variables or table_name in config.yaml')
+        print('Please specify database table in pois_fusion() variables or table_name in config.yaml')
     
     df_area = area_n_buffer2df(con, rs_set, buffer=8300)
     df_base2area = df2area(df_base, df_area)
@@ -318,6 +319,9 @@ def pois_fusion(df=None, config=None, result_name=None, return_type=None):
                 filename = key + '.' + typ
                 df_input = file2df(filename)
                 df_input = df2area(df_input, df_area)
+                
+            # here should be GPKG option
+
             elif typ == 'database':
                 df_input = database_table2df(con, key)
                 df_input = df2area(df_input, df_area)

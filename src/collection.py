@@ -1,6 +1,6 @@
 import os
 import time
-import yaml
+import psutil
 import subprocess
 import pandas as pd
 import numpy as np
@@ -27,6 +27,9 @@ def osm_collection(conf, database=None, filename=None, return_type=None):
 
     print(f"Collection of osm data for {conf.name} started...")
     start_time = time.time()
+
+    memory = psutil.virtual_memory().total
+    cache = round(memory/1073741824 * 1000 * 0.75)
 
     dbname, host, username, port = DATABASE['dbname'], DATABASE['host'], DATABASE['user'], DATABASE['port']
     region_links = conf.collection_regions()
@@ -56,7 +59,7 @@ def osm_collection(conf, database=None, filename=None, return_type=None):
     subprocess.run(obj_filter, shell=True, check=True)
     os.chdir(work_dir)
     conf.osm2pgsql_create_style()
-    subprocess.run(f'PGPASSFILE=~/.pgpass_{dbname} osm2pgsql -d {dbname} -H {host} -U {username} --port {port} --hstore -E 4326 -r .osm -c src/data/temp/osm-filtered.osm -s --drop -C 24000 --style src/config/{conf.name}_p4b.style --prefix osm_{conf.name}', shell=True, check=True)
+    subprocess.run(f'PGPASSFILE=~/.pgpass_{dbname} osm2pgsql -d {dbname} -H {host} -U {username} --port {port} --hstore -E 4326 -r .osm -c src/data/temp/osm-filtered.osm -s --drop -C {cache} --style src/config/{conf.name}_p4b.style --prefix osm_{conf.name}', shell=True, check=True)
     os.chdir('src/data/temp')
     subprocess.run('rm raw-merged-osm.osm', shell=True, check=True)
     subprocess.run('rm osm-filtered.osm', shell=True, check=True)
