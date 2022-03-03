@@ -1,5 +1,5 @@
-CREATE OR REPLACE FUNCTION get_id_for_max_val(arr_val integer[], arr_id integer[]) 
-RETURNS integer
+CREATE OR REPLACE FUNCTION get_id_for_max_val(arr_val integer[], arr_id bigint[]) 
+RETURNS bigint
 AS $$
 DECLARE 
     arr_index integer; 
@@ -9,4 +9,4 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql IMMUTABLE;
 
--- SELECT get_id_for_max_val(ARRAY[300,10,30000],ARRAY[33,12,88])
+--SELECT get_id_for_max_val(ARRAY[300,10,30000],ARRAY[33,12,88])

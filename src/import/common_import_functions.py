@@ -127,4 +127,5 @@ class BulkImport:
         #     engine.execute(create_spatial_index)            
         #     print(f'''Spatial Index created for {self.table_name} table''')
 
-initialize_import('/app/src/data/input')
+# initialize_import('/app/src/data/input')
+initialize_import('/home/p4b/Plan4Better/goat_community/data_preparation/src/data/input')
