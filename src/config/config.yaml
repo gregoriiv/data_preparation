@@ -57,7 +57,7 @@ VARIABLES_SET :
     fusion: 
   
   pois:
-    region_pbf : ["Mittelfranken","Oberpfalz"]
+    region_pbf : ["Mittelfranken"]
     collection:
       osm_tags:
         amenity : ["fuel", "post_office", "taxi", "atm", "bank", "dentist", "doctors", "pharmacy", "post_box", "marketplace", "bar", "biergarten", "cafe", 
@@ -156,13 +156,12 @@ VARIABLES_SET :
         exclude: ['privat','priv.','montessori','waldorf']
 
     fusion:
-      table_base  : #"pois_bayern"
-      rs_set      : ["091620000","095640000","097610000","093620000","091610000","096630000","095630000","095620000","094610000",
-                     "094620000","092610000","096610000","097630000","091630000","096620000","092620000","091780124","092630000",
-                     "091740115","094640000","097620000","097640000","093630000","093610000","095610000","094630000","095650000",
-                     "091790123","091790121","094740126","091840149","091790142","095740138","091860143","095730134","095760143",
-                     "091840148","091880139","091750132","095720132","091740126","091840136","091790145","091840123","091880120",
-                     "091780145"]
+      rs_set      : ['095640000'] # ["091620000","095640000","097610000","093620000","091610000","096630000","095630000","095620000","094610000",
+      #                "094620000","092610000","096610000","097630000","091630000","096620000","092620000","091780124","092630000",
+      #                "091740115","094640000","097620000","097640000","093630000","093610000","095610000","094630000","095650000",
+      #                "091790123","091790121","094740126","091840149","091790142","095740138","091860143","095730134","095760143",
+      #                "091840148","091880139","091750132","095720132","091740126","091840136","091790145","091840123","091880120",
+      #                "091780145"] 
       fusion_data :
         source:
           database:
@@ -174,6 +173,7 @@ VARIABLES_SET :
               columns2rename : {"category": "amenity", "extras": "tags", "spider": "source"}
               column_set_value : 
               columns2fuse : ["amenity", "tags", "source", "name", "opening_hours", "phone", "addr:street", "housenumber" ,"addr:city", "addr:postcode", "addr:country", "website"]
+          # implement GPKG fusion category
           geojson:
             dm:
               fusion_type : "fuse"
@@ -366,14 +366,14 @@ VARIABLES_SET :
 
   # temporary variable container to generate ways table
   ways:
-    region_pbf: ["Freiburg"]
+    region_pbf: ["mittelfranken", "niederbayern", "oberbayern", "oberfranken", "oberpfalz", "schwaben", "unterfranken", "freiburg"]
     collection: 
     preparation:
       excluded_class_id_walking: [0,101,102,103,104,105,106,107,501,502,503,504,701,801]
       excluded_class_id_cycling: [0,101,102,103,104,105,106,107,501,502,503,504,701,801]
       categories_no_foot: ["use_sidepath","no"]
       categories_no_bicycle: ["use_sidepath","no"]
-      compute_slope_impedance: "'yes'"
+      compute_slope_impedance: "'no'"
       wheelchair:
         smoothness_no: ["very_bad","horrible","very_horrible","impassable"]
         smoothness_limited: ['bad']
