@@ -10,25 +10,6 @@ variable_container_ways = config_ways.preparation
 
 network_preparation1 = f'''
 
-ALTER TABLE ways
-DROP COLUMN RULE,DROP COLUMN x1,DROP COLUMN x2,DROP COLUMN y1,DROP COLUMN y2, DROP COLUMN priority,
-DROP COLUMN length,DROP COLUMN cost,DROP COLUMN reverse_cost, DROP COLUMN cost_s, DROP COLUMN reverse_cost_s, 
-DROP COLUMN source_osm, DROP COLUMN target_osm;
-
-ALTER TABLE ways_vertices_pgr DROP COLUMN chk, DROP COLUMN ein, DROP COLUMN eout, DROP COLUMN lon, DROP COLUMN lat;
-
-ALTER TABLE ways rename column gid to id;
-ALTER TABLE ways rename column the_geom to geom;
-ALTER TABLE ways_vertices_pgr rename column the_geom to geom;
-ALTER TABLE ways alter column target type int4;
-ALTER TABLE ways alter column source type int4;
-
-
-CREATE INDEX ON ways USING GIST(geom);
-
-ALTER TABLE ways 
-ADD COLUMN bicycle text, ADD COLUMN foot TEXT, ADD COLUMN length_3857 float, ADD COLUMN coordinates_3857 json; /*, ADD COLUMN oneway TEXT;*/ 
-
 UPDATE ways 
 SET foot = p.foot
 FROM planet_osm_line p
@@ -44,7 +25,7 @@ UPDATE ways
 SET length_3857 = ST_LENGTH(ST_TRANSFORM(geom, 3857));
 
 UPDATE ways
-SET coordinates_3857 = ST_ASGEOJSON(geom)::jsonb -> 'coordinates';
+SET coordinates_3857 = ST_ASGEOJSON(ST_TRANSFORM(geom, 3857))::jsonb -> 'coordinates';
 
 --	ADD COLUMN crossing TEXT, ADD COLUMN one_link_crossing boolean;
 

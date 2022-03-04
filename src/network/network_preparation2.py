@@ -105,7 +105,7 @@ CREATE INDEX ON ways USING btree(foot);
 CREATE INDEX ON ways USING btree(id);
 CREATE INDEX ON ways_vertices_pgr USING btree(cnt);
 
-CREATE SEQUENCE IF NOT EXISTS ways_vertices_pgr_id_seq;
+/* CREATE SEQUENCE IF NOT EXISTS ways_vertices_pgr_id_seq;
 ALTER TABLE ways_vertices_pgr ALTER COLUMN id SET DEFAULT nextval('ways_vertices_pgr_id_seq');
 ALTER SEQUENCE ways_vertices_pgr_id_seq OWNED BY ways_vertices_pgr.id;
 SELECT setval('ways_vertices_pgr_id_seq', COALESCE(max(id), 0)) FROM ways_vertices_pgr;
@@ -113,8 +113,9 @@ SELECT setval('ways_vertices_pgr_id_seq', COALESCE(max(id), 0)) FROM ways_vertic
 CREATE SEQUENCE ways_id_seq;
 ALTER TABLE ways ALTER COLUMN id SET DEFAULT nextval('ways_id_seq');
 ALTER SEQUENCE ways_id_seq OWNED BY ways.id;
-SELECT setval('ways_id_seq', COALESCE(max(id), 0)) FROM ways;
+SELECT setval('ways_id_seq', COALESCE(max(id), 0)) FROM ways; */
 
 ALTER TABLE ways rename column tag_id to class_id;
 ALTER TABLE ways_vertices_pgr rename column tag_ids to class_ids;
+
 '''

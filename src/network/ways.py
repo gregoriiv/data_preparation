@@ -101,6 +101,8 @@ class PrepareLayers():
             AND    table_name   = %(table_name)s);''', params={"table_name": table_name})[0][0]
 
     def ways(self):
+        from src.network.network_table_upd import network_table_upd
+        self.db.perform(query = network_table_upd)
         from src.network.network_preparation1 import network_preparation1
         self.db.perform(query = network_preparation1)
         from src.network.network_islands import network_islands
@@ -119,8 +121,15 @@ class PrepareLayers():
             update_ways = '''UPDATE ways w  
                 SET s_imp = s.imp, rs_imp = s.rs_imp 
                 FROM slope_profile s 
-                WHERE w.id = s.id''' 
+                WHERE w.id = s.id;''' 
             cur.execute(update_ways)
+            conn.commit()
+            rename_tables = '''
+                    DROP TABLE IF EXISTS edge;
+                    DROP TABLE IF EXISTS node;
+                    CREATE TABLE edge AS TABLE ways;
+                    CREATE TABLE node AS TABLE ways_vertices_pgr;'''
+            cur.execute(rename_tables)
             conn.commit()
             conn.close()
 
