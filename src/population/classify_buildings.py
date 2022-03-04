@@ -9,8 +9,7 @@ parentdir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0,parentdir)
 from config.config import Config
 
-config_population = Config("population")
-variable_container_population = config_population.variable_container
+variable_container_population = Config("population").preparation
 
 classify_buildings = f'''
 
@@ -48,7 +47,10 @@ ALTER TABLE buildings_classification ADD PRIMARY KEY(gid);
 '''
 
 intersect_landuse = f'''
-DO $$                  
+DO $$
+	DECLARE 
+    	categories_no_residents TEXT[] := ARRAY{variable_container_population['custom_landuse_no_residents']};
+		categories_potential_residents TEXT[] := ARRAY{variable_container_population['custom_landuse_potential_residents']};
     BEGIN 
         IF EXISTS
             ( SELECT 1
@@ -72,7 +74,8 @@ DO $$
         	WITH buildings_intersects AS 
         	(
 				SELECT b.gid, CASE WHEN l.landuse IS NULL THEN 2 
-				ELSE (ARRAY{variable_container_population['custom_landuse_no_residents']} && ARRAY[l.landuse])::integer END AS residential_status, l.gid landuse_gid
+				WHEN (categories_potential_residents && ARRAY[l.landuse]) IS TRUE THEN 2 
+				ELSE (categories_no_residents && ARRAY[l.landuse])::integer END AS residential_status, l.gid landuse_gid
 				FROM (
 					SELECT * 
 					FROM buildings 
@@ -102,6 +105,7 @@ intersect_landuse_additional = f'''
 DO $$                  
     DECLARE 
     	categories_no_residents TEXT[] := ARRAY{variable_container_population['custom_landuse_additional_no_residents']};
+		categories_potential_residents TEXT[] := ARRAY{variable_container_population['custom_landuse_additional_potential_residents']};
 	BEGIN 
         IF EXISTS
             ( SELECT 1
@@ -124,6 +128,7 @@ DO $$
         	WITH buildings_intersects AS 
         	(
 				SELECT b.gid, CASE WHEN l.landuse IS NULL THEN 2 
+				WHEN (categories_potential_residents && ARRAY[l.landuse]) IS TRUE THEN 2 
 				ELSE (categories_no_residents && ARRAY[l.landuse])::integer END AS residential_status, l.gid landuse_gid
 				FROM (
 					SELECT * 
@@ -218,43 +223,55 @@ INSERT INTO buildings_to_update
 SELECT b.gid, 'with_residents'
 FROM buildings_classification c, buildings b
 WHERE c.landuse_residential_status = ARRAY[0]
-AND c.landuse_additional_residential_status = ARRAY[0]
-AND c.landuse_osm_residential_status = ARRAY[0]
+AND (c.landuse_additional_residential_status = ARRAY[0] OR c.landuse_additional_residential_status IS NULL)
+AND (c.landuse_osm_residential_status = ARRAY[0] OR c.landuse_osm_residential_status IS NULL)
 AND c.gid = b.gid; 
 
 INSERT INTO buildings_to_update 
 SELECT b.gid, 'no_residents'
 FROM buildings_classification c, buildings b
 WHERE c.landuse_residential_status = ARRAY[1]
-AND c.landuse_additional_residential_status = ARRAY[1]
-AND c.landuse_osm_residential_status = ARRAY[1]
+AND (c.landuse_additional_residential_status = ARRAY[1] OR c.landuse_additional_residential_status IS NULL)
+AND (c.landuse_osm_residential_status = ARRAY[1] OR c.landuse_osm_residential_status IS NULL)
 AND c.gid = b.gid; 
 
 INSERT INTO buildings_to_update 
 SELECT b.gid, 'no_residents'
 FROM buildings_classification c, buildings b
 WHERE c.landuse_residential_status = ARRAY[2]
-AND c.landuse_additional_residential_status = ARRAY[2]
-AND c.landuse_osm_residential_status = ARRAY[2]
+AND (c.landuse_additional_residential_status = ARRAY[2] OR c.landuse_additional_residential_status IS NULL)
+AND (c.landuse_osm_residential_status = ARRAY[2] OR c.landuse_additional_residential_status IS NULL)
 AND c.gid = b.gid; 
 
 INSERT INTO buildings_to_update
 WITH classification AS 
 (
-	SELECT c.gid, classify_building(c.gid, 
-		jsonb_build_array(
-		jsonb_build_object('categorization',c.landuse_residential_status,'landuse_gid', c.landuse_gids, 'table','landuse'),
-		jsonb_build_object('categorization',c.landuse_osm_residential_status,'landuse_osm_gid', c.landuse_osm_gids, 'table','landuse_osm'),
-		jsonb_build_object('categorization',c.landuse_additional_residential_status,'landuse_additional_gid', c.landuse_additional_gids, 'table','landuse_additional')
-		)
-	) 
+	SELECT c.gid, jsonb_build_object('categorization',c.landuse_residential_status,'landuse_gid', c.landuse_gids, 'table','landuse') AS landuse
 	FROM buildings_classification c
 	LEFT JOIN buildings_to_update u 
 	ON c.gid = u.gid 
 	WHERE u.gid IS NULL 
+	AND c.landuse_residential_status IS NOT NULL 
+	UNION ALL 
+	SELECT c.gid, jsonb_build_object('categorization',c.landuse_osm_residential_status,'landuse_osm_gid', c.landuse_osm_gids, 'table','landuse_osm') landuse_osm
+	FROM buildings_classification c
+	LEFT JOIN buildings_to_update u 
+	ON c.gid = u.gid 
+	WHERE u.gid IS NULL 
+	AND c.landuse_osm_residential_status IS NOT NULL 
+	UNION ALL 
+	SELECT c.gid, jsonb_build_object('categorization',c.landuse_additional_residential_status,'landuse_additional_gid', c.landuse_additional_gids, 'table','landuse_additional') landuse_additional
+	FROM buildings_classification c
+	LEFT JOIN buildings_to_update u 
+	ON c.gid = u.gid 
+	WHERE u.gid IS NULL 
+	AND c.landuse_additional_residential_status IS NOT NULL 
 )
-SELECT gid, CASE WHEN classify_building = 0 THEN 'with_residents' ELSE 'no_residents' END AS residential_status 
-FROM classification;
+SELECT c.gid, CASE WHEN classify_building(c.gid, jsonb_agg(c.landuse)) = 0 THEN 'with_residents' 
+WHEN classify_building(c.gid, jsonb_agg(c.landuse)) = 2 THEN 'potential_residents'
+ELSE 'no_residents' END AS residential_status 
+FROM classification c
+GROUP BY c.gid; 
 '''
 
 buildings_update = f'''

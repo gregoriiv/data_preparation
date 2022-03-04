@@ -1,4 +1,3 @@
-#%%
 import glob
 import string
 from tokenize import single_quoted
@@ -12,33 +11,26 @@ import fiona
 import logging as LOGGER
 import re
 from pathlib import Path
-#%%
-#Create Postgresql Engine
 db = Database()
 engine = db.connect_sqlalchemy()   
-# engine = db.connect_geopandas()
-# print(df.head())
 
-#%%
-def initialize_import(args):
+def initialize_import(dir):
     """
-        Import bulk shape, geojson and gpkg files to PostGIS
+        Import Geopackages files to PostGIS
     """ 
 
-    if args['dir'].endswith('/'):
-        args['dir'] = args['dir'][:-1]
+    if dir.endswith('/'):
+        dir = dir[:-1]
     
-    bulk_import = BulkImport(args)
+    bulk_import = BulkImport(dir)
     bulk_import.create_files_path('gpkg')  # 'gpkg' as defaut input data format
     bulk_import.bulk_import_files()
 
 class BulkImport:
 
-    def __init__(self, args):
-        
-        self.dir = args['dir']
+    def __init__(self, dir):    
+        self.dir = dir
           
-
     def read_asGPD(self, file, layer = None):
         """
             Read file as geo pandas DataFrame
@@ -116,11 +108,9 @@ class BulkImport:
             print("No files selected to import because selected directory is either empty or contain invalid files.")
             raise "No files selected to import because selected directory is either empty or contain invalid files."          
 
-        # print(len(files_store))
         print ('--- finish read ---')
-
         print("Importing files to PostGIS")
-        # Inserting record to table            
+            
         
         #Import geopandas file to PostGIS
         print('--- insert gdf to postgis ---')
@@ -136,3 +126,6 @@ class BulkImport:
         #     create_spatial_index = 'CREATE INDEX ON ' + self.table_name + ' USING GIST(geom)'
         #     engine.execute(create_spatial_index)            
         #     print(f'''Spatial Index created for {self.table_name} table''')
+
+# initialize_import('/app/src/data/input')
+initialize_import('/home/p4b/Plan4Better/goat_community/data_preparation/src/data/input')

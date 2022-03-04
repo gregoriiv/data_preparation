@@ -36,17 +36,16 @@ class Database:
 
     def connect(self):
         """Connect to a Postgres database."""
-        if self.conn is None:
-            try:
-                connection_string = " ".join(("{}={}".format(*i) for i in DATABASE.items()))
-                # print(connection_string)
-                self.conn = psycopg2.connect(connection_string)
-            except psycopg2.DatabaseError as e:
-                LOGGER.error(e)
-                raise e
-            finally:
-                LOGGER.getLogger().setLevel(LOGGER.INFO)   # To show logging.info in the console
-                LOGGER.info('Connection opened successfully.')
+        # if self.conn is None:
+        try:
+            connection_string = " ".join(("{}={}".format(*i) for i in DATABASE.items()))
+            self.conn = psycopg2.connect(connection_string)
+        except psycopg2.DatabaseError as e:
+            LOGGER.error(e)
+            raise e
+        finally:
+            LOGGER.getLogger().setLevel(LOGGER.INFO)   # To show logging.info in the console
+            LOGGER.info('Connection opened successfully.')
         return self.conn
       
     def connect_rd(self):
@@ -64,15 +63,15 @@ class Database:
       
     def connect_sqlalchemy(self):
         print ("Connect to a Postgres database with engine")
-        """Connect to a Postgres database with engine"""
-        if self.conn is None:
-            try:
-                self.conn = create_engine(f"postgresql://{user}:{password}@{host}:{port}/{dbname}")
-            except Exception as e:
-                LOGGER.error(e)
-                raise e
-            finally:
-                LOGGER.info('Connection opened successfully.')
+        
+        # if self.conn is None :    # check if it is connected with engine
+        try:
+            self.conn = create_engine(f"postgresql://{user}:{password}@{host}:{port}/{dbname}", pool_pre_ping=True)
+        except Exception as e:
+            LOGGER.error(e)
+            raise e
+        finally:
+            LOGGER.info('Connection opened successfully.')
         return self.conn
         
     def connect_rd_sqlalchemy(self):

@@ -2,8 +2,7 @@ import sys
 sys.path.insert(0,"..")
 import collection
 
-config_population = collection.Config("population")
-variable_container_population = config_population.variable_container
+variable_container_population = Config("population").preparation
 
 population_extrapolated_census = f'''
 

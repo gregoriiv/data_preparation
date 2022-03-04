@@ -17,21 +17,15 @@ parentdir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0,parentdir)
 from config.config import Config
 
-
-
-config_population = Config("population")
-variable_container_population = config_population.variable_container
+variable_container_population = Config("population").preparation
 
 data_fusion_buildings = f'''
-
-ALTER TABLE study_area ADD COLUMN IF NOT EXISTS default_building_levels SMALLINT; 
+ALTER TABLE study_area ADD COLUMN IF NOT EXISTS default_building_levels SMALLINT;
 ALTER TABLE study_area ADD COLUMN IF NOT EXISTS default_roof_levels SMALLINT; 
-
 ALTER TABLE study_area ALTER COLUMN sum_pop TYPE integer using sum_pop::integer;
 ALTER TABLE study_area DROP COLUMN IF EXISTS area;
 ALTER TABLE study_area add column area float;
 UPDATE study_area set area = st_area(geom::geography);
-
 DROP TABLE IF EXISTS buildings;
 CREATE TABLE buildings 
 (
@@ -52,7 +46,6 @@ CREATE TABLE buildings
 	CONSTRAINT building_pkey PRIMARY KEY(gid)
 );
 CREATE INDEX ON buildings USING GIST(geom);
-
 DO 
 $$
 	DECLARE
@@ -78,7 +71,6 @@ $$
 			ALTER TABLE buildings_custom ADD COLUMN IF NOT EXISTS building_levels SMALLINT; 
 			ALTER TABLE buildings_custom ADD COLUMN IF NOT EXISTS roof_Levels SMALLINT;
 			ALTER TABLE buildings_custom ADD COLUMN IF NOT EXISTS height float;
-
 			/*There where some invalid geometries in the dataset*/        	
 			UPDATE buildings_custom 
 			SET geom = ST_MAKEVALID(geom)
@@ -125,11 +117,10 @@ $$
         	WHERE c.cnt_osm_id > 1
         	AND m.custom_gid = c.custom_gid
         	GROUP BY m.osm_id, m.custom_gid;
-
         	INSERT INTO selected_buildings
         	WITH dominant_osm_building AS 
         	(
-	        	SELECT s.custom_gid, NULL::FLOAT AS share_intersection, get_id_for_max_val(ARRAY_AGG((s.area_intersection*10000000000000)::integer), ARRAY_AGG(s.osm_id::integer)) osm_id
+	        	SELECT s.custom_gid, NULL::FLOAT AS share_intersection, get_id_for_max_val(ARRAY_AGG((s.area_intersection*10000000000000)::integer), ARRAY_AGG(s.osm_id::bigint)) osm_id
 	        	FROM sum_multi_intersection s
 	        	GROUP BY custom_gid 
         	)
@@ -143,6 +134,10 @@ $$
         	
         	/*Inject buildings from OSM that do not intersect custom buildings*/
         	IF inject_not_duplicated_osm = 'yes' THEN 
+
+				ALTER TABLE selected_buildings  ALTER COLUMN geom TYPE geometry(Geometry,4326);
+        		ALTER TABLE buildings_osm ALTER COLUMN geom type geometry(Geometry , 4326);
+
 	        	INSERT INTO selected_buildings 
 	        	SELECT o.osm_id, NULL AS custom_gid, o.geom  
 	        	FROM buildings_osm o
@@ -177,12 +172,12 @@ $$
 				WHEN c.building_levels IS NOT NULL THEN c.building_levels
 				WHEN c.height IS NOT NULL THEN (c.height/average_height_per_level)::smallint 
 				WHEN o.building_levels IS NOT NULL THEN o.building_levels
-				WHEN s.default_building_levels IS NOT NULL THEN s.default_building_levels
+				--WHEN s.default_building_levels IS NOT NULL THEN s.default_building_levels
 				ELSE average_building_levels END AS building_levels, 	
 			CASE 
 				WHEN c.roof_levels IS NOT NULL THEN c.roof_levels 
 				WHEN o.roof_levels IS NOT NULL THEN o.roof_levels 
-				WHEN s.default_roof_levels IS NOT NULL THEN s.default_roof_levels
+				--WHEN s.default_roof_levels IS NOT NULL THEN s.default_roof_levels
 				ELSE average_roof_levels END AS roof_levels, 
 			b.geom
 			FROM selected_buildings b
@@ -204,5 +199,4 @@ $$
 		END IF;
 	END
 $$;
-
 '''

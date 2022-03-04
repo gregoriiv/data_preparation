@@ -15,6 +15,7 @@ from classify_buildings import intersect_osm_landuse as sql_intersect_osm_landus
 from classify_buildings import finalized_classification as sql_finalized_classification
 from classify_buildings import buildings_update as sql_buildings_update
 from building_classifier import building_prediction
+from sqlalchemy import create_engine
 
 ### The following files are required to be in the data directory to run the script:
 
@@ -77,7 +78,8 @@ class Population():
 
     #     # Create db extensions (should be added when creating the database?)
     #     self.db.perform(query = "CREATE EXTENSION IF NOT EXISTS intarray;")
-
+     
+    
     def produce_population_points(self, source_population):
         '''This function produces a SQL table with population points.'''
 
@@ -102,9 +104,9 @@ class Population():
         print ('------ landuse additional intersection finished! ------')
         #self.db.perform(query = sql_intersect_osm_landuse)
         print ('------ osm landuse intersection finished! ------')
-        #self.db.perform(query = sql_finalized_classification)
+        self.db.perform(query = sql_finalized_classification)
         print ('------ finilized classification finished! ------')
-        #self.db.perform(query = sql_buildings_update)
+        self.db.perform(query = sql_buildings_update)
         print ('------ buildings upate finished! ------')
 
         # self.db.perform(query = scripts.create_residential_addresses.create_residential_addresses)
@@ -123,16 +125,21 @@ class Population():
 
         # further classification: select residential_status = potential_residents 
         sql_potential_residents = "SELECT gid, residential_status, geom FROM buildings b WHERE b.residential_status = 'potential_residents'"
-        gdf_potential_residents = gpd.GeoDataFrame.from_postgis(sql_potential_residents,self.db.connect_sqlalchemy())
+
+        # didn't connect with engine, only used connect() function
+        gdf_potential_residents = gpd.GeoDataFrame.from_postgis(sql_potential_residents, self.db.connect_sqlalchemy())
+        # gdf_potential_residents = self.db.select(query = sql_potential_residents)
+
         print('------ data fetching finished! ------')
         print('the number of rows: ', len(gdf_potential_residents))
 
-        # data prediction: save it to database
         prediction_type = building_prediction(gdf_potential_residents)
-        prediction_type.to_postgis('prediction_type', self.db.connect_sqlalchemy(), if_exists='replace')
-        print(prediction_type.head())
-
+        prediction_type.to_postgis('prediction_type', self.db.connect_sqlalchemy(), if_exists='replace')   # why?
+        
+        # data prediction: save it to database
+        
         # updating database with prediction results
+        
         sql_update_building_types = f'''
         UPDATE buildings b 
         SET residential_status = 'with_residents'
@@ -144,11 +151,9 @@ class Population():
         FROM prediction_type pt
         WHERE b.gid = pt.gid AND pt.pred_label = 2;'''
 
-        self.db.perform(query = sql_update_building_types)  
+        self.db.perform(query = sql_update_building_types)
 
     
-### tests
-
 population = Population(Database=Database)
 population.produce_population_points(source_population = 'census_standard')
 
