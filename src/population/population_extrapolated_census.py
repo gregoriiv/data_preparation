@@ -1,6 +1,7 @@
 import sys
 sys.path.insert(0,"..")
 import collection
+from config.config import Config
 
 variable_container_population = Config("population").preparation
 

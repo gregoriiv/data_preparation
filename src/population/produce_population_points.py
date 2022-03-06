@@ -20,14 +20,14 @@ from sqlalchemy import create_engine
 ### The following files are required to be in the data directory to run the script:
 
 #  1. study_area.sql (input)
-#  2. pois.sql (can be generated with scripts inside this repo, but needs to be clipped to study area)
+#  2. pois.sql (can be generated with scripts inside this repo, but needs to be clipped to study area) ????
 #  3. buildings_osm.sql (can be generated with scripts inside this repo, but needs to be clipped to study area)
 #  4. study_area.osm (can be generated manually -> see instructions below)
 #  5. planet_osm_point.sql (can be generated manually -> see instructions below)
 #  6. landuse.sql (input: ATKIS)
 #  7. landuse_osm.sql (can be generated with scripts inside this repo, but needs to be clipped to study area)
 #  8. landuse_additional (input: UrbanAtlas)
-#  9. mapconfig.xml (input)
+#  9. mapconfig.xml (input) ????
 # 10. ways.sql (can be generated manually -> see instructions below)
 # 11. census.sql
 
@@ -64,21 +64,7 @@ from sqlalchemy import create_engine
 class Population():
 
     def __init__(self, Database):
-        self.db = Database()
-
-    # def _database_preparation_population(self):
-    #     """This function prepares the database to run the function produce_population_points()."""
-    #     # helper functions
-    #     helper_functions = importlib.import_module("helper_functions", "src")
-    #     self.db.perform(query = helper_functions.get_id_for_max_val.get_id_for_max_val)
-    #     self.db.perform(query = helper_functions.classify_building.classify_building)
-    #     self.db.perform(query = helper_functions.jsonb_array_int_array.jsonb_array_int_array)
-    #     self.db.perform(query = helper_functions.derive_dominant_class.derive_dominant_class)
-    #     self.db.perform(query = helper_functions.meter_degree.meter_degree)
-
-    #     # Create db extensions (should be added when creating the database?)
-    #     self.db.perform(query = "CREATE EXTENSION IF NOT EXISTS intarray;")
-     
+        self.db = Database()     
     
     def produce_population_points(self, source_population):
         '''This function produces a SQL table with population points.'''
@@ -87,11 +73,8 @@ class Population():
         # also check for indices and primary keys -> minimum requirements: primary key on gid or id and gist index on geom
         # give user feedback e.g. there are additional columns
 
-        # prepare database
-        # self._database_preparation_population()
-
         # execute scripts
-        # scripts = importlib.import_module("population", "src")
+        scripts = importlib.import_module("population", "src")
 
         print ('It was chosen to use population from: ', source_population)
         self.db.perform(query = sql_data_fusion_buildings)
@@ -109,28 +92,28 @@ class Population():
         self.db.perform(query = sql_buildings_update)
         print ('------ buildings upate finished! ------')
 
-        # self.db.perform(query = scripts.create_residential_addresses.create_residential_addresses)
+        self.db.perform(query = scripts.create_residential_addresses.create_residential_addresses)
 
-        # if source_population == 'census_standard':
-        #     self.db.perform(query = scripts.prepare_census.prepare_census)
-        #     self.db.perform(query = scripts.population_census.population_census)
-        # elif source_population == 'census_extrapolation':
-        #     self.db.perform(query = scripts.prepare_census.prepare_census)
-        #     self.db.perform(query = scripts.population_extrapolated_census.population_extrapolated_census)
-        # elif source_population == 'disaggregation':
-        #     # census_disaggregation: population_disaggregation
-        #     self.db.perform(query = scripts.population_disaggregation.population_disaggregation)
-        # else:
-        #     print('No valid population mode was provided. Therefore the population scripts cannot be executed.') 
+        if source_population == 'census_standard':
+            self.db.perform(query = scripts.prepare_census.prepare_census)
+            self.db.perform(query = scripts.population_census.population_census)
+        elif source_population == 'census_extrapolation':
+            self.db.perform(query = scripts.prepare_census.prepare_census)
+            self.db.perform(query = scripts.population_extrapolated_census.population_extrapolated_census)
+        elif source_population == 'disaggregation':
+            # census_disaggregation: population_disaggregation
+            self.db.perform(query = scripts.population_disaggregation.population_disaggregation)
+        else:
+            print('No valid population mode was provided. Therefore the population scripts cannot be executed.') 
 
         # further classification: select residential_status = potential_residents 
         sql_potential_residents = "SELECT gid, residential_status, geom FROM buildings b WHERE b.residential_status = 'potential_residents'"
 
         # didn't connect with engine, only used connect() function
         gdf_potential_residents = gpd.GeoDataFrame.from_postgis(sql_potential_residents, self.db.connect_sqlalchemy())
-        # gdf_potential_residents = self.db.select(query = sql_potential_residents)
+        gdf_potential_residents = self.db.select(query = sql_potential_residents)
 
-        print('------ data fetching finished! ------')
+        # print('------ data fetching finished! ------')
         print('the number of rows: ', len(gdf_potential_residents))
 
         prediction_type = building_prediction(gdf_potential_residents)
