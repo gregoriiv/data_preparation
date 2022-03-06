@@ -1,5 +1,6 @@
 import argparse, sys, os
 from argparse import RawTextHelpFormatter
+from datetime import datetime
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir)))
 from src.other.utility_functions import database_table2df, df2database, drop_table
@@ -39,10 +40,10 @@ if args.db == True:
 
 if prepare or prepare in(layers_prepare):
     if prepare == 'network':
-        print('Network collection started.')
+        print(datetime.now().strftime("%Y-%m-%d %H:%M:%S") + '  Network collection started.')
         network_collection()
-        print('Network collection has been finished.')
-        print('Starting network preparation..')
+        print(datetime.now().strftime("%Y-%m-%d %H:%M:%S") + '  Network collection has been finished.')
+        print(datetime.now().strftime("%Y-%m-%d %H:%M:%S") + '  Starting network preparation..')
         prep_layers = PrepareLayers('ways')
         prep_layers.ways()
     elif prepare == 'pois':
@@ -73,4 +74,4 @@ if fuse or fuse in(layers_fuse):
         df2database(pois, 'pois_fused')
         db.perform(query = 'ALTER TABLE pois_fused RENAME COLUMN geometry TO geom;')
     else:
-        print('Please specify a valid fusion type.')
+        print(datetime.now().strftime("%Y-%m-%d %H:%M:%S") + '  Please specify a valid fusion type.')

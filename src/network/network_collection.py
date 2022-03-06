@@ -61,4 +61,4 @@ def network_collection(conf=None,database=None):
     subprocess.run(f'PGPASSFILE=~/.pgpass_{dbname} osm2pgsql -d {dbname} -H {host} -U {username} --port {port} --hstore -E 4326 -r .osm -c src/data/temp/merged_osm.osm -s --drop -C {cache}', shell=True, check=True)
     os.chdir('src/data/temp')
     subprocess.run('rm merged_osm.osm', shell=True, check=True)
-
+    os.chdir(work_dir)

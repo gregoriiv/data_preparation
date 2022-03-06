@@ -9,7 +9,6 @@ config_ways = Config("ways")
 variable_container_ways = config_ways.preparation
 
 network_preparation1 = f'''
-
 ALTER TABLE ways
 DROP COLUMN RULE,DROP COLUMN x1,DROP COLUMN x2,DROP COLUMN y1,DROP COLUMN y2, DROP COLUMN priority,
 DROP COLUMN length,DROP COLUMN cost,DROP COLUMN reverse_cost, DROP COLUMN cost_s, DROP COLUMN reverse_cost_s, 
@@ -43,7 +42,7 @@ UPDATE ways
 SET length_3857 = ST_LENGTH(ST_TRANSFORM(geom, 3857));
 
 UPDATE ways
-SET coordinates_3857 = ST_ASGEOJSON(geom)::jsonb -> 'coordinates';
+SET coordinates_3857 = ST_ASGEOJSON(ST_TRANSFORM(geom, 3857))::jsonb -> 'coordinates';
 
 --	ADD COLUMN crossing TEXT, ADD COLUMN one_link_crossing boolean;
 
