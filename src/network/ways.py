@@ -101,14 +101,15 @@ class PrepareLayers():
             AND    table_name   = %(table_name)s);''', params={"table_name": table_name})[0][0]
 
     def ways(self):
-        from src.network.network_table_upd import network_table_upd
-        self.db.perform(query = network_table_upd)
+
         from src.network.network_preparation1 import network_preparation1
         self.db.perform(query = network_preparation1)
         from src.network.network_islands import network_islands
         self.db.perform(query=network_islands)
         from src.network.network_preparation2 import network_preparation2
         self.db.perform(query = network_preparation2)
+        from src.network.network_table_upd import network_table_upd
+        self.db.perform(query = network_table_upd)
 
         if self.variable_container["compute_slope_impedance"][1:-1] == 'yes':
             slope_profiles = Profiles(ways_table='ways', filter_ways=f'''WHERE class_id::text NOT IN (SELECT UNNEST(ARRAY{self.variable_container['excluded_class_id_cycling']}::text[]))''')
@@ -124,15 +125,19 @@ class PrepareLayers():
                 WHERE w.id = s.id;''' 
             cur.execute(update_ways)
             conn.commit()
-            rename_tables = '''
-                    DROP TABLE IF EXISTS edge;
-                    DROP TABLE IF EXISTS node;
-                    CREATE TABLE edge AS TABLE ways;
-                    CREATE TABLE node AS TABLE ways_vertices_pgr;'''
-            cur.execute(rename_tables)
-            conn.commit()
             conn.close()
 
+        db = Database()
+        conn = db.connect()
+        cur = conn.cursor()
+        rename_tables = '''
+            DROP TABLE IF EXISTS edge;
+            DROP TABLE IF EXISTS node;
+            CREATE TABLE edge AS TABLE ways;
+            CREATE TABLE node AS TABLE ways_vertices_pgr;'''
+        cur.execute(rename_tables)
+        conn.commit()
+        conn.close()
 
 ##==========================================OUTDATED===============================================###
 
