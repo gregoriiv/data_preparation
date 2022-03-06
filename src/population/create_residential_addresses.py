@@ -1,4 +1,11 @@
-create_residential_addresses = '''
+import sys
+sys.path.insert(0,"..")
+import collection
+from config.config import Config
+
+variable_container_population = Config("population").preparation
+
+create_residential_addresses = f'''
 
 /*Creating building entrances for the residential buildings*/
 DROP TABLE IF EXISTS buildings_residential;
@@ -51,7 +58,7 @@ ALTER TABLE residential_addresses ADD PRIMARY KEY (gid);
 /*Snap addresses that are close to a building but do not intersect*/
 DO $$
 	DECLARE 
-    	buffer_distance float := 5 * meter_degree(); /*Default buffer at 5 meters*/
+    	buffer_distance float := 5 * {variable_container_population['one_meter_degree']}; /*Default buffer at 5 meters*/
     BEGIN 
 	    INSERT INTO residential_addresses 
 	    WITH not_intersection_addresses AS 
@@ -99,7 +106,7 @@ WHERE a.building_gid = c.building_gid;
 */
 DO $$
 	DECLARE 
-    	buffer_distance float := 30 * meter_degree(); /*Default buffer at 5 meters*/
+    	buffer_distance float := 30 * {variable_container_population['one_meter_degree']}; /*Default buffer at 5 meters*/
     BEGIN 
 		INSERT INTO residential_addresses 
 		WITH buildings_no_address AS 

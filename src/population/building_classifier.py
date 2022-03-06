@@ -96,7 +96,7 @@ def building_prediction(buildings):
     print('------ feature calculated! ------')
 
     # load model:
-    model_file = os.path.join(sys.path[0],"data","input/building_classifier_model.joblib")
+    model_file = os.path.join('src',"data","input/building_classifier_model.joblib")
     clf = load(model_file)
     print ('------ prediction model loaded ------')
     test_feature = np.array(buildings[["area","compactness","convexity","solidality", "roundness"]]).tolist()
