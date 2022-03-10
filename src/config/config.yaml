@@ -57,7 +57,7 @@ VARIABLES_SET :
     fusion: 
   
   pois:
-    region_pbf : ["Mittelfranken"]
+    region_pbf : ["Mittelfranken","Niederbayern","Oberbayern","Oberfranken","Oberpfalz","Schwaben","Unterfranken", "Freiburg"]
     collection:
       osm_tags:
         amenity : ["fuel", "post_office", "taxi", "atm", "bank", "dentist", "doctors", "pharmacy", "post_box", "marketplace", "bar", "biergarten", "cafe", 
@@ -156,25 +156,24 @@ VARIABLES_SET :
         exclude: ['privat','priv.','montessori','waldorf']
 
     fusion:
-      rs_set      : ['095640000'] # ["091620000","095640000","097610000","093620000","091610000","096630000","095630000","095620000","094610000",
-      #                "094620000","092610000","096610000","097630000","091630000","096620000","092620000","091780124","092630000",
-      #                "091740115","094640000","097620000","097640000","093630000","093610000","095610000","094630000","095650000",
-      #                "091790123","091790121","094740126","091840149","091790142","095740138","091860143","095730134","095760143",
-      #                "091840148","091880139","091750132","095720132","091740126","091840136","091790145","091840123","091880120",
-      #                "091780145"] 
+      rs_set      : ["083110000"] # ["091620000","095640000","097610000","093620000","091610000","096630000","095630000","095620000","094610000",
+                    #  "094620000","092610000","096610000","097630000","091630000","096620000","092620000","091780124","092630000",
+                    #  "091740115","094640000","097620000","097640000","093630000","093610000","095610000","094630000","095650000",
+                    #  "091790123","091790121","094740126","091840149","091790142","095740138","091860143","095730134","095760143",
+                    #  "091840148","091880139","091750132","095720132","091740126","091840136","091790145","091840123","091880120",
+                    #  "091780145","083110000"] 
       fusion_data :
         source:
           database:
-            doctors_bavaria:
-              fusion_type : "replace" 
-              amenity : "doctors"
-              amenity_set : False
-              amenity_operator : 
-              columns2rename : {"category": "amenity", "extras": "tags", "spider": "source"}
-              column_set_value : 
-              columns2fuse : ["amenity", "tags", "source", "name", "opening_hours", "phone", "addr:street", "housenumber" ,"addr:city", "addr:postcode", "addr:country", "website"]
-          # implement GPKG fusion category
-          geojson:
+            # doctors_bavaria:
+            #   fusion_type : "replace" 
+            #   amenity : "doctors"
+            #   amenity_set : False
+            #   amenity_operator : 
+            #   columns2rename : {"category": "amenity", "extras": "tags", "spider": "source"}
+            #   column_set_value : 
+            #   columns2fuse : ["amenity", "tags", "source", "name", "opening_hours", "phone", "addr:street", "housenumber" ,"addr:city", "addr:postcode", "addr:country", "website"]
+          gpkg:
             dm:
               fusion_type : "fuse"
               amenity :
@@ -183,13 +182,46 @@ VARIABLES_SET :
               columns2rename : 
               column_set_value : {"brand" : "dm-drogerie markt", "source" : "dm_de"} # for all values
               columns2fuse : ["name", "source", "opening_hours", "phone", "addr:street", "housenumber" ,"addr:city", "addr:postcode", "addr:country", "brand"]
+            childcare_freiburg_upd:
+              fusion_type : "replace"
+              amenity : 'kindergarten'
+              amenity_set : False
+              amenity_operator :
+              columns2rename : 
+              column_set_value : {"source" : "freiburg.de"} # for all values
+              columns2fuse : ["name", "source", "opening_hours", "phone", "addr:street", "housenumber" ,"addr:city", "addr:postcode"]
+            nextbike_freiburg:
+              fusion_type : "replace"
+              amenity : 'bicycle_rental'
+              amenity_set : False
+              amenity_operator :
+              columns2rename : 
+              column_set_value : {"source" : "nextbike.de", "addr:city" : "Freiburg", "operator" : "Frilo"} # for all values
+              columns2fuse : ["name", "source", "addr:street", "housenumber" ,"addr:city"]
+            playgrounds_freiburg:
+              fusion_type : "replace"
+              amenity : 'playground'
+              amenity_set : False
+              amenity_operator :
+              columns2rename : 
+              column_set_value : {"source" : "govdata.de", "addr:city" : "Freiburg"} # for all values
+              columns2fuse : ["name", "source", "addr:city"]
+          geojson:
+            # dm:
+            #   fusion_type : "fuse"
+            #   amenity :
+            #   amenity_set : False
+            #   amenity_operator : ("chemist","dm")
+            #   columns2rename : 
+            #   column_set_value : {"brand" : "dm-drogerie markt", "source" : "dm_de"} # for all values
+            #   columns2fuse : ["name", "source", "opening_hours", "phone", "addr:street", "housenumber" ,"addr:city", "addr:postcode", "addr:country", "brand"]
             mueller:
               fusion_type : "fuse"
               amenity :
               amenity_set : False 
               amenity_operator : ("chemist","Müller")
               columns2rename : 
-              column_set_value : {"brand" : "Müller", "source": "mueller_de"} # for all values in osm related to brand
+              column_set_value : {"brand" : "Müller", "source": "mueller_de"} 
               columns2fuse : ["source", "opening_hours", "addr:street", "housenumber", "addr:city", "addr:postcode", "addr:country", "name", "brand"]
             apotheken_de:
               fusion_type : "replace"
@@ -205,15 +237,15 @@ VARIABLES_SET :
               amenity_set : False
               amenity_operator : 
               columns2rename : {"@spider" : "source"}
-              column_set_value : {"operator": "denn's biomarkt", "name" : "denn's Biomarkt"} # for all values in osm related to brand
-              columns2fuse : ["name", "source", "opening_hours", "addr:street", "housenumber", "addr:city", "addr:postcode", "addr:country", "phone","operator"] # no name column for denn's data   
+              column_set_value : {"operator": "denn's biomarkt", "name" : "denn's Biomarkt"} 
+              columns2fuse : ["name", "source", "opening_hours", "addr:street", "housenumber", "addr:city", "addr:postcode", "addr:country", "phone","operator"]  
             alnatura_de:
               fusion_type : "fuse"
               amenity : 
               amenity_set : False
               amenity_operator : ("organic","Alnatura")
               columns2rename : {"@spider" : "source"}
-              column_set_value : {"brand": "Alnatura"} # for all values in osm related to brand
+              column_set_value : {"brand": "Alnatura"} 
               columns2fuse : ["opening_hours", "source", "addr:street", "housenumber", "addr:city", "addr:postcode", "addr:country", "name", "phone", "brand"]
             commerzbank_de:
               fusion_type : "fuse"
@@ -221,7 +253,7 @@ VARIABLES_SET :
               amenity_set : False
               amenity_operator : ("bank","Commerzbank") # issues with brand - operator
               columns2rename : {"@spider" : "source"}
-              column_set_value : {"brand": "Commerzbank"} # for all values in osm related to brand
+              column_set_value : {"brand": "Commerzbank"}
               columns2fuse : ["opening_hours", "source", "addr:street", "housenumber", "addr:city", "addr:postcode", "addr:country", "name", "phone", "brand"]
             kaufland:
               fusion_type : "fuse"
@@ -229,7 +261,7 @@ VARIABLES_SET :
               amenity_set : False
               amenity_operator : ("hypermarket","Kaufland")
               columns2rename : {"@spider" : "source"}
-              column_set_value : {"brand": "Kaufland"} # for all values in osm related to brand
+              column_set_value : {"brand": "Kaufland"} 
               columns2fuse : ["source", "opening_hours", "addr:street", "housenumber", "addr:city", "addr:postcode", "addr:country", "name", "phone", "website", "brand"]
             lidl:
               fusion_type : "fuse"
@@ -237,7 +269,7 @@ VARIABLES_SET :
               amenity_set : False
               amenity_operator : ("discount_supermarket","Lidl")
               columns2rename : {"@spider" : "source"}
-              column_set_value : {"brand": "Lidl"} # for all values in osm related to brand
+              column_set_value : {"brand": "Lidl"} 
               columns2fuse : ["source", "opening_hours", "addr:street", "housenumber", "addr:city", "addr:postcode", "addr:country", "name", "brand"]
             norma_de:
               fusion_type : "fuse"
@@ -245,7 +277,7 @@ VARIABLES_SET :
               amenity_set : False
               amenity_operator : ("discount_supermarket","Norma")
               columns2rename : {"@spider" : "source"}
-              column_set_value : {"brand": "Norma", "name" : "Norma"} # for all values in osm related to brand
+              column_set_value : {"brand": "Norma", "name" : "Norma"}
               columns2fuse : ["name", "source", "opening_hours", "addr:street", "housenumber", "addr:city", "addr:postcode", "addr:country", "brand"]
             penny:
               fusion_type : "fuse"
@@ -253,7 +285,7 @@ VARIABLES_SET :
               amenity_set : False
               amenity_operator : ("discount_supermarket","Penny")
               columns2rename : {"@spider" : "source"}
-              column_set_value : {"brand": "Penny"} # for all values in osm related to brand
+              column_set_value : {"brand": "Penny"} 
               columns2fuse : ["source", "addr:street", "addr:city", "addr:postcode", "addr:country", "name", "brand"]
             deutschepost_filiale:
               fusion_type : "replace"
@@ -261,7 +293,7 @@ VARIABLES_SET :
               amenity_set : True
               amenity_operator :
               columns2rename : {"@spider" : "source"}
-              column_set_value : {"brand": "Deutschepost"} # for all values in osm related to brand
+              column_set_value : {"brand": "Deutschepost"} 
               columns2fuse : ["name", "source", "brand", "addr:street", "housenumber", "addr:city", "addr:postcode", "addr:country", "opening_hours"]
             deutschepost_paketshop:
               fusion_type : "replace"
@@ -269,7 +301,7 @@ VARIABLES_SET :
               amenity_set : True
               amenity_operator :
               columns2rename : {"@spider" : "source"}
-              column_set_value : {"brand": "Deutschepost"} # for all values in osm related to brand
+              column_set_value : {"brand": "Deutschepost"} 
               columns2fuse : ["name", "source", "brand", "addr:street", "housenumber", "addr:city", "addr:postcode", "addr:country", "opening_hours"]
             jedeschule_geocode:
               fusion_type : "replace"
@@ -277,7 +309,7 @@ VARIABLES_SET :
               amenity_set : False
               amenity_operator :
               columns2rename : {"official_i": "osm_id"}
-              column_set_value : {"source": "jedeschule"} # for all values in osm related to brand
+              column_set_value : {"source": "jedeschule"} 
               columns2fuse : ["name", "source", "osm_id"] # , "addr:street", "housenumber", "addr:city", "addr:postcode", "addr:country", "opening_hours"
             vitalia:
               fusion_type : "fuse"
@@ -285,7 +317,7 @@ VARIABLES_SET :
               amenity_set : False
               amenity_operator : ("health_food", "Vitalia")
               columns2rename : {"@spider" : "source"}
-              column_set_value : {"brand": "Vitalia"} # for all values in osm related to brand
+              column_set_value : {"brand": "Vitalia"} 
               columns2fuse : ["name", "source", "opening_hours", "phone", "addr:street", "housenumber" ,"addr:city", "addr:postcode", "addr:country", "brand"]
             tegut:
               fusion_type : "fuse"
@@ -295,14 +327,14 @@ VARIABLES_SET :
               columns2rename : {"@spider" : "source"}
               column_set_value : {"brand": "Tegut"} 
               columns2fuse : ["name", "source", "phone", "addr:street", "housenumber" ,"addr:city", "addr:postcode", "addr:country", "brand"]
-            childcare_bayern_de:
-              fusion_type : "replace"
-              amenity : "kindergarten"
-              amenity_set : False
-              amenity_operator :
-              columns2rename : {"street" : "addr:street", "zipcode" : "addr:postcode", "municipality" : "addr:city"}
-              column_set_value : 
-              columns2fuse : ["source", "name", "addr:street" , "housenumber" ,"addr:city", "addr:postcode"]
+            # childcare_bayern_de:
+            #   fusion_type : "replace"
+            #   amenity : "kindergarten"
+            #   amenity_set : False
+            #   amenity_operator :
+            #   columns2rename : {"street" : "addr:street", "zipcode" : "addr:postcode", "municipality" : "addr:city"}
+            #   column_set_value : 
+            #   columns2fuse : ["source", "name", "addr:street" , "housenumber" ,"addr:city", "addr:postcode"]
             zahnarzt_de:
               fusion_type : "replace"
               amenity : "dentist"
@@ -357,8 +389,7 @@ VARIABLES_SET :
                                               "Pastures"]
       custom_landuse_additional_potential_residents: ["Construction sites","Continuous urban fabric (S.L. : > 80%)","Discontinuous dense urban fabric (S.L. : 50% -  80%)",
       "Discontinuous low density urban fabric (S.L. : 10% - 30%)","Discontinuous medium density urban fabric (S.L. : 30% - 50%)","Discontinuous very low density urban fabric (S.L. : < 10%)",
-      "Isolated structures","Land without current use"
-      ]
+      "Isolated structures","Land without current use"]
       osm_landuse_no_residents: ["farmyard","construction","farmland","quarry","industrial","retail","commercial","forest","military", "cemetery",
                                 "landfill","allotments","recreation ground","railway","parking","grass","grassland","green","garages"]
       tourism_no_residents: ["zoo"]
@@ -371,7 +402,7 @@ VARIABLES_SET :
 
   # temporary variable container to generate ways table
   ways:
-    region_pbf: ["mittelfranken", "niederbayern", "oberbayern", "oberfranken", "oberpfalz", "schwaben", "unterfranken", "freiburg"]
+    region_pbf: ["oberpfalz", "mittelfranken"]
     collection: 
     preparation:
       excluded_class_id_walking: [0,101,102,103,104,105,106,107,501,502,503,504,701,801]

@@ -46,17 +46,19 @@ def area_n_buffer2df(con, rs_set, buffer=8300):
 def addr_deaggregate(addr_street):
     street_l = []
     number_l = []
-    addr_split = addr_street.split()
-    for a in addr_split:
-        if len(a) < 2 or any(map(str.isdigit, a)):
-            number_l.append(a)
-        else:
-            street_l.append(a)
+    try:
+        addr_split = addr_street.split()
+        for a in addr_split:
+            if len(a) < 2 or any(map(str.isdigit, a)):
+                number_l.append(a)
+            else:
+                street_l.append(a)
 
-    street = ' '.join(street_l)
-    number = ' '.join(number_l)
-       
-    return street, number
+        street = ' '.join(street_l)
+        number = ' '.join(number_l)
+        return street, number
+    except:
+        pass
 
 def df2area(df,df_area):
     df2area = gpd.overlay(df, df_area, how='intersection')
@@ -97,7 +99,7 @@ def find_nearest(gdA, gdB, max_dist):
 # Indexing data in dataframe with goat indexes
 def dataframe_goat_index(df):
     db = Database()
-    con = db.connect()
+    con = db.connect_rd()
     cur = con.cursor()
     df['id_x'] = df.centroid.x * 1000
     df['id_y'] = df.centroid.y * 1000
@@ -106,7 +108,7 @@ def dataframe_goat_index(df):
     df = df.astype({'id_x': int, 'id_y': int})
     df['poi_goat_id'] = df['id_x'].map(str) + '-' + df['id_y'].map(str) + '-' + df['amenity']
     df = df.drop(columns=['id_x','id_y'])
-    df["osm_id"] = df["osm_id"].fillna(value="")
+    df["osm_id"] = df["osm_id"].fillna(value=0)
     df_poi_goat_id = df[['poi_goat_id','osm_id']]
 
     cols = ','.join(list(df_poi_goat_id.columns))
@@ -118,7 +120,7 @@ def dataframe_goat_index(df):
         tup_l = list(tup)
         id_number = tup_l[0]
         query_select = f"SELECT max(index) FROM poi_goat_id WHERE poi_goat_id = '{id_number}'"
-        last_number = db.select(query_select)
+        last_number = db.select_rd(query_select)
         if (list(last_number[0])[0]) is None:
             tup_new = tup_l
             tup_new.append(0)
@@ -175,8 +177,10 @@ def replace_data_area(df_base2area, df_area, df_input, amenity_replace=None, ame
 
     # Set tags and geom from osm data to input
 
+    
     # Deaggregate street and number
     if "addr:street" in df_input2area.columns.tolist():
+        df_input2area["addr:street"] = df_input2area["addr:street"].fillna(value="")
         if 'housenumber' not in df_input2area.columns.tolist():
             for i in df_input2area.index:
                 df_row = df_input2area.iloc[i]
@@ -233,7 +237,9 @@ def fuse_data_area(df_base2area, df_area, df_input, amenity_fuse=None, amenity_s
     else:
         print("Amenity (and brand) were not specified.. ")
 
+    
     if "addr:street" in df_input2area.columns.tolist():
+        df_input2area["addr:street"] = df_input2area["addr:street"].fillna(value="")
         if 'housenumber' not in df_input2area.columns.tolist():
             for i in df_input2area.index:
                 df_row = df_input2area.iloc[i]
@@ -290,7 +296,7 @@ def pois_fusion(df=None, config=None, result_name=None, return_type=None):
         config = Config("pois")
 
 #    rs_set = config.fusion["rs_set"]
-    typen = ["database","geojson", "gpkg"]
+    typen = ["database", "gpkg", "geojson"]
 
     # REMOVE OPTION FOR BASE TABLE FROM 
     if df is not None:
@@ -306,7 +312,6 @@ def pois_fusion(df=None, config=None, result_name=None, return_type=None):
 
     for typ in typen:
         fusion_key_set = config.fusion_key_set(typ)
-
         for key in fusion_key_set:
             print(key)
             fusion_set = config.fusion_set(typ,key)
@@ -349,5 +354,6 @@ def pois_fusion(df=None, config=None, result_name=None, return_type=None):
                     pass
 
     df_base2area = dataframe_goat_index(df_base2area)
+    df_base2area = df_base2area.astype({'osm_id': int})
 
     return gdf_conversion(df_base2area, result_name, return_type=return_type)

@@ -340,7 +340,7 @@ def pois_preparation(dataframe, config=None,filename="pois_preparation_result", 
 
     return gdf_conversion(df,filename,return_type)
 
-# Preparation jedeschule table ->> conversion to fusable format
+# Preparation 'jedeschule' table ->> conversion to fusable format
 def school_categorization(df, config, result_name, return_type):
     var = config.preparation
     var_schools = var["schools"]
@@ -376,14 +376,14 @@ def school_categorization(df, config, result_name, return_type):
 
 # function deaggregates childacare amenities to four groups according to value in "age_group" column
 def kindergarten_deaggrgation(df, result_name, return_type):
-    df.loc[df['age_group'] == '0-3', 'amenity_t'] = 'nursery'
-    df.loc[(df['age_group'] == '3-6') | (df['age_group'] == '2-6'), 'amenity_t'] = 'kindergarten'
-    df.loc[df['age_group'] == '6+', 'amenity_t'] = 'kinderhort'
+    df.loc[df['age_group'] == '0-3', 'amenity'] = 'nursery'
+    df.loc[(df['age_group'] == '3-6') | (df['age_group'] == '2-6'), 'amenity'] = 'kindergarten'
+    df.loc[df['age_group'] == '6+', 'amenity'] = 'kinderhort'
 
     df_temp = df[(df['age_group'] == '0-6') | (df['age_group'] == '1-6')]
-    df_temp['amenity_t'] = 'nursery'
+    df_temp['amenity'] = 'nursery'
 
-    df.loc[(df['age_group'] == '0-6') | (df['age_group'] == '1-6'), 'amenity_t'] = 'kindergarten'
+    df.loc[(df['age_group'] == '0-6') | (df['age_group'] == '1-6'), 'amenity'] = 'kindergarten'
 
     df_result = pd.concat([df,df_temp],sort=False).reset_index(drop=True)
 
