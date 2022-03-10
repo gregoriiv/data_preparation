@@ -97,10 +97,33 @@ class Database:
             records = cur.fetchall()
         cur.close()
         return records
+    
+    def select_rd(self, query, params=None):
+        """Run a SQL query to select rows from table."""
+        self.connect_rd()
+        with self.conn.cursor() as cur:
+            if params is None:
+                cur.execute(query)
+            else:
+                cur.execute(query, params)
+            records = cur.fetchall()
+        cur.close()
+        return records    
 
     def perform(self, query, params=None):
         """Run a SQL query that does not return anything"""
         self.connect()
+        with self.conn.cursor() as cur:
+            if params is None:
+                cur.execute(query)
+            else:
+                cur.execute(query, params)
+        self.conn.commit()
+        cur.close()
+
+    def perform_rd(self, query, params=None):
+        """Run a SQL query that does not return anything"""
+        self.connect_rd()
         with self.conn.cursor() as cur:
             if params is None:
                 cur.execute(query)

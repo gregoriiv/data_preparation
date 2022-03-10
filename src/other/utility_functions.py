@@ -1,11 +1,12 @@
 import os
 import sys
 import time
+import subprocess
 from pathlib import Path
 import geopandas as gp
 from decouple import config
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir)))
-from db.db import Database
+from db.db import Database, DATABASE_RD, DATABASE
 
 # Function for creation backupfiles
 # Convert and save dataframe as GPKG or GeoJSON file formats
@@ -38,7 +39,7 @@ def file2df(filename):
         file = os.path.join('src', 'data', 'input',filename)
         df = gp.read_file(file)
     else:
-        print("Extension of file %s currently doen not support with file2df() function." % filename)
+        print("Extension of file %s currently does not support by file2df() function." % filename)
         sys.exit()
     return df     
     
@@ -87,3 +88,45 @@ def create_pgpass():
     os.system('echo '+':'.join([config("POSTGRES_HOST"),'5432',db_name,config("POSTGRES_USER"),config("POSTGRES_PASSWORD")])+f' > ~/.pgpass_{db_name}')
     os.system(f'chmod 600  ~/.pgpass_{db_name}')
 
+# 'source' could be "remote" or "local". Need to specify 
+def table_dump(source,tablename):
+    if source == 'remote':
+        dbname_rd, host_rd, username_rd, port_rd, password_rd = DATABASE['dbname'], DATABASE['host'], DATABASE['user'], DATABASE['port'], DATABASE['password']
+        try:
+            os.system(f'rm ~/.pgpass_{dbname_rd}')
+        except:
+            pass
+        os.system('echo '+':'.join([host_rd, str(port_rd), dbname_rd, username_rd, password_rd])+f' > ~/.pgpass_{dbname_rd}')
+        os.system(f'chmod 600  ~/.pgpass_{dbname_rd}')
+        cmd_call = f'''PGPASSFILE=~/.pgpass_{dbname_rd} pg_dump -h {host_rd} -t {tablename} --no-owner -U {username_rd} {dbname_rd} > export_results/{tablename}.sql'''
+        subprocess.call(cmd_call, shell=True)
+    elif source == 'local':
+        create_pgpass()
+        dbname, host, username, port = DATABASE['dbname'], DATABASE['host'], DATABASE['user'], DATABASE['port']
+        cmd_call = f'''PGPASSFILE=~/.pgpass_{dbname} pg_dump -h {host} -t {tablename} --no-owner -U {username} {dbname} > export_results/{tablename}.sql'''
+        subprocess.call(cmd_call, shell=True)
+    else:
+        print("Please, specify 'source' - 'remote' or 'local'!")
+
+def table_restore(source, filename):
+    if source == 'remote':
+        dbname_rd, host_rd, username_rd, port_rd, password_rd = DATABASE_RD['dbname'], DATABASE_RD['host'], DATABASE_RD['user'], DATABASE_RD['port'], DATABASE_RD['password']
+        try:
+            os.system(f'rm ~/.pgpass_{dbname_rd}')
+        except:
+            pass
+        os.system('echo '+':'.join([host_rd, str(port_rd), dbname_rd, username_rd, password_rd])+f' > ~/.pgpass_{dbname_rd}')
+        os.system(f'chmod 600  ~/.pgpass_{dbname_rd}')
+        cmd_call = f'''PGPASSFILE=~/.pgpass_{dbname_rd} psql -h {host_rd} -U {username_rd} -p {port_rd} -d {dbname_rd} < export_results/{filename}.sql'''     
+        print(cmd_call)
+        subprocess.call(cmd_call, shell=True)
+    elif source == 'local':
+        create_pgpass()
+        dbname, host, username, port = DATABASE['dbname'], DATABASE['host'], DATABASE['user'], DATABASE['port']
+        cmd_call = f'''PGPASSFILE=~/.pgpass_{dbname} pg_restore -h {host} -U {username} -p {port} -d {dbname} export_results/{filename}.sql'''
+        subprocess.call(cmd_call, shell=True)
+    else:
+        print("Please, specify 'source' - 'remote' or 'local'!")
+    
+# table_dump('local','pois_fused')
+# table_restore('remote', 'pois_fused')
