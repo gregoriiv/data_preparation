@@ -42,19 +42,70 @@ sql_queries = {
             ALTER TABLE temporal.landuse_additional ADD COLUMN gid serial;
             CREATE INDEX ON temporal.landuse_additional(gid);
             CREATE INDEX ON temporal.landuse_additional USING GIST(geom);''',
-    "pois": '''DROP TABLE IF EXISTS buffer_study_area;
+    # "pois": '''DROP TABLE IF EXISTS buffer_study_area;
+    #     CREATE TEMP TABLE buffer_study_area AS 
+    #     SELECT ST_BUFFER(ST_UNION(geom), 0.027) AS geom 
+    #     FROM temporal.study_area;
+
+    #     DROP TABLE IF EXISTS temporal.pois;
+    #     CREATE TABLE temporal.pois as 
+    #     SELECT p.* 
+    #     FROM public.pois_fused p, buffer_study_area s
+    #     WHERE ST_Intersects(p.geom,s.geom);''',
+    "aoi": '''DROP TABLE IF EXISTS buffer_study_area;
         CREATE TEMP TABLE buffer_study_area AS 
         SELECT ST_BUFFER(ST_UNION(geom), 0.027) AS geom 
         FROM temporal.study_area;
 
-        DROP TABLE IF EXISTS temporal.pois;
-        CREATE TABLE temporal.pois as 
-        SELECT p.* 
-        FROM public.pois_fused p, buffer_study_area s
-        WHERE ST_Intersects(p.geom,s.geom);''',
+        DROP TABLE IF EXISTS temporal.aoi;
+        CREATE TABLE temporal.aoi AS 
+        SELECT ua.objart_txt as category, ua.geom 
+        FROM public.landuse_atkis ua, buffer_study_area s
+        WHERE ST_Intersects(ua.geom,s.geom)
+       	AND (objart_txt = 'AX_Wald'
+       	OR objart_txt = 'AX_SportFreizeitUndErholungsflaeche'
+       	OR objart_txt = 'AX_Landwirtschaft'
+       	OR objart_txt = 'AX_Gehoelz'
+       	);
+
+        UPDATE temporal.aoi
+        SET category = 'forest'
+        WHERE category = 'AX_Wald';
+
+        UPDATE temporal.aoi
+        SET category = 'park'
+        WHERE category = 'AX_SportFreizeitUndErholungsflaeche';
+
+		UPDATE temporal.aoi
+        SET category = 'field'
+        WHERE category = 'AX_Landwirtschaft';
+
+		UPDATE temporal.aoi
+        SET category = 'heath_scrub'
+        WHERE category = 'AX_Gehoelz';''',
+    "aoi_freiburg": '''DROP TABLE IF EXISTS buffer_study_area;
+        CREATE TEMP TABLE buffer_study_area AS 
+        SELECT ST_BUFFER(ST_UNION(geom), 0.027) AS geom 
+        FROM temporal.study_area;
+
+        DROP TABLE IF EXISTS temporal.aoi;
+        CREATE TABLE temporal.aoi AS 
+        SELECT ua.class_2018 as category, ua.geom 
+        FROM public.urban_atlas ua, buffer_study_area s
+        WHERE ST_Intersects(ua.geom,s.geom)
+       	AND (class_2018 = 'Forests'
+       	OR class_2018 = 'Green urban areas');
+
+        UPDATE temporal.aoi
+        SET category = 'forest'
+        WHERE category = 'Forests';
+
+        UPDATE temporal.aoi
+        SET category = 'park'
+        WHERE category = 'Green urban areas';''',
     "buildings_custom": '''DROP TABLE IF EXISTS temporal.buildings_custom;
             CREATE TABLE temporal.buildings_custom AS 
-            SELECT b.ags, (ST_DUMP(b.geom)).geom  
+            SELECT b.ags, (ST_DUMP(b.geom)).geom, b.height, b.residential_status 
             FROM public.germany_buildings b, (SELECT ST_UNION(geom) AS geom FROM temporal.study_area) s
             WHERE ST_Intersects(b.geom, s.geom);
             ALTER TABLE temporal.buildings_custom ADD COLUMN gid serial;

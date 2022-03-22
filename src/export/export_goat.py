@@ -2,6 +2,7 @@ import geopandas as gpd
 from src.db.db import Database
 from src.db.config import DATABASE, DATABASE_RD
 import os
+from src.other.create_h3_grid import H3Grid
 import subprocess
 import datetime
 from src.export.export_sql_queries import *
@@ -59,23 +60,22 @@ def getDataFromSql(layer_names, municipalities, export_formats=['shp','sql', 'ge
     print(municipalities)
     #Create temp table for study_area
     for i, mun in enumerate(municipalities):
-        print (i, mun)
         if i == 0:
             db_rd.perform_rd(f'''DROP TABLE IF EXISTS temporal.study_area;
             CREATE TABLE temporal.study_area AS 
-            SELECT rs, name, sum_pop::integer, geom
+            SELECT rs, name, sum_pop::integer, geom, gen, default_building_levels, default_roof_levels
             FROM public.germany_municipalities_districts 
             WHERE rs = '{mun}';''')
         else:
             db_rd.perform_rd(f'''
-            INSERT INTO temporal.study_area (rs, name, sum_pop, geom)
-            SELECT rs, name, sum_pop::integer, geom
+            INSERT INTO temporal.study_area (rs, name, sum_pop, geom, gen, default_building_levels ,default_roof_levels)
+            SELECT rs, name, sum_pop::integer, geom, gen, default_building_levels ,default_roof_levels
             FROM public.germany_municipalities_districts 
-            WHERE rs = '{mun}';''')           
+            WHERE rs = '{mun}';''')
 
     if db_rd.select_rd('SELECT * FROM temporal.study_area LIMIT 1') == []:
         sql_municipalities = ('''CREATE TABLE study_area AS
-        SELECT rs, gen AS name, ewz::integer AS sum_pop, geom 
+        SELECT rs, gen AS name, ewz::integer AS sum_pop, geom, gen 
         FROM public.germany_municipalities
         WHERE rs IN(SELECT UNNEST(ARRAY%s));
         ''' % municipalities)
@@ -87,8 +87,33 @@ def getDataFromSql(layer_names, municipalities, export_formats=['shp','sql', 'ge
     
     for layer_name in layer_names:
         print(f'''Exporting {layer_name} with municipalities code {municipalities}''')
-        export_layer(layer_name, municipalities, export_formats)
-        print('\n')    
+        if layer_name == 'grids':
+            print('Data for %s is searched in the database.' % layer_name)
+            for i, mun in enumerate(municipalities):
+                if i == 0:
+                    grid = H3Grid()
+                    bbox_coords = grid.create_grids_study_area_table(f'{mun}')
+                    bbox = H3Grid().create_geojson_from_bbox(*bbox_coords)
+                    df_gv = H3Grid().create_grid(mun, polygon=bbox, resolution=9, layer_name='grid_visualization')
+                    db = Database()
+                    con = db.connect_rd_sqlalchemy()
+                    df_gv.to_postgis(con=con, schema = 'temporal', name = 'grid_visualization', if_exists='replace',index=False)
+                    df_gc = H3Grid().create_grid(mun, polygon=bbox, resolution=10, layer_name='grid_calculation')
+                    df_gc.to_postgis(con=con, schema = 'temporal', name = 'grid_calculation', if_exists='replace',index=False)
+
+                else:
+                    grid = H3Grid()
+                    bbox_coords = grid.create_grids_study_area_table(f'{mun}')
+                    bbox = H3Grid().create_geojson_from_bbox(*bbox_coords)
+                    df_gv = H3Grid().create_grid(mun, polygon=bbox, resolution=9, layer_name='grid_visualization')           
+                    db = Database()
+                    con = db.connect_rd_sqlalchemy()
+                    df_gv.to_postgis(con=con, schema = 'temporal', name = 'grid_visualization', if_exists='append',index=False)
+                    df_gc = H3Grid().create_grid(mun, polygon=bbox, resolution=10, layer_name='grid_calculation')
+                    df_gc.to_postgis(con=con, schema = 'temporal', name = 'grid_calculation', if_exists='append',index=False)
+        else:
+            export_layer(layer_name, municipalities, export_formats)
+            print('\n')    
 
     # for i in sql_queries.keys():
     #     if i != 'study_area':
@@ -97,3 +122,4 @@ def getDataFromSql(layer_names, municipalities, export_formats=['shp','sql', 'ge
     con_rd.close()
 
 
+# getDataFromSql('grids', )

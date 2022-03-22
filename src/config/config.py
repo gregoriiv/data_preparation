@@ -5,7 +5,7 @@ from pathlib import Path
 import pandas as pd
 import geopandas as gpd 
 from config.osm_dict import OSM_tags, OSM_germany
-from src.other.utility_functions import rdatabase_connection, file2df
+from other.utility_functions import rdatabase_connection, file2df
 
 class Config:
     def __init__(self,name):
@@ -59,12 +59,12 @@ class Config:
         osm_tags = self.collection["osm_tags"]
         pol_columns = ['amenity', 'leisure', 'tourism', 'shop', 'sport', 'public_transport']
 
-        f = open(os.path.join('src','config','style_p4b.style'), "r")
+        f = open(os.path.join('src','config','style_template.style'), "r")
         sep = '#######################CUSTOM###########################'
         text = f.read()
         text = text.split(sep,1)[0]
 
-        f1 = open(os.path.join('src','config', (self.name + '_p4b.style'))  , "w")
+        f1 = open(os.path.join('src','data','temp', (self.name + '_p4b.style'))  , "w")
         f1.write(text)
         f1.write(sep)
         f1.write('\n')

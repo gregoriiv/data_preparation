@@ -103,7 +103,7 @@ def building_prediction(buildings):
     print ('------ start predicting ------')
     type_pred = clf.predict(test_feature) 
     buildings['pred_label'] = type_pred
-    print('------ prediction gernerated ! ------')
+    print('------ prediction generated ! ------')
 
     # write predicted types of buildigns into database
     buildings = buildings[['gid','pred_label','geom']]

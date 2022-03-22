@@ -133,6 +133,7 @@ to_reduce_pop AS (
 	FROM comparison_pop c, sum_distributed_pop s 
 	WHERE s.name = c.name
 	AND sum_new_pop > sum_pop
+	AND s.distributed_pop <> 0
 )
 UPDATE census_prepared
 SET new_pop=new_pop-(new_pop::float/cc.distributed_pop::float)::float*cc.difference::float 
