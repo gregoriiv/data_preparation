@@ -140,6 +140,7 @@ def dataframe_goat_index(df):
             df.iloc[cnt, df.columns.get_loc('poi_goat_id')] = f'{id_number}-{new_ind:04}'
         cnt += 1
     con.close()
+    df = df.astype({'osm_id': int})
     return df
 # POIs fusion function for fusion custom pois data with osm data, referenced to table "germany_municipalities" with regions 
 # RETURNS tuple(df,name) and saves data as file if is specified
@@ -354,6 +355,8 @@ def pois_fusion(df=None, config=None, result_name=None, return_type=None):
                     pass
 
     df_base2area = dataframe_goat_index(df_base2area)
-    df_base2area = df_base2area.astype({'osm_id': int})
+    gdf_conversion(df_base2area, 'pois_muc', return_type="GPKG")
+    # df_base2area["osm_id"] = df_base2area["osm_id"].fillna(value=0)
+    # df_base2area = df_base2area.astype({'osm_id': int})
 
     return gdf_conversion(df_base2area, result_name, return_type=return_type)

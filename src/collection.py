@@ -34,7 +34,7 @@ def osm_collection(conf, database=None, filename=None, return_type=None):
     dbname, host, username, port = DATABASE['dbname'], DATABASE['host'], DATABASE['user'], DATABASE['port']
     region_links = conf.collection_regions()
     work_dir = os.getcwd()
-    os.chdir('src/data/temp')
+    os.chdir(os.path.join('src','data','temp'))
     files = ["raw-osm.osm.pbf", "raw-merged-osm.osm.pbf", "raw-merged-osm-new.osm.pbf", "raw-merged-osm.osm", "raw-merged-osm.osm", "raw-merged-osm-reduced.osm", "osm-filtered.osm"]
     for f in files:
         try:
@@ -59,12 +59,13 @@ def osm_collection(conf, database=None, filename=None, return_type=None):
     subprocess.run(obj_filter, shell=True, check=True)
     os.chdir(work_dir)
     conf.osm2pgsql_create_style()
-    subprocess.run(f'PGPASSFILE=~/.pgpass_{dbname} osm2pgsql -d {dbname} -H {host} -U {username} --port {port} --hstore -E 4326 -r .osm -c src/data/temp/osm-filtered.osm -s --drop -C {cache} --style src/config/{conf.name}_p4b.style --prefix osm_{conf.name}', shell=True, check=True)
-    os.chdir('src/data/temp')
+    subprocess.run(f'PGPASSFILE=~/.pgpass_{dbname} osm2pgsql -d {dbname} -H {host} -U {username} --port {port} --hstore -E 4326 -r .osm -c ' + os.path.join('src','data','temp','osm-filtered.osm') + f'-s --drop -C {cache} --style src/config/{conf.name}_p4b.style --prefix osm_{conf.name}', shell=True, check=True)
+    os.chdir(os.path.join('src','data','temp'))
     subprocess.run('rm raw-merged-osm.osm', shell=True, check=True)
     subprocess.run('rm osm-filtered.osm', shell=True, check=True)
+    subprocess.run(f'rm {conf.name}_p4b.style', shell=True, check=True)
     os.chdir(work_dir)
-
+    
     tables = [f'osm_{conf.name}_line', f'osm_{conf.name}_point', f'osm_{conf.name}_polygon', f'osm_{conf.name}_roads']
 
     db = Database()
@@ -83,7 +84,6 @@ def osm_collection(conf, database=None, filename=None, return_type=None):
     print(f"Collection of osm data for {conf.name} took {time.time() - start_time} seconds ---")
 
     return gdf_conversion(df_result, filename, return_type)
-
 
 #============================================OUTDATED=============================================#
 #=================================================================================================#

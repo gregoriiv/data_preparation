@@ -21,7 +21,7 @@ if args['type'] not in ['shp', 'geojson', 'gpkg', 'tif']:
     print("file type should be shp, geojson, gpkg or tif")
 else:
     if args['type'] == 'tif':
-        bulk_import_geotiff(args);
+        bulk_import_geotiff(args)
     else:
         initialize_import(args)
 

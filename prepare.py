@@ -55,13 +55,13 @@ if prepare or prepare in(layers_prepare):
     elif prepare == 'landuse':
         landuse = osm_collection('landuse')[0]
         landuse = landuse_preparation(landuse)[0]
-        drop_table('landuse')
-        df2database(landuse, 'landuse')
+        drop_table('landuse_osm')
+        df2database(landuse, 'landuse_osm')
     elif prepare == 'buildings':
         buildings = osm_collection('buildings')[0]
         buildings = buildings_preparation(buildings)[0]   
-        drop_table('buildings')
-        df2database(buildings, 'buildings')             
+        drop_table('buildings_osm')
+        df2database(buildings, 'buildings_osm')             
     else:
         print('Please specify a valid preparation type.')
 
@@ -73,8 +73,11 @@ if fuse or fuse in(layers_fuse):
         pois = pois_fusion(pois)[0]
         drop_table('pois_fused')
         df2database(pois, 'pois_fused')
+        db.perform(query = 'ALTER TABLE pois_fused DROP COLUMN IF EXISTS id;')  
+        db.perform(query = 'ALTER TABLE pois_fused ADD COLUMN id serial;')
+        db.perform(query = 'ALTER TABLE pois_fused ADD PRIMARY KEY (id);')        
         db.perform(query = 'CREATE INDEX ON pois_fused(poi_goat_id);')
         db.perform(query = 'ALTER TABLE pois_fused RENAME COLUMN geometry TO geom;')
-        db.perform(query = 'ALTER TABLE pois_fused ALTER COLUMN osm_id TYPE bigint')
+        db.perform(query = 'ALTER TABLE pois_fused ALTER COLUMN osm_id TYPE bigint;')
     else:
         print('Error ' + datetime.now().strftime("%Y-%m-%d %H:%M:%S") + '  Please specify a valid fusion type.')

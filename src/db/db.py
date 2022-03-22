@@ -158,3 +158,9 @@ class Database:
         self.connect()
         self.conn.cursor()
         return self.conn.cursor()
+
+    def cursor_rd(self):
+        """This will return the query as string for testing"""
+        self.connect_rd()
+        self.conn.cursor()
+        return self.conn.cursor()

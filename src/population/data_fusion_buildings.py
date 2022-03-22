@@ -20,6 +20,16 @@ from config.config import Config
 variable_container_population = Config("population").preparation
 
 data_fusion_buildings = f'''
+DROP TABLE IF EXISTS buildings_osm_study_area; 
+CREATE TABLE buildings_osm_study_area AS 
+SELECT b.*
+FROM buildings_osm b, study_area s
+WHERE ST_Intersects(s.geom, b.geom);  
+
+ALTER TABLE buildings_osm_study_area ADD COLUMN gid serial; 
+ALTER TABLE buildings_osm_study_area ADD PRIMARY KEY(gid);
+CREATE INDEX ON buildings_osm_study_area USING GIST(geom);
+
 ALTER TABLE study_area ADD COLUMN IF NOT EXISTS default_building_levels SMALLINT;
 ALTER TABLE study_area ADD COLUMN IF NOT EXISTS default_roof_levels SMALLINT; 
 ALTER TABLE study_area ALTER COLUMN sum_pop TYPE integer using sum_pop::integer;
@@ -135,15 +145,24 @@ $$
         	/*Inject buildings from OSM that do not intersect custom buildings*/
         	IF inject_not_duplicated_osm = 'yes' THEN 
 
-				ALTER TABLE selected_buildings  ALTER COLUMN geom TYPE geometry(Geometry,4326);
-        		ALTER TABLE buildings_osm ALTER COLUMN geom type geometry(Geometry , 4326);
+				ALTER TABLE selected_buildings ALTER COLUMN geom TYPE geometry(Geometry,4326);
+        		ALTER TABLE buildings_osm_study_area ALTER COLUMN geom type geometry(Geometry , 4326);
 
-	        	INSERT INTO selected_buildings 
-	        	SELECT o.osm_id, NULL AS custom_gid, o.geom  
-	        	FROM buildings_osm o
-	        	LEFT JOIN selected_buildings s 
-	        	ON o.osm_id = s.osm_id
-	        	WHERE s.osm_id IS NULL;
+				DROP TABLE IF EXISTS osm_ids_intersect;
+				CREATE TABLE osm_ids_intersect AS 
+				SELECT DISTINCT o.gid   
+				FROM buildings_osm_study_area o, buildings_custom c 
+				WHERE ST_Intersects(o.geom,c.geom);
+						
+				ALTER TABLE osm_ids_intersect ADD PRIMARY KEY(gid);
+				
+				INSERT INTO selected_buildings 
+				SELECT b.osm_id, NULL AS custom_gid, b.geom  
+				FROM buildings_osm_study_area b 
+				LEFT JOIN osm_ids_intersect i  
+				ON b.gid = i.gid 
+				WHERE i.gid IS NULL; 
+
         	END IF; 
         	
         	/*Inject buildings from custom that do not intersect osm buildings*/
@@ -156,7 +175,7 @@ $$
 	        	WHERE s.custom_gid IS NULL;	
             END IF; 
            
-        	INSERT INTO buildings(osm_id,building,amenity,residential_status,housenumber,street,building_levels,roof_levels,geom)
+        	INSERT INTO buildings(osm_id,building,amenity,residential_status,housenumber,street,building_levels,roof_levels,height,geom)
 			SELECT o.osm_id,			
 			CASE 
 				WHEN c.building IS NOT NULL THEN c.building ELSE o.building END AS building,
@@ -179,9 +198,10 @@ $$
 				WHEN o.roof_levels IS NOT NULL THEN o.roof_levels 
 				--WHEN s.default_roof_levels IS NOT NULL THEN s.default_roof_levels
 				ELSE average_roof_levels END AS roof_levels, 
+			height,	
 			b.geom
 			FROM selected_buildings b
-			LEFT JOIN buildings_osm o
+			LEFT JOIN buildings_osm_study_area o
 			ON b.osm_id = o.osm_id
 			LEFT JOIN buildings_custom c
 			ON b.custom_gid = c.gid
@@ -193,7 +213,7 @@ $$
 			SELECT b.osm_id,b.building,b.amenity,b.residential_status,b.street,b.housenumber,b.area,
 			CASE WHEN b.building_levels IS NOT NULL THEN b.building_levels ELSE average_building_levels END AS building_levels,
 			CASE WHEN b.roof_levels IS NOT NULL THEN b.roof_levels ELSE average_roof_levels END AS roof_levels,b.geom
-			FROM buildings_osm b
+			FROM buildings_osm_study_area b
 			LEFT JOIN study_area s
 			ON ST_Intersects(s.geom,b.geom);
 		END IF;

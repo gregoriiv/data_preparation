@@ -1,5 +1,7 @@
 #%%
 '''This script produces a SQL table with population points.'''
+import imp
+from re import I
 import sys
 import os
 import importlib
@@ -14,6 +16,11 @@ from classify_buildings import intersect_landuse_additional as sql_intersect_lan
 from classify_buildings import intersect_osm_landuse as sql_intersect_osm_landuse
 from classify_buildings import finalized_classification as sql_finalized_classification
 from classify_buildings import buildings_update as sql_buildings_update
+from create_residential_addresses import create_residential_addresses
+from prepare_census import prepare_census
+from population_census import population_census
+from population_extrapolated_census import population_extrapolated_census
+from population_disaggregation import population_disaggregation
 from building_classifier import building_prediction
 from sqlalchemy import create_engine
 
@@ -85,34 +92,21 @@ class Population():
         print ('------ landuse intersection finished! ------')
         self.db.perform(query = sql_intersect_landuse_additional)
         print ('------ landuse additional intersection finished! ------')
-        #self.db.perform(query = sql_intersect_osm_landuse)
+        self.db.perform(query = sql_intersect_osm_landuse)
         print ('------ osm landuse intersection finished! ------')
         self.db.perform(query = sql_finalized_classification)
         print ('------ finilized classification finished! ------')
         self.db.perform(query = sql_buildings_update)
         print ('------ buildings upate finished! ------')
 
-        self.db.perform(query = scripts.create_residential_addresses.create_residential_addresses)
-
-        if source_population == 'census_standard':
-            self.db.perform(query = scripts.prepare_census.prepare_census)
-            self.db.perform(query = scripts.population_census.population_census)
-        elif source_population == 'census_extrapolation':
-            self.db.perform(query = scripts.prepare_census.prepare_census)
-            self.db.perform(query = scripts.population_extrapolated_census.population_extrapolated_census)
-        elif source_population == 'disaggregation':
-            # census_disaggregation: population_disaggregation
-            self.db.perform(query = scripts.population_disaggregation.population_disaggregation)
-        else:
-            print('No valid population mode was provided. Therefore the population scripts cannot be executed.') 
-
         # further classification: select residential_status = potential_residents 
         sql_potential_residents = "SELECT gid, residential_status, geom FROM buildings b WHERE b.residential_status = 'potential_residents'"
 
         # didn't connect with engine, only used connect() function
         gdf_potential_residents = gpd.GeoDataFrame.from_postgis(sql_potential_residents, self.db.connect_sqlalchemy())
-        gdf_potential_residents = self.db.select(query = sql_potential_residents)
 
+        #gdf_potential_residents = self.db.select(query = sql_potential_residents)
+        
         # print('------ data fetching finished! ------')
         print('the number of rows: ', len(gdf_potential_residents))
 
@@ -136,10 +130,24 @@ class Population():
 
         self.db.perform(query = sql_update_building_types)
 
+        self.db.perform(query = create_residential_addresses)
+
+        if source_population == 'census_standard':
+            self.db.perform(query = prepare_census)
+            self.db.perform(query = population_census)
+        elif source_population == 'census_extrapolation':
+            self.db.perform(query = prepare_census)
+            self.db.perform(query = population_extrapolated_census)
+        elif source_population == 'disaggregation':
+            # census_disaggregation: population_disaggregation
+            self.db.perform(query = population_disaggregation)
+        else:
+            print('No valid population mode was provided. Therefore the population scripts cannot be executed.') 
+
+
     
 population = Population(Database=Database)
-population.produce_population_points(source_population = 'census_standard')
-
+population.produce_population_points(source_population = 'census_extrapolation')
 
 
 # def main():
