@@ -137,6 +137,10 @@ def pois_preparation(dataframe, config=None,filename="pois_preparation_result", 
 
     # drop operator value for supermarkets
     df.loc[df['shop'] == 'supermarket', 'operator'] = ''
+
+    # bycicle rental & doctors renaming
+    df.loc[df.amenity == 'bicycle_rental', 'amenity'] = "bike_sharing"
+    df.loc[df.amenity == 'doctors', 'amenity'] = "general_practitioner"
  
     # Iterate through the rows
     for i in df.index:
@@ -178,7 +182,7 @@ def pois_preparation(dataframe, config=None,filename="pois_preparation_result", 
         # Recclasify shops. Define convenience and clothes, others assign to amenity. If not rewrite amenity with shop value
         if df_row[i_shop] == "grocery" and df_row[i_amenity] == "":
             if df_row[i_organic] == "only":
-                df.iat[i,i_amenity] = "organic"
+                df.iat[i,i_amenity] = "organic_supermarket"
                 df.iat[i,i_tags]["organic"] = df_row[i_organic]
                 operator = poi_return_search_condition(df_row[i_name].lower(), organic_var)
                 if operator:
@@ -216,7 +220,7 @@ def pois_preparation(dataframe, config=None,filename="pois_preparation_result", 
                         pass
             else:
                 if df_row[i_organic] == "only":
-                    df.iat[i,i_amenity] = "organic"
+                    df.iat[i,i_amenity] = "organic_supermarket"
                     df.iat[i,i_tags]["organic"] = df_row[i_organic]
                     operator = poi_return_search_condition(df_row[i_name].lower(), organic_var)
                     if operator:

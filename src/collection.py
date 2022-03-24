@@ -35,7 +35,7 @@ def osm_collection(conf, database=None, filename=None, return_type=None):
     region_links = conf.collection_regions()
     work_dir = os.getcwd()
     os.chdir(os.path.join('src','data','temp'))
-    files = ["raw-osm.osm.pbf", "raw-merged-osm.osm.pbf", "raw-merged-osm-new.osm.pbf", "raw-merged-osm.osm", "raw-merged-osm.osm", "raw-merged-osm-reduced.osm", "osm-filtered.osm"]
+    files = ["raw-osm.osm.pbf", "raw-merged-osm.osm.pbf", "raw-merged-osm-new.osm.pbf", "raw-merged-osm.osm", "raw-merged-osm.osm", "raw-merged-osm-reduced.osm", "osm-filtered.osm", f'{conf.name}_p4b.style']
     for f in files:
         try:
             os.remove(f)
@@ -59,7 +59,7 @@ def osm_collection(conf, database=None, filename=None, return_type=None):
     subprocess.run(obj_filter, shell=True, check=True)
     os.chdir(work_dir)
     conf.osm2pgsql_create_style()
-    subprocess.run(f'PGPASSFILE=~/.pgpass_{dbname} osm2pgsql -d {dbname} -H {host} -U {username} --port {port} --hstore -E 4326 -r .osm -c ' + os.path.join('src','data','temp','osm-filtered.osm') + f'-s --drop -C {cache} --style src/config/{conf.name}_p4b.style --prefix osm_{conf.name}', shell=True, check=True)
+    subprocess.run(f'PGPASSFILE=~/.pgpass_{dbname} osm2pgsql -d {dbname} -H {host} -U {username} --port {port} --hstore -E 4326 -r .osm -c ' + os.path.join('src','data','temp','osm-filtered.osm') + f' -s --drop -C {cache} --style src/data/temp/{conf.name}_p4b.style --prefix osm_{conf.name}', shell=True, check=True)
     os.chdir(os.path.join('src','data','temp'))
     subprocess.run('rm raw-merged-osm.osm', shell=True, check=True)
     subprocess.run('rm osm-filtered.osm', shell=True, check=True)

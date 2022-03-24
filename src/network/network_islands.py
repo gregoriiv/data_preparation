@@ -22,6 +22,7 @@ WITH RECURSIVE ways_no_islands AS (
 	FROM ways w
 	WHERE w.tag_id NOT IN (SELECT UNNEST(ARRAY{variable_container_ways["excluded_class_id_walking"]}))
 	AND w.tag_id NOT IN (SELECT UNNEST(ARRAY{variable_container_ways["excluded_class_id_cycling"]}))
+	AND ST_Intersects(w.geom, ST_SETSRID(ST_GEOMFROMTEXT("Yourtext"), 4326)
 	AND (
 	(w.foot NOT IN (SELECT UNNEST(ARRAY{variable_container_ways["categories_no_foot"]})) OR foot IS NULL)
 	OR
@@ -31,6 +32,7 @@ WITH RECURSIVE ways_no_islands AS (
 	SELECT w.id,w.geom
 	FROM ways w, ways_no_islands n
 	WHERE ST_Intersects(n.geom,w.geom)
+	AND ST_Intersects(w.geom, ST_SETSRID(ST_GEOMFROMTEXT("Yourtext"), 4326)
 	AND w.tag_id NOT IN (SELECT UNNEST(ARRAY{variable_container_ways["excluded_class_id_walking"]}))
 	AND w.tag_id NOT IN (SELECT UNNEST(ARRAY{variable_container_ways["excluded_class_id_cycling"]}))
 	AND (w.foot NOT IN (SELECT UNNEST(ARRAY{variable_container_ways["categories_no_foot"]})) OR foot IS NULL)
@@ -42,6 +44,7 @@ FROM (
 	LEFT JOIN ways_no_islands n
 	ON w.id = n.id
 	WHERE n.id IS null
+	AND ST_Intersects(w.geom, ST_SETSRID(ST_GEOMFROMTEXT("Yourtext"), 4326)
 ) x, ways w
 WHERE w.id = x.id
 AND w.tag_id NOT IN (SELECT UNNEST(ARRAY{variable_container_ways["excluded_class_id_walking"]}))

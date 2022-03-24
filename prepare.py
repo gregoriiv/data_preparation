@@ -78,6 +78,7 @@ if fuse or fuse in(layers_fuse):
         db.perform(query = 'ALTER TABLE pois_fused ADD PRIMARY KEY (id);')        
         db.perform(query = 'CREATE INDEX ON pois_fused(poi_goat_id);')
         db.perform(query = 'ALTER TABLE pois_fused RENAME COLUMN geometry TO geom;')
-        db.perform(query = 'ALTER TABLE pois_fused ALTER COLUMN osm_id TYPE bigint;')
+        db.perform(query = 'ALTER TABLE pois_fused ALTER COLUMN osm_id TYPE float USING osm_id::double precision')        
+        db.perform(query = 'ALTER TABLE pois_fused ALTER COLUMN osm_id TYPE bigint USING osm_id::bigint')
     else:
         print('Error ' + datetime.now().strftime("%Y-%m-%d %H:%M:%S") + '  Please specify a valid fusion type.')

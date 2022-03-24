@@ -14,4 +14,8 @@ ALTER TABLE ways_vertices_pgr ADD PRIMARY KEY (id);
 CREATE INDEX ON ways USING GIST(geom);
 CREATE INDEX ON ways_vertices_pgr USING GIST(geom);
 
+ALTER TABLE "configuration" RENAME COLUMN tag_id TO class_id;
+ALTER TABLE "configuration" RENAME COLUMN tag_key TO class_key;
+ALTER TABLE "configuration" RENAME COLUMN tag_value TO class_value;
+
 '''

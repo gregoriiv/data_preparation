@@ -125,7 +125,7 @@ def create_pgpass():
 
 
 # 'source' could be "remote" or "local". Need to specify
-def table_dump(source, tablename):
+def table_dump(source, tablename,data_only=False):
     if source == "remote":
         dbname_rd, host_rd, username_rd, port_rd, password_rd = (
             DATABASE_RD["dbname"],
@@ -144,8 +144,10 @@ def table_dump(source, tablename):
             + f" > ~/.pgpass_{dbname_rd}"
         )
         os.system(f"chmod 600  ~/.pgpass_{dbname_rd}")
-
-        cmd_call = f"""PGPASSFILE=~/.pgpass_{dbname_rd} pg_dump -h {host_rd} -t {tablename} --no-owner -U {username_rd} {dbname_rd} > export_results/{tablename}.sql"""
+        if not data_only:
+            cmd_call = f"""PGPASSFILE=~/.pgpass_{dbname_rd} pg_dump -h {host_rd} -t {tablename} --no-owner -U {username_rd} {dbname_rd} > export_results/{tablename}.sql"""
+        else:
+            cmd_call = f"""PGPASSFILE=~/.pgpass_{dbname_rd} pg_dump -h {host_rd} -t {tablename} --no-owner -U {username_rd} --data-only  {dbname_rd} > export_results/{tablename}.sql"""
         subprocess.call(cmd_call, shell=True)
     elif source == "local":
         create_pgpass()
@@ -155,8 +157,10 @@ def table_dump(source, tablename):
             DATABASE["user"],
             DATABASE["port"],
         )
-        cmd_call = f"""PGPASSFILE=~/.pgpass_{dbname} pg_dump -h {host} -t {tablename} --no-owner -U {username} {dbname} > export_results/{tablename}.sql"""
-        print(cmd_call)
+        if not data_only:
+            cmd_call = f"""PGPASSFILE=~/.pgpass_{dbname} pg_dump -h {host} -t {tablename} --no-owner -U {username} {dbname} > export_results/{tablename}.sql"""
+        else:
+            cmd_call = f"""PGPASSFILE=~/.pgpass_{dbname} pg_dump -h {host} -t {tablename} --no-owner -U {username} --data-only  {dbname} > export_results/{tablename}.sql"""
         subprocess.call(cmd_call, shell=True)
     else:
         print("Please, specify 'source' - 'remote' or 'local'!")
@@ -212,28 +216,46 @@ def migrate_table2localdb(source_table, dest_table):
     subprocess.run(f'rm export_results/{dest_table}.sql', shell=True, check=True)
 
 
-def migrate_all_tables2localdb():
-    def GetTableList(t_schema):
-        # Retrieve the table list
-        s = "SELECT table_schema, table_name FROM information_schema.tables WHERE (table_schema = '" + t_schema + "') ORDER BY table_schema, table_name;"
+def GetTableList(t_schema, source='remote'):
+    # Retrieve the table list
+    s = "SELECT table_schema, table_name FROM information_schema.tables WHERE (table_schema = '" + t_schema + "') ORDER BY table_schema, table_name;"
 
-        db = Database()
+    db = Database()
+    if source == 'remote':
         db_cursor = db.cursor_rd()
-        # Retrieve all the rows from the cursor
-        db_cursor.execute(s)
-        list_tables = db_cursor.fetchall()
+    elif source == 'local':
+        db_cursor = db.cursor()
+    else:
+        print('Please, specify type of source of database "remote" or "local!"')
+    # Retrieve all the rows from the cursor
+    db_cursor.execute(s)
+    list_tables = db_cursor.fetchall()
+    # Print the names of the tables
+    table_list = [y for x,y in list_tables]
+    print(table_list)
+    return table_list
 
-        # Print the names of the tables
-        table_list = [y for x,y in list_tables]
-        print(table_list)
-        return table_list
-    
+def migrate_all_tables2localdb():
     tables = GetTableList('temporal')
     for t in tables:
         migrate_table2localdb(t,t)
 
+def create_sql_dumps():
+    tables_basic_standard = ['aoi', 'building', 'dem', 'edge', 'grid_calculation', 'grid_visualization', 'node', 'poi', 'population', 'study_area', 'sub_study_area']
+    tables_extra_standard = ['accidents_walking', 'accidents_cycling', 'building', 'landuse_additional', 'landuse_atkis', 'landuse_osm']
 
+    tables_basic = GetTableList('basic', 'local')
+    for tab_b in tables_basic:
+        if tab_b in tables_basic_standard:
+            table_dump('local','.'.join(['basic',tab_b]), data_only=True)
+
+    tables_extra = GetTableList('extra', 'local')
+    for tab_e in tables_extra:
+        if tab_e in tables_extra_standard:
+            table_dump('local','.'.join(['extra',tab_e]))
+
+create_sql_dumps()
 
 # migrate_all_tables2localdb()
 
-#migrate_table2localdb('buildings_custom', 'buildings_custom')
+# migrate_table2localdb('accidents', 'accidents')
