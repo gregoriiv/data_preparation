@@ -104,8 +104,8 @@ class PrepareLayers():
 
         from src.network.network_preparation1 import network_preparation1
         self.db.perform(query = network_preparation1)
-        from src.network.network_islands import network_islands
-        self.db.perform(query=network_islands)
+        # from src.network.network_islands import network_islands
+        # self.db.perform(query=network_islands)
         from src.network.network_preparation2 import network_preparation2
         self.db.perform(query = network_preparation2)
         from src.network.network_table_upd import network_table_upd

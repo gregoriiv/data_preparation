@@ -101,6 +101,7 @@ def dataframe_goat_index(df):
     db = Database()
     con = db.connect_rd()
     cur = con.cursor()
+    df = df[df['amenity'].notna()]
     df['id_x'] = df.centroid.x * 1000
     df['id_y'] = df.centroid.y * 1000
     df['id_x'] = df['id_x'].apply(np.floor)
@@ -208,7 +209,9 @@ def replace_data_area(df_base2area, df_area, df_input, amenity_replace=None, ame
     elif amenity_replace:
         def_values = ['amenity']
         remove_all_by_values(columns2fuse, def_values)
-        df_input2area['amenity'] = amenity_replace.lower()
+        if amenity_set:
+            df_input2area['amenity'] = amenity_replace
+        df_input2area['amenity'] = df_input2area['amenity'].str.lower()
         columns2fuse.extend((*def_values, 'geometry'))
         df_input2area = df_input2area[columns2fuse]      
  
@@ -229,6 +232,7 @@ def fuse_data_area(df_base2area, df_area, df_input, amenity_fuse=None, amenity_s
     if amenity_fuse:
         df_base_amenity = df_base2area[df_base2area.amenity == amenity_fuse]
         df_base2area_rest = df_base2area[df_base2area.amenity != amenity_fuse]
+
     elif amenity_brand_fuse:
         amenity_brand_fuse = eval(amenity_brand_fuse)
         df_base_amenity = df_base2area[((df_base2area.operator.str.lower() == amenity_brand_fuse[1].lower()) |
@@ -238,7 +242,6 @@ def fuse_data_area(df_base2area, df_area, df_input, amenity_fuse=None, amenity_s
     else:
         print("Amenity (and brand) were not specified.. ")
 
-    
     if "addr:street" in df_input2area.columns.tolist():
         df_input2area["addr:street"] = df_input2area["addr:street"].fillna(value="")
         if 'housenumber' not in df_input2area.columns.tolist():
@@ -253,7 +256,7 @@ def fuse_data_area(df_base2area, df_area, df_input, amenity_fuse=None, amenity_s
             df_input2area[col] = column_set_value[col]
 
     # Create temp sorted base dataframe 
-    df_base_temp = df_base_amenity[["geometry", "osm_id"]]      
+    df_base_temp = df_base_amenity[["geometry", "osm_id"]]
     # find closest points to fuse, default max distance for fusion 150 meters
     # return 2 df - find closests and not
     df_fus, df_not_fus = find_nearest(df_input2area, df_base_temp, 500)
@@ -306,7 +309,12 @@ def pois_fusion(df=None, config=None, result_name=None, return_type=None):
     else:
         print('Please specify database table in pois_fusion() variables or table_name in config.yaml')
     
-    #df_area = area_n_buffer2df(con, rs_set, buffer=8300)
+    values = ['atm','bakery','bank','bar','bike_sharing','biergarten','bus_stop','butcher','cafe','car_sharing','charging_station','chemist','cinema','clothes','convenience','dentist','discount_gym','discount_supermarket',
+                'general_practitioner','fast_food','fuel','greengrocer','guest_house','gym','hairdresser','health_food','hostel','hotel','hypermarket','ice_cream','international_hypermarket','kindergarten','kiosk','library','mall','marketplace',
+                'museum','nightclub','organic_supermarket','parking','pharmacy','playground','post_box','post_office','post_paketshop','pub','rail_station','recycling','restaurant','restaurant;bar','school','shoes','subway_entrance',
+                'supermarket','taxi','theatre','toilets','tram_stop', 'yoga']
+                
+    df_base = df_base[df_base.amenity.isin(values)]
 
     df_area = config.get_areas_by_rs(buffer=8300)
     df_base2area = df2area(df_base, df_area)
@@ -346,7 +354,7 @@ def pois_fusion(df=None, config=None, result_name=None, return_type=None):
             if df_input.empty:
                 pass
             else:
-                if config.fusion_type(typ, key) == "fuse":                                                            
+                if config.fusion_type(typ, key) == "fuse":                                                          
                     df_base2area = fuse_data_area(df_base2area, df_area, df_input, *fusion_set, return_name = None, return_type=None)[0]
                 elif config.fusion_type(typ, key) == "replace":
                     df_base2area = replace_data_area(df_base2area, df_area, df_input, *fusion_set, return_name = None, return_type=None)[0]
@@ -355,8 +363,5 @@ def pois_fusion(df=None, config=None, result_name=None, return_type=None):
                     pass
 
     df_base2area = dataframe_goat_index(df_base2area)
-    gdf_conversion(df_base2area, 'pois_muc', return_type="GPKG")
-    # df_base2area["osm_id"] = df_base2area["osm_id"].fillna(value=0)
-    # df_base2area = df_base2area.astype({'osm_id': int})
 
     return gdf_conversion(df_base2area, result_name, return_type=return_type)

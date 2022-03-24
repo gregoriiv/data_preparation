@@ -5,6 +5,7 @@ sql_queries = {
         SELECT a.* 
         FROM public.germany_accidents a, temporal.study_area s
         WHERE ST_Intersects(a.geom,s.geom)
+        AND (istrad = '1' OR istfuss = '1'); 
     '''
     ,
     "landuse": '''
