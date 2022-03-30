@@ -18,10 +18,17 @@ from fusion import database_table2df
 # !! Notice if driver is specified it creates GeoJSON, but function still returns DF.
 # !! If it is not specified func returns only DF
 
+
+
+
 def osm_collection(conf, database=None, filename=None, return_type=None):
     create_pgpass()
 
-    conf = Config(conf)
+    if isinstance(conf, str): 
+        conf = Config(conf)
+    else:
+        conf = conf
+
     if not database:
         database = DATABASE
 
@@ -87,6 +94,7 @@ def osm_collection(conf, database=None, filename=None, return_type=None):
 
 #============================================OUTDATED=============================================#
 #=================================================================================================#
+
 
 # def osm_collect_filter(config, pbf_region=None, driver=None, update=False):
 #     # Timer

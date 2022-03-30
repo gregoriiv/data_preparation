@@ -5,9 +5,7 @@ sql_queries = {
         SELECT a.* 
         FROM public.germany_accidents a, temporal.study_area s
         WHERE ST_Intersects(a.geom,s.geom)
-        AND (istrad = '1' OR istfuss = '1'); 
-    '''
-    ,
+        AND (istrad = '1' OR istfuss = '1'); ''',
     "landuse": '''
         DROP TABLE IF EXISTS temporal.landuse; 
         DO $$                  
@@ -43,16 +41,45 @@ sql_queries = {
             ALTER TABLE temporal.landuse_additional ADD COLUMN gid serial;
             CREATE INDEX ON temporal.landuse_additional(gid);
             CREATE INDEX ON temporal.landuse_additional USING GIST(geom);''',
-    # "pois": '''DROP TABLE IF EXISTS buffer_study_area;
-    #     CREATE TEMP TABLE buffer_study_area AS 
-    #     SELECT ST_BUFFER(ST_UNION(geom), 0.027) AS geom 
-    #     FROM temporal.study_area;
+    "landuse_osm": '''DROP TABLE IF EXISTS temporal.landuse_osm;
+            CREATE TABLE temporal.landuse_osm AS 
+            SELECT * 
+            FROM public.landuse_osm, (SELECT ST_UNION(geom) AS geom FROM temporal.study_area) s
+            WHERE ST_Intersects(u.geom, s.geom);
+            ALTER TABLE temporal.landuse_osm ADD COLUMN gid serial;
+            CREATE INDEX ON temporal.landuse_osm(gid);
+            CREATE INDEX ON temporal.landuse_osm USING GIST(geom);''',
+    "buildings_osm": '''DROP TABLE IF EXISTS buffer_study_area;
+        CREATE TEMP TABLE buffer_study_area AS 
+        SELECT ST_BUFFER(ST_UNION(geom), 0.027) AS geom 
+        FROM temporal.study_area;
 
-    #     DROP TABLE IF EXISTS temporal.pois;
-    #     CREATE TABLE temporal.pois as 
-    #     SELECT p.* 
-    #     FROM public.pois_fused p, buffer_study_area s
-    #     WHERE ST_Intersects(p.geom,s.geom);''',
+        DROP TABLE IF EXISTS temporal.buildings_osm;
+        CREATE TABLE temporal.buildings_osm AS 
+        SELECT b.* 
+        FROM public.buildings_osm b, buffer_study_area s
+        WHERE ST_Intersects(b.geom,s.geom);
+    ''',
+    "pois": '''DROP TABLE IF EXISTS buffer_study_area;
+        CREATE TEMP TABLE buffer_study_area AS 
+        SELECT ST_BUFFER(ST_UNION(geom), 0.027) AS geom 
+        FROM temporal.study_area;
+
+        DROP TABLE IF EXISTS temporal.pois;
+        CREATE TABLE temporal.pois as 
+        SELECT p.* 
+        FROM public.pois_fused p, buffer_study_area s
+        WHERE ST_Intersects(p.geom,s.geom);''',
+    "planet_osm_points": '''DROP TABLE IF EXISTS buffer_study_area;
+        CREATE TEMP TABLE buffer_study_area AS 
+        SELECT ST_BUFFER(ST_UNION(geom), 0.027) AS geom 
+        FROM temporal.study_area;
+
+        DROP TABLE IF EXISTS temporal.planet_osm_points_p;
+        CREATE TABLE temporal.planet_osm_points_p as 
+        SELECT p.* 
+        FROM public.planet_osm_points p, buffer_study_area s
+        WHERE ST_Intersects(p.way,s.geom);''',
     "aoi": '''DROP TABLE IF EXISTS buffer_study_area;
         CREATE TEMP TABLE buffer_study_area AS 
         SELECT ST_BUFFER(ST_UNION(geom), 0.027) AS geom 

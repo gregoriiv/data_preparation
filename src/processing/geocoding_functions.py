@@ -2,6 +2,8 @@ from geopy import geocoders
 from geopy import Nominatim
 from geojson import Point
 import json
+from postal.parser import parse_address
+from src.other.utility_functions import file2df, gdf_conversion
 
 
 class GeoAddress:
@@ -63,3 +65,38 @@ def addLocationOfAdressToJson(input_fpath,output_fpath,g_api_key,addr_class):
 
 # addr = GeoAddress(street="addr:street", city="addr:city", country="addr:country", postcode="addr:postcode")
 # addLocationOfAdressToJson(path,path2store,google_api_key,addr)
+
+
+# Function allows to deagregate column with address as a str in separate columns (housenumber, addr:street, addr:city, addr:postcode)
+# * requires installed libary libpostal
+def redefine_address(filename, address_column):
+
+    df = file2df(filename)
+    df['housenumber'] = None
+    df['addr:street'] = None                     
+    df['addr:city'] = None 
+    df['addr:postcode'] = None    
+
+    for i in df.index:
+        print(i)  
+        df_row = df.iloc[i]
+        address = df_row[address_column]
+
+        try:
+            result = parse_address(address)
+            for r in result:
+                if r[1] == 'house_number':
+                    df['housenumber'][i] = r[0]
+                elif r[1] == 'road':
+                    df['addr:street'][i] = r[0]                     
+                elif r[1] == 'city':
+                     df['addr:city'][i] = r[0]
+                elif r[1] == 'postcode': 
+                    df['addr:postcode'][i] = r[0]    
+        except:
+            print(f'Deagregation failed for row number {i} with address: {address}')
+            pass
+        
+    df = df.drop(columns={address_column})
+                
+    gdf_conversion(df, filename.split('.')[0] + '_upd','GPKG')
