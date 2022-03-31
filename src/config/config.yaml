@@ -1,7 +1,7 @@
 # VARIABLES_SET 
 VARIABLES_SET : 
   landuse:
-    region_pbf : ["Mittelfranken"]
+    region_pbf : ["freiburg"]
     collection:
         # add all tags in a list associated to their osm feature that should be collected from geofabrik 
         # if you are not sure add feature not_sure: ["tag1", "tag2"] then a dict with all tags (value) and their assosicated feature (key) and one key 
@@ -57,7 +57,7 @@ VARIABLES_SET :
     fusion: 
   
   pois:
-    region_pbf : ["Mittelfranken","Niederbayern","Oberbayern","Oberfranken","Oberpfalz","Schwaben","Unterfranken", "Freiburg"]
+    region_pbf : ["freiburg"]
     collection:
       osm_tags:
         amenity : ["fuel", "post_office", "taxi", "atm", "bank", "dentist", "doctors", "pharmacy", "post_box", "marketplace", "bar", "biergarten", "cafe", 
@@ -165,9 +165,9 @@ VARIABLES_SET :
       fusion_data :
         source:
           database:
-            # doctors_bavaria:
+            # doctors_bavaria_upd:
             #   fusion_type : "replace" 
-            #   amenity : "doctors"
+            #   amenity : "general_practitioner"
             #   amenity_set : False
             #   amenity_operator : 
             #   columns2rename : {"category": "amenity", "extras": "tags", "spider": "source"}
@@ -192,8 +192,8 @@ VARIABLES_SET :
               columns2fuse : ["name", "source", "opening_hours", "phone", "addr:street", "housenumber" ,"addr:city", "addr:postcode"]
             nextbike_freiburg:
               fusion_type : "replace"
-              amenity : 'bicycle_rental'
-              amenity_set : False
+              amenity : 'bike_sharing'
+              amenity_set : True
               amenity_operator :
               columns2rename : 
               column_set_value : {"source" : "nextbike.de", "addr:city" : "Freiburg", "operator" : "Frilo"} # for all values
@@ -206,15 +206,15 @@ VARIABLES_SET :
               columns2rename : 
               column_set_value : {"source" : "govdata.de", "addr:city" : "Freiburg"} # for all values
               columns2fuse : ["name", "source", "addr:city"]
+            jedeschule_geocode:
+              fusion_type : "replace"
+              amenity : "school"
+              amenity_set : False
+              amenity_operator :
+              columns2rename : {"id": "osm_id"}
+              column_set_value : {"source": "jedeschule"} 
+              columns2fuse : ["name", "source", "osm_id", "addr:street", "housenumber", "addr:city", "addr:postcode"] # , "addr:street", "housenumber", "addr:city", "addr:postcode", "addr:country", "opening_hours"
           geojson:
-            # dm:
-            #   fusion_type : "fuse"
-            #   amenity :
-            #   amenity_set : False
-            #   amenity_operator : ("chemist","dm")
-            #   columns2rename : 
-            #   column_set_value : {"brand" : "dm-drogerie markt", "source" : "dm_de"} # for all values
-            #   columns2fuse : ["name", "source", "opening_hours", "phone", "addr:street", "housenumber" ,"addr:city", "addr:postcode", "addr:country", "brand"]
             mueller:
               fusion_type : "fuse"
               amenity :
@@ -233,7 +233,7 @@ VARIABLES_SET :
               columns2fuse : ["amenity", "source", "name", "phone", "addr:street", "housenumber" ,"addr:city", "addr:postcode", "addr:country"]
             denns_de:
               fusion_type : "fuse"
-              amenity : "organic"
+              amenity : "organic_supermarket"
               amenity_set : False
               amenity_operator : 
               columns2rename : {"@spider" : "source"}
@@ -243,7 +243,7 @@ VARIABLES_SET :
               fusion_type : "fuse"
               amenity : 
               amenity_set : False
-              amenity_operator : ("organic","Alnatura")
+              amenity_operator : ("organic_supermarket","Alnatura")
               columns2rename : {"@spider" : "source"}
               column_set_value : {"brand": "Alnatura"} 
               columns2fuse : ["opening_hours", "source", "addr:street", "housenumber", "addr:city", "addr:postcode", "addr:country", "name", "phone", "brand"]
@@ -303,14 +303,6 @@ VARIABLES_SET :
               columns2rename : {"@spider" : "source"}
               column_set_value : {"brand": "Deutschepost"} 
               columns2fuse : ["name", "source", "brand", "addr:street", "housenumber", "addr:city", "addr:postcode", "addr:country", "opening_hours"]
-            jedeschule_geocode:
-              fusion_type : "replace"
-              amenity : "school"
-              amenity_set : False
-              amenity_operator :
-              columns2rename : {"official_i": "osm_id"}
-              column_set_value : {"source": "jedeschule"} 
-              columns2fuse : ["name", "source", "osm_id"] # , "addr:street", "housenumber", "addr:city", "addr:postcode", "addr:country", "opening_hours"
             vitalia:
               fusion_type : "fuse"
               amenity : 
@@ -354,7 +346,7 @@ VARIABLES_SET :
 
   # config to collect buildings from OSM
   buildings :
-    region_pbf: ["Mittelfranken"]
+    region_pbf: ["freiburg","Oberbayern"]
     collection:
       osm_tags: 
         building: [True]
@@ -402,7 +394,7 @@ VARIABLES_SET :
 
   # temporary variable container to generate ways table
   ways:
-    region_pbf: ["oberpfalz", "mittelfranken"]
+    region_pbf: ["oberbayern","freiburg"]
     collection: 
     preparation:
       excluded_class_id_walking: [0,101,102,103,104,105,106,107,501,502,503,504,701,801]
@@ -433,3 +425,4 @@ VARIABLES_SET :
         mud: '0.4'
       one_meter_degree : 0.000009
     fusion:
+      rs_codes: ['']

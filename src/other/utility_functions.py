@@ -254,7 +254,7 @@ def create_sql_dumps():
         if tab_e in tables_extra_standard:
             table_dump('local','.'.join(['extra',tab_e]))
 
-create_sql_dumps()
+# create_sql_dumps()
 
 # migrate_all_tables2localdb()
 

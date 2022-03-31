@@ -207,7 +207,13 @@ OSM_germany = {
     'baden-wuerttemberg' : ['freiburg-regbez', 'karlsruhe-regbez', 'stuttgart-regbez', 'tuebingen-regbez'],
     'bayern' :             ["mittelfranken", "niederbayern", "oberbayern", "oberfranken", "oberpfalz", "schwaben", "unterfranken"],
     'nordrhein_westfalen': ["arnsberg_regbez", "detmold_regbez", "duesseldorf_regbez", "koeln_regbez", "muenster_regbez"],
-
 }
 
+gms_keys = {
+    "01" : "schleswig_holstein", "02" : "hamburg", "03" : "niedersachsen", "04" : "bremen", "051" : "duesseldorf", "053" : "koeln",
+    "055" : "muenster", "057" : "arnsberg", "06" : "hessen", "07" : "rheinland_pfalz", "081" : "stuttgart", "082" : "karlsruhe", 
+    "083" : "freiburg", "084" : "tuebingen", "091" : "oberbayern", "092" : "niederbayern", "093" : "oberpfalz", "094" : "oberfranken", 
+    "095" : "mittelfranken", "096" : "unterfranken", "097" : "schwaben", "10" : "saarland", "12" : "brandenburg", "13" : "mecklenburg_vorpommern", 
+    "14" : "sachsen", "15" : "sachsen-anhalt", "16" : "thueringen"
+}
     
