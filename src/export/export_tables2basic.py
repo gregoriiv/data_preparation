@@ -1,7 +1,6 @@
 sql_queries_goat = {
-    "schema_basic": '''CREATE SCHEMA IF NOT EXISTS basic;'''
-    ,
-    "study area":'''
+    "schema_basic": '''CREATE SCHEMA IF NOT EXISTS basic;''',
+    "study area": '''
         DROP TABLE IF EXISTS basic.sub_study_area CASCADE;
         DROP TABLE IF EXISTS basic.study_area CASCADE;
         CREATE TABLE basic.study_area (
@@ -48,9 +47,7 @@ sql_queries_goat = {
 
         INSERT INTO basic.sub_study_area ("name", default_building_levels, default_roof_levels, area, geom, population, study_area_id)
         SELECT "name", default_building_levels, default_roof_levels, area, geom, sum_pop, RIGHT(rs, length(rs) - 1)::int4
-        FROM study_area;
-    '''
-    ,
+        FROM study_area;''',
     "nodes_edges":'''
         DELETE from ways_vertices_pgr 
         WHERE geom IS NULL;
@@ -140,7 +137,7 @@ sql_queries_goat = {
         CREATE INDEX ix_basic_edge_source ON basic.edge USING btree (source);
         CREATE INDEX ix_basic_edge_target ON basic.edge USING btree (target);
 
-        INSERT INTO  basic.edge (
+        INSERT INTO basic.edge (
             id,
             length_m,
             "name",
@@ -237,10 +234,8 @@ sql_queries_goat = {
         AND coordinates_3857 IS NOT NULL
         AND class_id is NOT NULL
         AND "source" IS NOT NULL
-        AND target Is NOT NULL;
-    '''
-    ,
-    "poi": '''
+        AND target Is NOT NULL;''',
+    "pois": '''
         DROP TABLE IF EXISTS basic.poi;
         CREATE TABLE basic.poi (
         id serial4 NOT NULL,
@@ -262,7 +257,7 @@ sql_queries_goat = {
         CREATE INDEX ix_basic_poi_uid ON basic.poi USING btree (uid); 
 
         -- ##################################################################################  --
-        -- ## TEMPORAL FIX FOR pois_fused TABLE #############################################  --
+        -- ## TEMPORAL FIX FOR pois_goat TABLE #############################################  --
 
         DROP TABLE IF EXISTS temp_p;
         CREATE TABLE temp_p as
@@ -276,7 +271,7 @@ sql_queries_goat = {
                 jsonb_build_object('origin_geometry', 'origin_geometry') AS origin_geometry ,
                 jsonb_build_object('phone', phone) AS "phone",
                 tags 
-        FROM pois_fused pf; 
+        FROM pois_goat pf; 
 
         UPDATE temp_p 
         SET tags = "addr:city" || tags;
@@ -299,12 +294,12 @@ sql_queries_goat = {
         UPDATE temp_p 
         SET tags = phone || tags;
 
-        UPDATE pois_fused pf 
+        UPDATE pois_goat pf 
         SET    tags = tp.tags
         FROM   temp_p tp
         WHERE  pf.poi_goat_id = tp.poi_goat_id;
 
-        ALTER TABLE pois_fused
+        ALTER TABLE pois_goat
         DROP COLUMN "addr:city" , 
         DROP COLUMN website, 
         DROP COLUMN "source",
@@ -314,20 +309,15 @@ sql_queries_goat = {
         DROP COLUMN "phone",
         DROP COLUMN "addr:country";
 
-        ALTER TABLE pois_fused 
+        ALTER TABLE pois_goat 
         ADD COLUMN wheelchair text; 
 
-        UPDATE pois_fused 
+        UPDATE pois_goat 
         SET wheelchair = tags ->> 'wheelchair';
 
-        -- ##################################################################################  --
-
-        -- POIs
         INSERT INTO basic.poi (category, "name", street, housenumber, zipcode, opening_hours, wheelchair, tags, geom, uid)
         SELECT amenity, "name", "addr:street", housenumber, "addr:postcode" , opening_hours, wheelchair, tags, geom, poi_goat_id
-        FROM pois_fused;
-    '''
-    ,
+        FROM pois_goat;''',
     "building": '''
         DROP TABLE IF EXISTS basic.population;
         DROP TABLE IF EXISTS basic.building;
@@ -376,9 +366,7 @@ sql_queries_goat = {
                 gross_floor_area_residential,
                 osm_id,
                 building
-        FROM buildings;
-    '''
-    ,
+        FROM buildings;''',
     "population": '''
         CREATE TABLE basic.population (
         id serial4 NOT NULL,

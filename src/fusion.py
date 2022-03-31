@@ -110,7 +110,7 @@ def dataframe_goat_index(df):
     df['poi_goat_id'] = df['id_x'].map(str) + '-' + df['id_y'].map(str) + '-' + df['amenity']
     df = df.drop(columns=['id_x','id_y'])
     df["osm_id"] = df["osm_id"].fillna(value=0)
-    df_poi_goat_id = df[['poi_goat_id','osm_id']]
+    df_poi_goat_id = df[['poi_goat_id','osm_id', 'name']]
 
     cols = ','.join(list(df_poi_goat_id.columns))
     tuples = [tuple(x) for x in df_poi_goat_id.to_numpy()]

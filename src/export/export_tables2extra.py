@@ -1,6 +1,6 @@
 sql_queries_goat = {
     "schema_extra": '''
-        CREATE SCHEMA IF NOT EXISTS	 extra;
+        CREATE SCHEMA IF NOT EXISTS extra;
     '''
     ,
     "landuse": '''
