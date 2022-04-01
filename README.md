@@ -22,7 +22,7 @@ This is a repository containing the data preparation steps for GOAT.
 10. Use command line to fuse data and store in layers in database tables `python prepare.py -fuse LAYERNAME` (pois)
 
 
-# Observe Documentation for Data Preparation
+# Check Documentation for Data Preparation
 
 In terminal execute cammand `mkdocs serve`.
 Open webbrowser `http://127.0.0.1:8000/` 
