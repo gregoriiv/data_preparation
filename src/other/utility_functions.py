@@ -215,6 +215,13 @@ def migrate_table2localdb(source_table, dest_table):
     table_restore("local", dest_table)
     subprocess.run(f'rm export_results/{dest_table}.sql', shell=True, check=True)
 
+def migrate_table2localdb2(table):
+    db = Database()
+    table_dump("remote", 'temporal.'+ table)
+    db.perform(query = f"DROP TABLE IF EXISTS {table} CASCADE;")
+    table_restore("local", table)
+    subprocess.run(f'rm export_results/{table}.sql', shell=True, check=True)
+
 
 def GetTableList(t_schema, source='remote'):
     # Retrieve the table list
@@ -232,7 +239,7 @@ def GetTableList(t_schema, source='remote'):
     list_tables = db_cursor.fetchall()
     # Print the names of the tables
     table_list = [y for x,y in list_tables]
-    print(table_list)
+
     return table_list
 
 def migrate_all_tables2localdb():

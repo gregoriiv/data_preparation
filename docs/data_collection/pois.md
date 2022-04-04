@@ -1,5 +1,5 @@
 # POIs
-HowTo for preparation of Points of Interest to GOAT database format.
+HowTo for Collection of Points of Interest to GOAT database format.
 
 Result of this operation will be local database table **pois_goat**. It will be neccessary to store result tables in remote database for execution of preparation for defined municiplaities.  
   
@@ -139,4 +139,4 @@ Next comes a subcategory containing settings for data that will be integrated in
  - See chapter **Quick Start - Command Line**
  
 ### Manual execution of function
-Fusion is done with a single function **pois_fusion()**, which by default returns the dataframe. It is possible to save the result of fusion as a file if the _result_filename_ and _return_type_ variables are defined. For example, **pois_fusion(df, config='pois', result_name="pois_result", return_type="GeoJSON")**. At the moment, the extensions **"GeoJSON"** and **"GPKG"** are supported. Result file will be saved in _crs/data/output_
+Fusion is done with a single function **pois_fusion()**, which by default returns the dataframe. It is possible to save the result of fusion as a file if the _result_filename_ and _return_type_ variables are defined. For example, **pois_fusion(df, config='pois', result_name="pois_result", return_type="GeoJSON")**. At the moment, the extensions **"GeoJSON"** and **"GPKG"** are supported. Result file will be saved in __crs/data/output__.

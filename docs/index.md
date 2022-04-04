@@ -10,13 +10,13 @@ Perform data collection using the command line, by calling __collect.py__. Data 
 
 ![Screenshot](img/collect.png)
 
-**Network**. Original network data is processed with **__osm2grouting__** during the collection then fitered and processed susequently with SQL scripts for preparation. As a result in local database are stored two tables **__ways__** and **__ways_vertices_pgr__**. Can be called in command line by `collect.py -c network`. See chapter __Data Collection/Network__.
+- **Network**. Original network data is processed with **__osm2grouting__** during the collection then fitered and processed susequently with SQL scripts for preparation. As a result in local database are stored two tables **__ways__** and **__ways_vertices_pgr__**. Can be called in command line by `collect.py -c network`. See chapter __Data Collection/Network__.
 
-**Buildings**. The process allows to collect and prepare buildings from OSM data. Returns table in local database **__buildings_osm__**. Can be called in command line by `collect.py -c buildings`. See chapter __Data Collection/Buildings__.
+- **Buildings**. The process allows to collect and prepare buildings from OSM data. Returns table in local database **__buildings_osm__**. Can be called in command line by `collect.py -c buildings`. See chapter __Data Collection/Buildings__.
 
-**Landuse**. Landuse polygons from OSM data. Process returns table in local database **__landuse_osm__**. Can be called in command line by `collect.py -c landuse`. See chapter __Data Collection/Landuse__.
+- **Landuse**. Landuse polygons from OSM data. Process returns table in local database **__landuse_osm__**. Can be called in command line by `collect.py -c landuse`. See chapter __Data Collection/Landuse__.
 
-**POIs**. As other process for data collection, it collects, filters and prepares data from OSM in a format fittable for GOAT. Process returns table **__pois__** stored in local database. Can be called in command line by `collect.py -c pois`. See chapter __Data Collection/POIs__.
+- **POIs**. As other process for data collection, it collects, filters and prepares data from OSM in a format fittable for GOAT. Process returns table **__pois__** stored in local database. Can be called in command line by `collect.py -c pois`. See chapter __Data Collection/POIs__.
 
 For **POIs** it is neccessary to execute **fusion** process. Not only it is used for fusion or replacement parts of OSM data with custom data but also within the process **__poi_goat_id__** should be created. Can be called in command line by `collect.py -f pois`. Process returns table **__pois_goat__** stored in local database. For additional information see chapter __Data Collection/POIs__. 
 

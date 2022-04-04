@@ -3,10 +3,10 @@ from argparse import RawTextHelpFormatter
 from datetime import datetime
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir)))
-from src.other.utility_functions import database_table2df, df2database, drop_table, migrate_table2localdb
-from src.collection import osm_collection
-from src.preparation import pois_preparation, landuse_preparation, buildings_preparation
-from src.fusion import pois_fusion
+from src.other.utility_functions import database_table2df, df2database, drop_table, migrate_table2localdb2
+from src.collection.collection import osm_collection
+from src.collection.preparation import pois_preparation, landuse_preparation, buildings_preparation
+from src.collection.fusion import pois_fusion
 from src.network.network_collection import network_collection
 from src.network.ways import PrepareLayers, Profiles
 from src.network.conversion_dem import conversion_dem
@@ -14,7 +14,7 @@ from src.population.population_data_preparation import population_data_preparati
 from src.population.produce_population_points import Population
 from src.export.export_goat import getDataFromSql
 from src.export.export_tables2basic import sql_queries_goat
-from src.network.network_islands import network_islands
+from src.network.network_islands_municip import calculate_network_islands_mun
 
 from src.db.db import Database
 from src.db.prepare import PrepareDB
@@ -41,17 +41,19 @@ if prepare or prepare in(layers_prepare):
         population.produce_population_points(source_population = 'census_extrapolation')
     elif prepare == 'network':
         getDataFromSql('ways', municipalities)
-        migrate_table2localdb('ways', 'ways')
-        migrate_table2localdb('ways_vertices_pgr', 'ways_vertices_pgr')
+        migrate_table2localdb2('study_area')
+        migrate_table2localdb2('ways')
+        migrate_table2localdb2('ways_vertices_pgr')
+        for m in municipalities:
+            calculate_network_islands_mun(m)
         db = Database()
-        db.perform(query=network_islands)
         conn = db.connect()
         cur = conn.cursor()
         rename_tables = '''
-            DROP TABLE IF EXISTS edge;
-            DROP TABLE IF EXISTS node;
-            CREATE TABLE edge AS TABLE ways;
-            CREATE TABLE node AS TABLE ways_vertices_pgr;'''
+            DROP TABLE IF EXISTS temporal.edge;
+            DROP TABLE IF EXISTS temporal.node;
+            CREATE TABLE temporal.edge AS TABLE temporal.ways;
+            CREATE TABLE temporal.node AS TABLE temporal.ways_vertices_pgr;'''
         cur.execute(rename_tables)
         conn.commit()
         db.perform(sql_queries_goat['nodes_edges'])

@@ -1,7 +1,7 @@
 # VARIABLES_SET 
 VARIABLES_SET : 
   landuse:
-    region_pbf : ["freiburg"]
+    region_pbf : ["freiburg", "Mittelfranken","Niederbayern","Oberbayern","Oberfranken","Oberpfalz","Schwaben","Unterfranken"]
     collection:
         # add all tags in a list associated to their osm feature that should be collected from geofabrik 
         # if you are not sure add feature not_sure: ["tag1", "tag2"] then a dict with all tags (value) and their assosicated feature (key) and one key 
@@ -57,7 +57,7 @@ VARIABLES_SET :
     fusion: 
   
   pois:
-    region_pbf : ["freiburg"]
+    region_pbf : ["freiburg", "Mittelfranken","Niederbayern","Oberbayern","Oberfranken","Oberpfalz","Schwaben","Unterfranken"]
     collection:
       osm_tags:
         amenity : ["fuel", "post_office", "taxi", "atm", "bank", "dentist", "doctors", "pharmacy", "post_box", "marketplace", "bar", "biergarten", "cafe", 
@@ -346,7 +346,7 @@ VARIABLES_SET :
 
   # config to collect buildings from OSM
   buildings :
-    region_pbf: ["freiburg","Oberbayern"]
+    region_pbf: ["freiburg","Mittelfranken","Niederbayern","Oberbayern","Oberfranken","Oberpfalz","Schwaben","Unterfranken",]
     collection:
       osm_tags: 
         building: [True]
@@ -394,7 +394,7 @@ VARIABLES_SET :
 
   # temporary variable container to generate ways table
   ways:
-    region_pbf: ["oberbayern","freiburg"]
+    region_pbf: ["Mittelfranken","Niederbayern","Oberbayern","Oberfranken","Oberpfalz","Schwaben","Unterfranken","freiburg"]
     collection: 
     preparation:
       excluded_class_id_walking: [0,101,102,103,104,105,106,107,501,502,503,504,701,801]

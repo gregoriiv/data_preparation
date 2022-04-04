@@ -34,6 +34,8 @@ class PrepareDB:
         # Create db extensions (should be added when creating the database?)
         self.db.perform(query = "CREATE EXTENSION IF NOT EXISTS intarray;")
         self.db.perform(query = "CREATE EXTENSION IF NOT EXISTS postgis_raster;")
+        self.db.perform(query = "CREATE SCHEMA IF NOT EXISTS basic;")
+        self.db.perform(query = "CREATE SCHEMA IF NOT EXISTS temporal;")
 
     def create_db_tables(self):
         self.db.perform(query = "CREATE TABLE IF NOT EXISTS poi_goat_id (poi_goat_id VARCHAR, index int, osm_id VARCHAR);")
